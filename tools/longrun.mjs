@@ -1,15 +1,17 @@
 // Full 50-wave run in a real browser (AI autoplay at turbo speed) while
 // sampling the JS heap after forced GC. Verifies memory stays flat.
 //   node tools/longrun.mjs [--turbo=24] [--map=0] [--diff=normal]
+
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
 const require = createRequire(import.meta.url);
 let pw;
 try { pw = require('playwright'); } catch { pw = require('/opt/npm-tools/node_modules/playwright'); }
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const arg = (k, d) => { const a = process.argv.find(x => x.startsWith('--' + k)); return a ? a.split('=')[1] : d; };
+const arg = (k, d) => { const a = process.argv.find(x => x.startsWith(`--${k}`)); return a ? a.split('=')[1] : d; };
 const turbo = +arg('turbo', 24), map = +arg('map', 0), diff = arg('diff', 'normal');
 const browser = await pw.chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--js-flags=--expose-gc'] });
 const page = await browser.newPage({ viewport: { width: 640, height: 400 } });

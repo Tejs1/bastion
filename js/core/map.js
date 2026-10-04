@@ -1,6 +1,6 @@
 /* Bastion — map construction: tile grid, rounded paths sampled into lookup tables. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   var STEP = 2;            // path sample spacing in world px
@@ -15,7 +15,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
    *  Result holds Float32Array tables so that position lookup is O(1):
    *  index = dist / STEP. */
   function samplePath(wps, tile) {
-    var pts = wps.map(function (p) { return [(p[0] + 0.5) * tile, (p[1] + 0.5) * tile]; });
+    var pts = wps.map((p) => [(p[0] + 0.5) * tile, (p[1] + 0.5) * tile]);
     // 1. dense polyline with rounded corners (quadratic bezier per corner)
     var poly = [pts[0]];
     for (var i = 1; i < pts.length - 1; i++) {
@@ -70,13 +70,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
   }
 
   /** Build a runtime map from a definition in TD.MAPS. */
-  TD.buildMap = function (def) {
+  TD.buildMap = (def) => {
     var cols = TD.COLS, rows = TD.ROWS, tile = TD.TILE;
     var grid = new Uint8Array(cols * rows);
-    var paths = def.paths.map(function (wps) { return samplePath(wps, tile); });
+    var paths = def.paths.map((wps) => samplePath(wps, tile));
 
     // rasterise axis-aligned path segments into the tile grid
-    def.paths.forEach(function (wps) {
+    def.paths.forEach((wps) => {
       for (var i = 0; i < wps.length - 1; i++) {
         var a = wps[i], b = wps[i + 1];
         var dx = Math.sign(b[0] - a[0]), dy = Math.sign(b[1] - a[1]);

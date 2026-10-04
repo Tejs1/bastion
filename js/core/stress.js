@@ -1,6 +1,6 @@
 /* Bastion — fixed-step loop driver and the stress-test scenario. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   /** Fixed-timestep accumulator. Simulation always advances in DT ticks, so
@@ -26,7 +26,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
    * the base are recycled to the start, and the global fire-rate multiplier is
    * steered so projectile count stays at the target.
    */
-  TD.setupStress = function (sim, opts) {
+  TD.setupStress = (sim, opts) => {
     opts = opts || {};
     var targetEnemies = opts.enemies || 5000;
     var targetTowers = opts.towers || 100;
@@ -37,7 +37,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     sim.dmgMul = 0.04;      // keep enemies alive long enough to stay on screen
     sim.projSpeedMul = 0.55; // longer flights -> more projectiles alive per shot
     var bot = new TD.Bot(sim);
-    var spots = bot.spots.slice().sort(function (a, b) { return b.mid - a.mid; });
+    var spots = bot.spots.slice().sort((a, b) => b.mid - a.mid);
     // tower mix: projectile towers dominate so the projectile target is reachable
     var mix = [0, 1, 0, 1, 0, 3, 0, 1, 2, 4];
     var placed = 0;
@@ -50,11 +50,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
       }
     }
     var types = [];
-    TD.ENEMIES.forEach(function (e, idx) { if (e.id !== 'boss') types.push(idx); });
+    TD.ENEMIES.forEach((e, idx) => { if (e.id !== 'boss') types.push(idx); });
     var nPaths = sim.map.paths.length;
     sim.stress = {
       targetEnemies: targetEnemies, targetProj: targetProj, towers: placed,
-      update: function (s) {
+      update: (s) => {
         var need = targetEnemies - s.eCount;
         if (need > 400) need = 400;
         for (var k = 0; k < need; k++) {

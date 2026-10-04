@@ -4,13 +4,13 @@
 //   node tools/headless.mjs memory       full 50-wave run, heap sampled every wave
 //   node tools/headless.mjs stress       sim-only cost of the 5000/100/1000 stress scenario
 import fs from 'node:fs';
-import vm from 'node:vm';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 for (const f of ['util', 'data', 'map', 'sim', 'bot', 'stress']) {
-  vm.runInThisContext(fs.readFileSync(path.join(root, 'js/core', f + '.js'), 'utf8'), { filename: f + '.js' });
+  vm.runInThisContext(fs.readFileSync(path.join(root, 'js/core', `${f}.js`), 'utf8'), { filename: `${f}.js` });
 }
 const TD = globalThis.TD;
 
@@ -120,7 +120,7 @@ if (mode === 'stress') {
     if (i % 300 === 299) console.log(`t=${((i + 1) / 60).toFixed(0)}s enemies ${sim.eCount} towers ${sim.towers.length} projectiles ${sim.pCount} fireMul ${sim.fireMul.toFixed(2)}`);
   }
   times.sort((a, b) => a - b);
-  const tail = times.slice(300);
+  const _tail = times.slice(300);
   console.log(`sim step ms: median ${times[times.length >> 1].toFixed(3)} p95 ${times[Math.floor(times.length * 0.95)].toFixed(3)} max ${times[times.length - 1].toFixed(3)}`);
 }
 

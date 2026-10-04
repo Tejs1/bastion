@@ -1,7 +1,7 @@
 /* Bastion — game controller: owns the single requestAnimationFrame loop,
  * the camera, player intents and game-mode orchestration. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   var params = new URLSearchParams(location.search);
@@ -46,10 +46,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.lockstep = params.has('lockstep');
     this.view = { x0: 0, y0: 0, x1: 0, y1: 0 };
     this.bgRect = { x: 0, y: 0, w: 1, h: 1 };
-    var self = this;
     // one reusable step closure: no per-frame function allocation
-    this.stepFn = function () { if (self.bot) self.bot.update(); self.sim.step(); };
-    this.frameFn = function (t) { self.frame(t); };
+    this.stepFn = () => { if (this.bot) this.bot.update(); this.sim.step(); };
+    this.frameFn = (t) => { this.frame(t); };
   }
   TD.Game = Game;
   var G = Game.prototype;
@@ -62,22 +61,21 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.scene = new TD.Scene(this.renderer, this.atlas);
     this.audio = new TD.Audio();
     var muted = false;
-    try { muted = localStorage.getItem('bastion.muted') === '1'; } catch (e) { /* storage unavailable */ }
+    try { muted = localStorage.getItem('bastion.muted') === '1'; } catch (_e) { /* storage unavailable */ }
     this.audio.setMuted(muted);
     this.fx = new TD.Fx(this.audio);
     this.ui = new TD.UI(this);
     this.ui.init(this.atlas);
     this.ui.setMuted(muted);
     this.input = new TD.Input(this.canvas, this);
-    var self = this;
-    this.renderer.onRestore = function () {
-      self.renderer.initGL();
-      self.renderer.setTexture('atlas', self.atlas.canvas);
-      if (self.bgCanvas) self.renderer.setTexture('bg', self.bgCanvas);
+    this.renderer.onRestore = () => {
+      this.renderer.initGL();
+      this.renderer.setTexture('atlas', this.atlas.canvas);
+      if (this.bgCanvas) this.renderer.setTexture('bg', this.bgCanvas);
     };
-    window.addEventListener('resize', function () { self.resize(); });
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden && self.mode === 'play' && !self.paused && self.sim && self.sim.state === 'running') self.setPaused(true);
+    window.addEventListener('resize', () => { this.resize(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && this.mode === 'play' && !this.paused && this.sim && this.sim.state === 'running') this.setPaused(true);
     });
     this.resize();
 
@@ -90,18 +88,17 @@ var TD = globalThis.TD || (globalThis.TD = {});
       this.newGame(+(params.get('map') || 0), params.get('diff') || 'normal', 'demo');
       if (params.has('turbo')) { this.speed = +params.get('turbo'); this.loop.maxSteps = this.speed * 3; }
     }
-    requestAnimationFrame(function (ts) { self.frame(ts); });
+    requestAnimationFrame((ts) => { this.frame(ts); });
     window.__td = this;
   };
 
   // ------------------------------------------------------------ game modes
   G.newGame = function (mapIndex, diff, mode) {
     this.mapIndex = mapIndex; this.diffId = diff; this.mode = mode;
-    var self = this;
     this.fx.reset();
     this.sim = new TD.Sim({ map: mapIndex, difficulty: diff, fx: mode === 'backdrop' ? TD.NOFX : this.fx, seed: (Math.random() * 1e9) | 0 });
     this.sim.autoStart = this.autoStart;
-    this.sim.onWaveCleared = function (w, bonus) { if (self.mode !== 'backdrop') self.ui.toast('Wave ' + w + ' cleared  +' + bonus + ' credits'); };
+    this.sim.onWaveCleared = (w, bonus) => { if (this.mode !== 'backdrop') this.ui.toast(`Wave ${w} cleared  +${bonus} credits`); };
     this.bot = (mode === 'demo' || mode === 'backdrop') ? new TD.Bot(this.sim, { skill: 1 }) : null;
     if (mode === 'backdrop') { this.sim.fx = this.fx; this.fx.audio = null; }
     else this.fx.audio = this.audio;
@@ -154,7 +151,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       var tb = document.querySelector('.topbar').getBoundingClientRect();
       top = tb.bottom;
       var dockTop = this.cssH;
-      ['palette', 'waveBox'].forEach(function (id) {
+      ['palette', 'waveBox'].forEach((id) => {
         var e = document.getElementById(id);
         if (!e.classList.contains('hidden')) { var r = e.getBoundingClientRect(); if (r.height) dockTop = Math.min(dockTop, r.top); }
       });
@@ -274,14 +271,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
       return true;
     }
     this.sfx('error');
-    if (res === 'gold') this.ui.toast('Not enough credits — need ' + TD.TOWERS[type].cost, true);
+    if (res === 'gold') this.ui.toast(`Not enough credits — need ${TD.TOWERS[type].cost}`, true);
     else if (res === 'blocked') this.ui.toast("Can't build there", true);
     return false;
   };
 
   G.selectTowerType = function (i) {
     if (!this.isPlay()) return;
-    if (i >= 0 && this.sim.gold < TD.TOWERS[i].cost) { this.ui.toast('Not enough credits — need ' + TD.TOWERS[i].cost, true); this.sfx('error'); }
+    if (i >= 0 && this.sim.gold < TD.TOWERS[i].cost) { this.ui.toast(`Not enough credits — need ${TD.TOWERS[i].cost}`, true); this.sfx('error'); }
     this.placing = i;
     this.touchGhostSet = false;
     if (i >= 0) { this.selected = 0; this.sfx('click'); }
@@ -329,7 +326,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   G.callWave = function () {
     if (!this.sim || !this.isPlay() || this.mode === 'stress') return;
     var b = this.sim.callWave();
-    if (b > 0) this.ui.toast('Early call bonus +' + b + ' credits');
+    if (b > 0) this.ui.toast(`Early call bonus +${b} credits`);
   };
 
   G.setSpeed = function (s) { this.speed = s; this.ui.showSpeed(s); this.sfx('click'); };
@@ -347,7 +344,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var m = !this.audio.muted;
     this.audio.setMuted(m);
     this.ui.setMuted(m);
-    try { localStorage.setItem('bastion.muted', m ? '1' : '0'); } catch (e) { /* ignore */ }
+    try { localStorage.setItem('bastion.muted', m ? '1' : '0'); } catch (_e) { /* ignore */ }
   };
 
   G.setAutoStart = function (v) { this.autoStart = v; if (this.sim) this.sim.autoStart = v; };
@@ -384,15 +381,15 @@ var TD = globalThis.TD || (globalThis.TD = {});
   };
 
   // ------------------------------------------------------------ scores
-  G.bestScore = function (map, diff) {
-    try { return JSON.parse(localStorage.getItem('bastion.best.' + map + '.' + diff) || 'null'); } catch (e) { return null; }
+  G.bestScore = (map, diff) => {
+    try { return JSON.parse(localStorage.getItem(`bastion.best.${map}.${diff}`) || 'null'); } catch (_e) { return null; }
   };
   G.saveScore = function (sim, won) {
     var best = this.bestScore(this.mapIndex, this.diffId);
     var isNew = !best || sim.score > best.score;
     if (isNew) {
       best = { score: sim.score, wave: sim.wave, won: won };
-      try { localStorage.setItem('bastion.best.' + this.mapIndex + '.' + this.diffId, JSON.stringify(best)); } catch (e) { /* ignore */ }
+      try { localStorage.setItem(`bastion.best.${this.mapIndex}.${this.diffId}`, JSON.stringify(best)); } catch (_e) { /* ignore */ }
     }
     return { best: best, isNew: isNew };
   };
@@ -410,10 +407,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
     b.frames.push(dtMs); b.cpu.push(cpuMs); b.sim.push(simMs); b.render.push(renderMs); b.ticks += ticks;
     if (b.t < b.warm + b.dur) return;
     b.done = true;
-    var f = b.frames.slice().sort(function (a, c) { return a - c; });
-    var cpu = b.cpu.slice().sort(function (a, c) { return a - c; });
-    var pct = function (arr, p) { return arr[Math.min(arr.length - 1, Math.floor(arr.length * p))]; };
-    var avg = function (arr) { var s = 0; for (var i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
+    var f = b.frames.slice().sort((a, c) => a - c);
+    var cpu = b.cpu.slice().sort((a, c) => a - c);
+    var pct = (arr, p) => arr[Math.min(arr.length - 1, Math.floor(arr.length * p))];
+    var avg = (arr) => { var s = 0; for (var i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
     var at45 = 0, over33 = 0;
     for (var i = 0; i < f.length; i++) { if (f[i] <= 1000 / 45 + 0.5) at45++; if (f[i] > 33.4) over33++; }
     var res = {
@@ -424,8 +421,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
       cpuAvg: avg(b.cpu), cpuP95: pct(cpu, 0.95), simAvg: avg(b.sim), renderAvg: avg(b.render),
       simPerTick: avg(b.sim) * b.frames.length / Math.max(1, b.ticks), ticksPerFrame: b.ticks / b.frames.length,
       renderScale: this.renderScale, lockstep: this.lockstep,
-      backend: this.renderer.backend + ' · ' + this.renderer.drawCalls + ' draw calls',
-      heap: b.heap0 ? b.heap0.toFixed(1) + ' → ' + heapMB().toFixed(1) + ' MB' : 'n/a (browser does not expose)'
+      backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls`,
+      heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)'
     };
     window.__benchResult = res;
     if (this.mode === 'stress') this.ui.showBench(res);
@@ -468,8 +465,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var view = this.view;
     view.x0 = rc.x - hw; view.x1 = rc.x + hw; view.y0 = rc.y - hh; view.y1 = rc.y + hh;
     this.renderT += running ? dt : 0;
-    var uiState = this;   // scene reads placing/selected/hover fields directly
-    this.scene.build(sim, this.fx, rc, view, this.loop.alpha, uiState, this.renderT);
+    this.scene.build(sim, this.fx, rc, view, this.loop.alpha, this, this.renderT);
     var map = sim.map, br = this.bgRect;
     br.w = map.width; br.h = map.height;
     this.renderer.flush(rc, 'bg', 'atlas', br, CLEAR);
@@ -517,10 +513,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
       this.lastWave = w;
       var groups = TD.buildWave(w, sim.map.paths.length);
       var intro = '';
-      [['runner', 3], ['swarm', 5], ['tank', 7], ['healer', 11], ['splitter', 14]].forEach(function (u) { if (u[1] === w) intro = 'New enemy: ' + TD.ENEMIES[TD.ENEMY_INDEX[u[0]]].name; });
+      [['runner', 3], ['swarm', 5], ['tank', 7], ['healer', 11], ['splitter', 14]].forEach((u) => { if (u[1] === w) intro = `New enemy: ${TD.ENEMIES[TD.ENEMY_INDEX[u[0]]].name}`; });
       var boss = w % 10 === 0;
-      var total = groups.reduce(function (a, g) { return a + g.count; }, 0);
-      this.ui.banner(w === TD.TOTAL_WAVES ? 'FINAL WAVE' : boss ? 'BOSS WAVE ' + w : 'WAVE ' + w, intro || (boss ? 'A Behemoth approaches' : total + ' hostiles inbound'), boss);
+      var total = groups.reduce((a, g) => a + g.count, 0);
+      this.ui.banner(w === TD.TOTAL_WAVES ? 'FINAL WAVE' : boss ? `BOSS WAVE ${w}` : `WAVE ${w}`, intro || (boss ? 'A Behemoth approaches' : `${total} hostiles inbound`), boss);
     }
     if ((sim.state === 'victory' || sim.state === 'defeat') && !this.endShown) {
       this.endTimer += dt;
@@ -545,19 +541,19 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var sub = s.subarray(0, n); sub.sort();
     var sim = this.sim;
     var lines = [
-      'FPS        ' + (1000 / (sum / n)).toFixed(1) + '   p95 ' + sub[Math.floor(n * 0.95)].toFixed(1) + ' ms',
-      'CPU/frame  ' + (cpu / n).toFixed(2) + ' ms',
-      '  sim      ' + (simT / n).toFixed(2) + ' ms  (' + (ticks / n).toFixed(1) + ' ticks)',
-      '  render   ' + (rnd / n).toFixed(2) + ' ms',
-      'enemies    ' + sim.eCount + '  (visible ' + this.scene.stats.visibleEnemies + ')',
-      'towers     ' + sim.towers.length + '   proj ' + sim.pCount,
-      'particles  ' + this.fx.count() + '   sprites ' + this.scene.stats.instances,
-      'renderer   ' + this.renderer.backend + ' · ' + this.renderer.drawCalls + ' draws · ' + Math.round(this.renderScale * 100) + '% res',
-      'speed      ' + this.speed + '×' + (performance.memory ? '   heap ' + heapMB().toFixed(1) + ' MB' : '')
+      `FPS        ${(1000 / (sum / n)).toFixed(1)}   p95 ${sub[Math.floor(n * 0.95)].toFixed(1)} ms`,
+      `CPU/frame  ${(cpu / n).toFixed(2)} ms`,
+      `  sim      ${(simT / n).toFixed(2)} ms  (${(ticks / n).toFixed(1)} ticks)`,
+      `  render   ${(rnd / n).toFixed(2)} ms`,
+      `enemies    ${sim.eCount}  (visible ${this.scene.stats.visibleEnemies})`,
+      `towers     ${sim.towers.length}   proj ${sim.pCount}`,
+      `particles  ${this.fx.count()}   sprites ${this.scene.stats.instances}`,
+      `renderer   ${this.renderer.backend} · ${this.renderer.drawCalls} draws · ${Math.round(this.renderScale * 100)}% res`,
+      `speed      ${this.speed}×${performance.memory ? `   heap ${heapMB().toFixed(1)} MB` : ''}`
     ];
     if (this.bench && !this.bench.done) {
       var b = this.bench;
-      lines.push(b.t < b.warm ? 'bench      warming up…' : 'bench      sampling ' + Math.max(0, b.warm + b.dur - b.t).toFixed(0) + 's');
+      lines.push(b.t < b.warm ? 'bench      warming up…' : `bench      sampling ${Math.max(0, b.warm + b.dur - b.t).toFixed(0)}s`);
     }
     this.ui.setPerfText(lines.join('\n'));
   };
@@ -569,7 +565,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       g.init();
     } catch (err) {
       document.getElementById('fatal').classList.remove('hidden');
-      document.getElementById('fatalMsg').textContent = String(err && err.stack || err);
+      document.getElementById('fatalMsg').textContent = String(err?.stack || err);
       throw err;
     }
   }

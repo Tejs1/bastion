@@ -2,7 +2,7 @@
  * intents (tap, hover, pan, zoom). Handlers run immediately on the event, so
  * the UI stays responsive regardless of simulation load. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   var DRAG_PX = 7;
@@ -14,22 +14,21 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.dragging = false;
     this.pinch = null;
     this.keys = {};
-    var self = this;
 
-    canvas.addEventListener('pointerdown', function (e) { self.down(e); });
-    canvas.addEventListener('pointermove', function (e) { self.move(e); });
-    canvas.addEventListener('pointerup', function (e) { self.up(e); });
-    canvas.addEventListener('pointercancel', function (e) { self.cancelPtr(e); });
-    canvas.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') game.hover(-1, -1); });
-    canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-    canvas.addEventListener('wheel', function (e) {
+    canvas.addEventListener('pointerdown', (e) => { this.down(e); });
+    canvas.addEventListener('pointermove', (e) => { this.move(e); });
+    canvas.addEventListener('pointerup', (e) => { this.up(e); });
+    canvas.addEventListener('pointercancel', (e) => { this.cancelPtr(e); });
+    canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') game.hover(-1, -1); });
+    canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+    canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
       game.zoomAt(e.offsetX, e.offsetY, Math.exp(-dy * 0.0015));
     }, { passive: false });
-    window.addEventListener('keydown', function (e) { self.keydown(e); });
-    window.addEventListener('keyup', function (e) { self.keys[e.code] = false; });
-    window.addEventListener('blur', function () { self.keys = {}; });
+    window.addEventListener('keydown', (e) => { this.keydown(e); });
+    window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
+    window.addEventListener('blur', () => { this.keys = {}; });
   }
   TD.Input = Input;
   var I = Input.prototype;
@@ -42,7 +41,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   I.down = function (e) {
     this.game.unlockAudio();
     var p = pos(e, this.canvas);
-    try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    try { this.canvas.setPointerCapture(e.pointerId); } catch (_err) { /* ignore */ }
     this.pointers.set(e.pointerId, { x: p.x, y: p.y, sx: p.x, sy: p.y, type: e.pointerType, button: e.button, t: performance.now() });
     if (this.pointers.size === 2) {
       var pts = Array.from(this.pointers.values());

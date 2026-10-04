@@ -1,6 +1,6 @@
 /* Bastion — static game data: towers, enemies, maps, difficulty, wave generator. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   TD.TILE = 40;
@@ -69,7 +69,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     }
   ];
   TD.TOWER_INDEX = {};
-  TD.TOWERS.forEach(function (t, i) { TD.TOWER_INDEX[t.id] = i; t.index = i; });
+  TD.TOWERS.forEach((t, i) => { TD.TOWER_INDEX[t.id] = i; t.index = i; });
 
   TD.TARGET_MODES = ['first', 'last', 'strong', 'close'];
   TD.TARGET_LABEL = { first: 'First', last: 'Last', strong: 'Strong', close: 'Close' };
@@ -95,7 +95,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       armorGrowth: 0.2, slowResist: 0.5, color: '#ff3d6e', blurb: 'Colossal armoured boss. Summons swarmlings and shrugs off slows.' }
   ];
   TD.ENEMY_INDEX = {};
-  TD.ENEMIES.forEach(function (e, i) { TD.ENEMY_INDEX[e.id] = i; e.index = i; });
+  TD.ENEMIES.forEach((e, i) => { TD.ENEMY_INDEX[e.id] = i; e.index = i; });
   var E = TD.ENEMY_INDEX;
 
   // ------------------------------------------------------------ difficulty
@@ -127,13 +127,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   // ----------------------------------------------------------- wave curves
   /** Enemy hit-point multiplier for wave w (1-based). Grows ~quadratically. */
-  TD.hpMult = function (w) {
+  TD.hpMult = (w) => {
     var x = w - 1;
     return 1 + 0.1 * x + 0.0115 * x * x;
   };
-  TD.rewardMult = function (w) { return 1 + 0.012 * (w - 1); };
-  TD.waveClearBonus = function (w) { return 20 + 3 * w; };
-  TD.earlyCallBonus = function (w) { return 8 + Math.floor(w * 1.6); };
+  TD.rewardMult = (w) => 1 + 0.012 * (w - 1);
+  TD.waveClearBonus = (w) => 20 + 3 * w;
+  TD.earlyCallBonus = (w) => 8 + Math.floor(w * 1.6);
   TD.WAVE_COUNTDOWN = 15; // seconds between waves before auto-start
 
   var UNLOCK = [
@@ -148,7 +148,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
    * { type, count, gap, delay, path (-1 = alternate), hp (extra multiplier) }.
    * Deterministic for a given (w, nPaths).
    */
-  TD.buildWave = function (w, nPaths) {
+  TD.buildWave = (w, _nPaths) => {
     var rng = new TD.RNG(9001 + w * 7919);
     var groups = [];
     var budget = 9 + 3.1 * w + 0.07 * w * w;
@@ -218,11 +218,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
   };
 
   /** Human-readable summary of a wave: [{type, count}] merged by type. */
-  TD.waveSummary = function (w, nPaths) {
+  TD.waveSummary = (w, nPaths) => {
     var groups = TD.buildWave(w, nPaths);
     var map = {};
     var out = [];
-    groups.forEach(function (g) {
+    groups.forEach((g) => {
       if (map[g.type] == null) { map[g.type] = out.length; out.push({ type: g.type, count: 0 }); }
       out[map[g.type]].count += g.count;
     });

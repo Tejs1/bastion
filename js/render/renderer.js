@@ -9,7 +9,7 @@
  * Backends: WebGL2 -> WebGL1 + ANGLE_instanced_arrays -> Canvas2D fallback.
  */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   var FLOATS = 11;          // per instance: x y w h rot u0 v0 u1 v1 rgba flash
@@ -89,14 +89,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
       var ext = gl.getExtension('ANGLE_instanced_arrays');
       if (!ext) return false;
       inst = {
-        divisor: function (i, d) { ext.vertexAttribDivisorANGLE(i, d); },
-        draw: function (m, f, c, n) { ext.drawArraysInstancedANGLE(m, f, c, n); }
+        divisor: (i, d) => { ext.vertexAttribDivisorANGLE(i, d); },
+        draw: (m, f, c, n) => { ext.drawArraysInstancedANGLE(m, f, c, n); }
       };
       this.backend = 'webgl1';
     }
     if (!inst) inst = {
-      divisor: function (i, d) { gl.vertexAttribDivisor(i, d); },
-      draw: function (m, f, c, n) { gl.drawArraysInstanced(m, f, c, n); }
+      divisor: (i, d) => { gl.vertexAttribDivisor(i, d); },
+      draw: (m, f, c, n) => { gl.drawArraysInstanced(m, f, c, n); }
     };
     this.gl = gl; this.inst = inst;
 
@@ -135,7 +135,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     gl.bufferData(gl.ARRAY_BUFFER, this.buf.byteLength, gl.DYNAMIC_DRAW);
     this.iboSize = this.buf.byteLength;
     this.loc = loc;
-    [loc.rect, loc.rot, loc.uv, loc.color, loc.flash].forEach(function (l) { gl.enableVertexAttribArray(l); inst.divisor(l, 1); });
+    [loc.rect, loc.rot, loc.uv, loc.color, loc.flash].forEach((l) => { gl.enableVertexAttribArray(l); inst.divisor(l, 1); });
     this.bindInstances(this.ibo);
     // tiny separate buffer for the single background instance
     this.bgbo = gl.createBuffer();
@@ -149,9 +149,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     gl.disable(gl.DEPTH_TEST);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     this.textures = {};
-    var self = this;
-    this.canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); self.lost = true; });
-    this.canvas.addEventListener('webglcontextrestored', function () { self.lost = false; if (self.onRestore) self.onRestore(); });
+    this.canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.lost = true; });
+    this.canvas.addEventListener('webglcontextrestored', () => { this.lost = false; if (this.onRestore) this.onRestore(); });
     return true;
   };
 
@@ -269,7 +268,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var c = this.ctx, dpr = this.dpr;
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
-    c.fillStyle = 'rgb(' + (clear[0] * 255 | 0) + ',' + (clear[1] * 255 | 0) + ',' + (clear[2] * 255 | 0) + ')';
+    c.fillStyle = `rgb(${clear[0] * 255 | 0},${clear[1] * 255 | 0},${clear[2] * 255 | 0})`;
     c.fillRect(0, 0, this.canvas.width, this.canvas.height);
     var z = cam.zoom * dpr, W2 = this.cssW * dpr / 2, H2 = this.cssH * dpr / 2;
     // camera matrix [A C E; B D F] (device px)
@@ -294,13 +293,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
       if (d[i + 10] < -0.5) {   // health bar
         c.globalAlpha = 1;
         c.fillStyle = 'rgba(5,8,13,0.85)'; c.fillRect(-w / 2, -h / 2, w, h);
-        c.fillStyle = 'rgb(' + (col & 255) + ',' + (col >> 8 & 255) + ',' + (col >> 16 & 255) + ')';
+        c.fillStyle = `rgb(${col & 255},${col >> 8 & 255},${col >> 16 & 255})`;
         c.fillRect(-w / 2, -h / 2, w * (-d[i + 10] - 1), h);
         continue;
       }
       if (sw < 8 && sh < 8) {   // solid quads (bars, rects): honour the tint colour
         var ia = add ? 1 : 255 / a;
-        c.fillStyle = 'rgb(' + ((col & 255) * ia | 0) + ',' + ((col >> 8 & 255) * ia | 0) + ',' + ((col >> 16 & 255) * ia | 0) + ')';
+        c.fillStyle = `rgb(${(col & 255) * ia | 0},${(col >> 8 & 255) * ia | 0},${(col >> 16 & 255) * ia | 0})`;
         c.fillRect(-w / 2, -h / 2, w, h);
       } else c.drawImage(img, su, sv, sw, sh, -w / 2, -h / 2, w, h);
     }

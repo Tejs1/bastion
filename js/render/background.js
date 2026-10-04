@@ -1,6 +1,6 @@
 /* Bastion — static map background, rasterised once per map into a texture. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   function strokePath(c, poly) {
@@ -10,7 +10,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   }
 
   /** Draw the map at `scale` px per world unit. Returns a canvas. */
-  TD.renderBackground = function (map, scale) {
+  TD.renderBackground = (map, scale) => {
     var W = map.width, H = map.height, T = map.tile;
     var cv = document.createElement('canvas');
     cv.width = Math.round(W * scale); cv.height = Math.round(H * scale);
@@ -27,7 +27,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       var x = rng.next() * W, y = rng.next() * H, r = 20 + rng.next() * 70;
       var rg = c.createRadialGradient(x, y, 0, x, y, r);
       var tone = rng.next() < 0.5 ? '40,70,80' : '30,45,70';
-      rg.addColorStop(0, 'rgba(' + tone + ',0.10)'); rg.addColorStop(1, 'rgba(' + tone + ',0)');
+      rg.addColorStop(0, `rgba(${tone},0.10)`); rg.addColorStop(1, `rgba(${tone},0)`);
       c.fillStyle = rg; c.fillRect(x - r, y - r, r * 2, r * 2);
     }
     // speckle
@@ -47,22 +47,22 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
     // paths: outer glow, bed, inner lane, centre dashes
     c.lineJoin = 'round'; c.lineCap = 'round';
-    map.paths.forEach(function (p) {
+    map.paths.forEach((p) => {
       strokePath(c, p.poly); c.lineWidth = 46; c.strokeStyle = 'rgba(79,209,255,0.05)'; c.stroke();
     });
-    map.paths.forEach(function (p) {
+    map.paths.forEach((p) => {
       strokePath(c, p.poly); c.lineWidth = 38; c.strokeStyle = '#0a0f17'; c.stroke();
     });
-    map.paths.forEach(function (p) {
+    map.paths.forEach((p) => {
       strokePath(c, p.poly); c.lineWidth = 34; c.strokeStyle = '#1a2433'; c.stroke();
     });
-    map.paths.forEach(function (p) {
+    map.paths.forEach((p) => {
       strokePath(c, p.poly); c.lineWidth = 30; c.strokeStyle = '#1f2b3d'; c.stroke();
       strokePath(c, p.poly); c.lineWidth = 1; c.setLineDash([6, 10]); c.strokeStyle = 'rgba(160,200,255,0.12)'; c.stroke();
       c.setLineDash([]);
     });
     // direction chevrons
-    map.paths.forEach(function (p) {
+    map.paths.forEach((p) => {
       for (var d = 60; d < p.len - 40; d += 120) {
         var k = (d * p.inv) | 0;
         c.save(); c.translate(p.x[k], p.y[k]); c.rotate(p.ang[k]);
@@ -72,7 +72,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       }
     });
     // path edge highlights
-    map.paths.forEach(function (p) {
+    map.paths.forEach((p) => {
       strokePath(c, p.poly); c.lineWidth = 34; c.strokeStyle = 'rgba(0,0,0,0)'; c.stroke();
     });
 
@@ -123,13 +123,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
     c.save(); c.translate(x, y);
     var hue = rng.next() < 0.5 ? '120,220,255' : '190,140,255';
     var glow = c.createRadialGradient(0, 0, 0, 0, 0, 20);
-    glow.addColorStop(0, 'rgba(' + hue + ',0.25)'); glow.addColorStop(1, 'rgba(' + hue + ',0)');
+    glow.addColorStop(0, `rgba(${hue},0.25)`); glow.addColorStop(1, `rgba(${hue},0)`);
     c.fillStyle = glow; c.fillRect(-20, -20, 40, 40);
     for (var i = 0; i < 3; i++) {
       c.save(); c.rotate(-0.5 + i * 0.5 + rng.range(-0.15, 0.15));
       var h = 9 + rng.next() * 7;
       c.beginPath(); c.moveTo(0, 3); c.lineTo(-3, -h * 0.5); c.lineTo(0, -h); c.lineTo(3, -h * 0.5); c.closePath();
-      c.fillStyle = 'rgba(' + hue + ',0.75)'; c.fill();
+      c.fillStyle = `rgba(${hue},0.75)`; c.fill();
       c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 0.8; c.stroke();
       c.restore();
     }

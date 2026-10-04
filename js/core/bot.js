@@ -2,7 +2,7 @@
  * stress/long-run harnesses and headless balance testing. Purely uses the
  * public command API of TD.Sim (placeTower / upgradeTower / callWave). */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   function Bot(sim, opts) {
@@ -21,7 +21,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   Bot.prototype.rankSpots = function () {
     var m = this.sim.map, out = [];
     var samples = [];
-    m.paths.forEach(function (p, pi) {
+    m.paths.forEach((p, pi) => {
       for (var k = 0; k < p.n; k += 5) samples.push(p.x[k], p.y[k], pi === 0 ? 1 : 1);
     });
     for (var r = 0; r < m.rows; r++) for (var c = 0; c < m.cols; c++) {

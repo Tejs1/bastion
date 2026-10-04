@@ -5,11 +5,12 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 const require = createRequire(import.meta.url);
 let pw;
 try { pw = require('playwright'); } catch { pw = require('/opt/npm-tools/node_modules/playwright'); }
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const arg = (k, d) => { const a = process.argv.find(x => x.startsWith('--' + k)); return a ? (a.split('=')[1] ?? true) : d; };
+const arg = (k, d) => { const a = process.argv.find(x => x.startsWith(`--${k}`)); return a ? (a.split('=')[1] ?? true) : d; };
 const [w, h] = String(arg('size', '1920x1080')).split('x').map(Number);
 const dpr = +arg('dpr', 1);
 // --gpu       : use the machine's real GPU (run headed or on a GPU host)
@@ -30,8 +31,8 @@ page.on('pageerror', e => errors.push(e.message));
 // --lockstep: exactly one 60 Hz sim tick per rendered frame, so per-frame CPU
 //             cost is measured as it would be on a 60 Hz display even when the
 //             (software) GPU makes frames slow.  --nodrs: fixed resolution.
-const q = 'stress' + (arg('canvas2d', false) ? '&canvas2d' : '') + (arg('lockstep', false) ? '&lockstep' : '') + (arg('nodrs', false) ? '&nodrs' : '');
-await page.goto('file://' + path.join(root, 'index.html') + '?' + q);
+const q = `stress${arg('canvas2d', false) ? '&canvas2d' : ''}${arg('lockstep', false) ? '&lockstep' : ''}${arg('nodrs', false) ? '&nodrs' : ''}`;
+await page.goto(`file://${path.join(root, 'index.html')}?${q}`);
 if (arg('cpu', false)) {
   // Pure CPU frame budget in the real browser engine: per 60 Hz frame we run
   // one sim tick + fx update + full scene build (instance buffer fill), with

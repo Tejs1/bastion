@@ -3,7 +3,7 @@
  * overlapping the camera view are visited: off-screen enemies cost nothing to
  * render. Everything else is bounds-checked before being queued. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   var pm = TD.pm, ad = TD.ad;
@@ -14,17 +14,17 @@ var TD = globalThis.TD || (globalThis.TD = {});
   function Scene(renderer, atlas) {
     this.r = renderer;
     var F = this.F = atlas.frames;
-    this.eF = TD.ENEMIES.map(function (e) { return F['e_' + e.id]; });
-    this.tB = TD.TOWERS.map(function (t) { return F['tb_' + t.id]; });
-    this.tT = TD.TOWERS.map(function (t) { return [0, 1, 2, 3].map(function (l) { return F['tt_' + t.id + l]; }); });
-    this.pF = TD.FX_FRAMES.map(function (n) { return F[n]; });
+    this.eF = TD.ENEMIES.map((e) => F[`e_${e.id}`]);
+    this.tB = TD.TOWERS.map((t) => F[`tb_${t.id}`]);
+    this.tT = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tt_${t.id}${l}`]));
+    this.pF = TD.FX_FRAMES.map((n) => F[n]);
     this.chF = {};
-    for (var d = 0; d <= 9; d++) this.chF[d] = F['ch_' + d];
+    for (var d = 0; d <= 9; d++) this.chF[d] = F[`ch_${d}`];
     this.chPlus = F['ch_+'];
     this.vis = new Int32Array(8192);
     this.nVis = 0;
     this.stats = { visibleEnemies: 0, instances: 0 };
-    this.towerCol = TD.TOWERS.map(function (t) { var n = parseInt(t.color.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; });
+    this.towerCol = TD.TOWERS.map((t) => { var n = parseInt(t.color.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; });
     // pre-baked colours
     this.C = {
       shadow: pm(255, 255, 255, 150),
@@ -51,7 +51,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var crot = cam.rot ? -Math.PI / 2 : 0;   // counter-rotation for screen-aligned elements
     r.begin();
     var x0 = view.x0, y0 = view.y0, x1 = view.x1, y1 = view.y1;
-    var i, k, a, f;
+    var i, k, a, _f;
 
     // ---- scorch decals
     for (i = 0; i < fx.dLife.length; i++) {
@@ -243,7 +243,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       var tcl = TD.rgba(255 * tl, 214 * tl, 90 * tl, 255 * tl);
       r.push(this.chPlus, tx, tyy, 9, 14, crot, tcl);
       for (k = digits - 1; k >= 0; k--) {
-        var dg = Math.floor(v / Math.pow(10, k)) % 10;
+        var dg = Math.floor(v / 10 ** k) % 10;
         tx += ax * 8; tyy += ay * 8;
         r.push(this.chF[dg], tx, tyy, 9, 14, crot, tcl);
       }

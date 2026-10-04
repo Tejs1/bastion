@@ -10,7 +10,7 @@
  * through the optional `fx` hook object.
  */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   var DT = TD.DT;
@@ -22,9 +22,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
   TD.PROJ_BULLET = K_BULLET; TD.PROJ_SHELL = K_SHELL;
 
   var NOFX = {
-    shoot: function () {}, hit: function () {}, explosion: function () {}, death: function () {},
-    arc: function () {}, beam: function () {}, pulse: function () {}, heal: function () {},
-    leak: function () {}, popup: function () {}, sound: function () {}, summon: function () {}
+    shoot: () => {}, hit: () => {}, explosion: () => {}, death: () => {},
+    arc: () => {}, beam: () => {}, pulse: () => {}, heal: () => {},
+    leak: () => {}, popup: () => {}, sound: () => {}, summon: () => {}
   };
   TD.NOFX = NOFX;
 
@@ -138,9 +138,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     return m.grid[i] === TD.TILE_FREE && this.towerAt[i] < 0;
   };
 
-  S.towerStats = function (t, level) {
-    return t.def.levels[level == null ? t.level : level];
-  };
+  S.towerStats = (t, level) => t.def.levels[level == null ? t.level : level];
 
   /** Rebuild the uniform grid with a counting sort: O(n), cache friendly,
    *  allocation-free. Each cell's enemies end up contiguous in gItems. */
@@ -390,7 +388,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     return t;
   };
 
-  S.upgradeCost = function (t) {
+  S.upgradeCost = (t) => {
     var nx = t.def.levels[t.level + 1];
     return nx ? nx.up : 0;
   };
@@ -541,7 +539,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.fx.sound('zap');
   };
 
-  S.fireBeam = function (t, L, tg) {
+  S.fireBeam = function (t, L, _tg) {
     var ang = t.angle, ca = Math.cos(ang), sa = Math.sin(ang);
     var len = L.range + 30;
     var x0 = t.x + ca * 14, y0 = t.y + sa * 14;

@@ -4,7 +4,7 @@
  * never grow memory or stall the frame. A per-frame emission budget further
  * thins particle bursts when thousands of events happen at once. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   /** Premultiplied normal-blend colour. */
@@ -17,7 +17,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   var PCAP = 6144, BCAP = 640, RCAP = 320, DCAP = 96, TCAP = 96;
   var FRAMES = ['glow', 'soft', 'dot', 'shard', 'flake', 'smoke', 'plus', 'streak'];
-  var F_GLOW = 0, F_SOFT = 1, F_DOT = 2, F_SHARD = 3, F_FLAKE = 4, F_SMOKE = 5, F_PLUS = 6, F_STREAK = 7;
+  var F_GLOW = 0, _F_SOFT = 1, F_DOT = 2, F_SHARD = 3, F_FLAKE = 4, F_SMOKE = 5, F_PLUS = 6, _F_STREAK = 7;
 
   function Fx(audio) {
     this.audio = audio || null;
@@ -52,8 +52,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.baseFlash = 0;
     this.time = 0;
     this.enabled = true;
-    this.enemyRGB = TD.ENEMIES.map(function (e) { return hexRGB(e.color); });
-    this.towerRGB = TD.TOWERS.map(function (t) { return hexRGB(t.color); });
+    this.enemyRGB = TD.ENEMIES.map((e) => hexRGB(e.color));
+    this.towerRGB = TD.TOWERS.map((t) => hexRGB(t.color));
     this.FRAMES = FRAMES;
   }
   TD.Fx = Fx;
@@ -208,7 +208,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   P.update = function (dt, realDt) {
     this.time += dt;
     this.budget = 900;
-    this.shake *= Math.pow(0.0015, realDt);
+    this.shake *= 0.0015 ** realDt;
     if (this.shake < 0.05) this.shake = 0;
     this.baseFlash = Math.max(0, this.baseFlash - realDt * 2.5);
     if (dt <= 0) return;

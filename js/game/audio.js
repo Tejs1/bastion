@@ -2,7 +2,7 @@
  * Each sound has a minimum re-trigger interval and there is a global voice
  * cap, so a 5,000-enemy firefight can't flood the audio graph. */
 var TD = globalThis.TD || (globalThis.TD = {});
-(function () {
+(() => {
   'use strict';
 
   var DEFS = {
@@ -43,7 +43,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    try { this.ctx = new AC(); } catch (e) { return; }
+    try { this.ctx = new AC(); } catch (_e) { return; }
     this.master = this.ctx.createGain();
     this.master.gain.value = this.muted ? 0 : this.volume;
     var comp = this.ctx.createDynamicsCompressor();
@@ -69,7 +69,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (this.last[name] && now - this.last[name] < def.gap) return;
     if (this.voices >= this.maxVoices) return;
     this.last[name] = now;
-    this['s_' + name](c, now, def.vol);
+    this[`s_${name}`](c, now, def.vol);
   };
 
   // --------------------------------------------------------------- voices
@@ -79,9 +79,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     g.gain.exponentialRampToValueAtTime(vol, t + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
     node.connect(g); g.connect(this.master);
-    var self = this;
     this.voices++;
-    setTimeout(function () { self.voices--; try { g.disconnect(); } catch (e) { /* noop */ } }, (attack + decay) * 1000 + 50);
+    setTimeout(() => { this.voices--; try { g.disconnect(); } catch (_e) { /* noop */ } }, (attack + decay) * 1000 + 50);
     return g;
   };
   A.osc = function (type, f0, f1, t, dur) {
@@ -102,30 +101,30 @@ var TD = globalThis.TD || (globalThis.TD = {});
     return f;
   };
 
-  A.s_blaster = function (c, t, v) { this.env(this.osc('square', 1400 + Math.random() * 200, 500, t, 0.07), t, v, 0.003, 0.07); };
-  A.s_cannon = function (c, t, v) {
+  A.s_blaster = function (_c, t, v) { this.env(this.osc('square', 1400 + Math.random() * 200, 500, t, 0.07), t, v, 0.003, 0.07); };
+  A.s_cannon = function (_c, t, v) {
     this.env(this.osc('sine', 160, 50, t, 0.25), t, v, 0.005, 0.25);
     this.env(this.noiseSrc(t, 0.15, 'lowpass', 900), t, v * 0.6, 0.003, 0.12);
   };
-  A.s_boom = function (c, t, v) {
+  A.s_boom = function (_c, t, v) {
     this.env(this.noiseSrc(t, 0.4, 'lowpass', 600 + Math.random() * 200), t, v, 0.005, 0.35);
     this.env(this.osc('sine', 90, 40, t, 0.3), t, v * 0.8, 0.005, 0.3);
   };
-  A.s_zap = function (c, t, v) {
+  A.s_zap = function (_c, t, v) {
     this.env(this.osc('sawtooth', 900 + Math.random() * 400, 1800, t, 0.1), t, v * 0.6, 0.002, 0.1);
     this.env(this.noiseSrc(t, 0.12, 'bandpass', 3000, 4), t, v, 0.002, 0.12);
   };
-  A.s_rail = function (c, t, v) {
+  A.s_rail = function (_c, t, v) {
     this.env(this.osc('sawtooth', 2200, 120, t, 0.3), t, v * 0.7, 0.002, 0.3);
     this.env(this.noiseSrc(t, 0.25, 'highpass', 2500), t, v * 0.5, 0.002, 0.2);
   };
-  A.s_frost = function (c, t, v) { this.env(this.noiseSrc(t, 0.35, 'bandpass', 5200, 6), t, v, 0.02, 0.3); };
-  A.s_pop = function (c, t, v) { this.env(this.osc('triangle', 520 + Math.random() * 300, 120, t, 0.08), t, v, 0.002, 0.08); };
-  A.s_bossdie = function (c, t, v) {
+  A.s_frost = function (_c, t, v) { this.env(this.noiseSrc(t, 0.35, 'bandpass', 5200, 6), t, v, 0.02, 0.3); };
+  A.s_pop = function (_c, t, v) { this.env(this.osc('triangle', 520 + Math.random() * 300, 120, t, 0.08), t, v, 0.002, 0.08); };
+  A.s_bossdie = function (_c, t, v) {
     this.env(this.noiseSrc(t, 1.4, 'lowpass', 400), t, v, 0.01, 1.3);
     this.env(this.osc('sine', 120, 30, t, 1.2), t, v, 0.01, 1.2);
   };
-  A.s_leak = function (c, t, v) {
+  A.s_leak = function (_c, t, v) {
     this.env(this.osc('square', 220, 110, t, 0.3), t, v * 0.6, 0.005, 0.3);
     this.env(this.osc('square', 233, 116, t, 0.3), t, v * 0.6, 0.005, 0.3);
   };
@@ -134,14 +133,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
       this.env(this.osc(type, notes[i], notes[i], t + i * step, dur), t + i * step, v, 0.01, dur);
     }
   };
-  A.s_build = function (c, t, v) { this.chord(t, [523, 784], 'triangle', v, 0.05, 0.12); };
-  A.s_upgrade = function (c, t, v) { this.chord(t, [523, 659, 784, 1046], 'triangle', v, 0.05, 0.14); };
-  A.s_sell = function (c, t, v) { this.chord(t, [784, 523], 'triangle', v, 0.06, 0.12); };
-  A.s_click = function (c, t, v) { this.env(this.osc('sine', 900, 700, t, 0.04), t, v, 0.002, 0.04); };
-  A.s_error = function (c, t, v) { this.env(this.osc('square', 180, 160, t, 0.15), t, v * 0.5, 0.005, 0.15); };
-  A.s_wave = function (c, t, v) { this.chord(t, [196, 294, 392], 'sawtooth', v * 0.4, 0.12, 0.45); };
-  A.s_boss = function (c, t, v) { this.chord(t, [98, 104, 98, 92], 'sawtooth', v * 0.5, 0.22, 0.5); };
-  A.s_clear = function (c, t, v) { this.chord(t, [659, 880], 'sine', v, 0.08, 0.25); };
-  A.s_victory = function (c, t, v) { this.chord(t, [523, 659, 784, 1046, 1318], 'triangle', v, 0.13, 0.6); };
-  A.s_defeat = function (c, t, v) { this.chord(t, [392, 330, 262, 196], 'sawtooth', v * 0.5, 0.22, 0.6); };
+  A.s_build = function (_c, t, v) { this.chord(t, [523, 784], 'triangle', v, 0.05, 0.12); };
+  A.s_upgrade = function (_c, t, v) { this.chord(t, [523, 659, 784, 1046], 'triangle', v, 0.05, 0.14); };
+  A.s_sell = function (_c, t, v) { this.chord(t, [784, 523], 'triangle', v, 0.06, 0.12); };
+  A.s_click = function (_c, t, v) { this.env(this.osc('sine', 900, 700, t, 0.04), t, v, 0.002, 0.04); };
+  A.s_error = function (_c, t, v) { this.env(this.osc('square', 180, 160, t, 0.15), t, v * 0.5, 0.005, 0.15); };
+  A.s_wave = function (_c, t, v) { this.chord(t, [196, 294, 392], 'sawtooth', v * 0.4, 0.12, 0.45); };
+  A.s_boss = function (_c, t, v) { this.chord(t, [98, 104, 98, 92], 'sawtooth', v * 0.5, 0.22, 0.5); };
+  A.s_clear = function (_c, t, v) { this.chord(t, [659, 880], 'sine', v, 0.08, 0.25); };
+  A.s_victory = function (_c, t, v) { this.chord(t, [523, 659, 784, 1046, 1318], 'triangle', v, 0.13, 0.6); };
+  A.s_defeat = function (_c, t, v) { this.chord(t, [392, 330, 262, 196], 'sawtooth', v * 0.5, 0.22, 0.6); };
 })();

@@ -3,20 +3,21 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 const require = createRequire(import.meta.url);
 let pw;
 try { pw = require('playwright'); } catch { pw = require('/opt/npm-tools/node_modules/playwright'); }
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = process.argv[2] || path.join(root, 'shots');
-const url = 'file://' + path.join(root, 'index.html');
+const url = `file://${path.join(root, 'index.html')}`;
 const vw = +(process.env.VW || 1440), vh = +(process.env.VH || 900);
 
 const browser = await pw.chromium.launch();
 const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: +(process.env.DPR || 1) });
 const errors = [];
-page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
+page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`${m.type()}: ${m.text()}`); });
 await page.goto(url);
 await page.waitForTimeout(1500);
 await page.screenshot({ path: path.join(out, 'menu.png') });
