@@ -1,0 +1,21 @@
+{
+  "name": "bastion-td",
+  "version": "1.0.0",
+  "description": "Bastion: a 50-wave browser tower defense with a WebGL instanced renderer and a deterministic fixed-step simulation.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -p 8080 .",
+    "build": "node tools/build.mjs && node tools/build.mjs --fragment",
+    "test": "node tools/headless.mjs determinism && node --expose-gc tools/headless.mjs memory && node tools/headless.mjs stress",
+    "balance": "node tools/headless.mjs balance",
+    "waves": "node tools/headless.mjs waves",
+    "bench": "node tools/bench.mjs",
+    "bench:cpu": "node tools/bench.mjs --cpu --nodrs",
+    "bench:gpu": "node tools/bench.mjs --gpu --headed",
+    "longrun": "node tools/longrun.mjs"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

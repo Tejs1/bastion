@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f17">
+<title>Bastion</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="view" aria-label="Game field"></canvas>
+
+  <!-- ===== in-game HUD ===== -->
+  <div id="hud" class="hidden">
+    <header class="topbar">
+      <div class="stats">
+        <div class="stat" id="stLives" title="Base integrity"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.3 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.7 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"/></svg><b id="hLives">20</b></div>
+        <div class="stat gold" id="stGold" title="Credits"><svg viewBox="0 0 24 24"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg><b id="hGold">0</b></div>
+        <div class="stat wave" title="Wave"><span class="lbl">Wave</span><b id="hWave">0</b><span class="of">/50</span></div>
+        <div class="stat score" title="Score"><span class="lbl">Score</span><b id="hScore">0</b></div>
+      </div>
+      <div class="controls">
+        <div class="seg" id="speedSeg" role="group" aria-label="Game speed">
+          <button data-speed="1" class="on">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button>
+        </div>
+        <button class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+        <button class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+    </header>
+
+    <div id="banner" aria-live="polite"><div class="b1"></div><div class="b2"></div></div>
+    <div id="toast" aria-live="polite"></div>
+    <div id="mode-tag" class="hidden"></div>
+
+    <footer class="dock">
+      <div id="palette" class="panel"></div>
+      <div id="towerPanel" class="panel hidden"></div>
+      <div id="waveBox" class="panel">
+        <div class="wb-head"><span id="wbTitle">Wave 1</span><span id="wbSub"></span></div>
+        <div id="wbList" class="wb-list"></div>
+        <button id="bNext" class="primary"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><i id="bNextBar"></i></button>
+      </div>
+    </footer>
+
+    <div id="perf" class="hidden"></div>
+  </div>
+
+  <!-- ===== screens ===== -->
+  <section id="scrMenu" class="screen">
+    <div class="menu-card">
+      <div class="brand">
+        <div class="logo"><svg viewBox="0 0 64 64"><path d="M32 4l24 14v28L32 60 8 46V18z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M32 18l12 7v14l-12 7-12-7V25z" fill="currentColor"/></svg></div>
+        <div><h1>BASTION</h1><p class="tag">Hold the line for fifty waves.</p></div>
+      </div>
+      <h2>Battlefield</h2>
+      <div id="mapList" class="map-list"></div>
+      <h2>Difficulty</h2>
+      <div class="seg wide" id="diffSeg"></div>
+      <button id="bPlay" class="primary big">Deploy</button>
+      <div class="menu-row">
+        <button id="bHelp" class="ghost">How to play</button>
+        <button id="bDemo" class="ghost">Watch AI demo</button>
+        <button id="bStress" class="ghost">Stress test</button>
+      </div>
+      <p class="fine">Mouse, touch or keyboard · Press <kbd>?</kbd> in game for shortcuts</p>
+    </div>
+  </section>
+
+  <section id="scrPause" class="screen hidden">
+    <div class="menu-card narrow">
+      <h1 class="small">Paused</h1>
+      <button id="bResume" class="primary big">Resume</button>
+      <button id="bRestart" class="ghost">Restart battle</button>
+      <label class="check"><input type="checkbox" id="optPerf"> Show performance overlay</label>
+      <label class="check"><input type="checkbox" id="optAuto" checked> Auto-start next wave</label>
+      <button id="bHelp2" class="ghost">How to play</button>
+      <button id="bQuit" class="ghost">Quit to menu</button>
+    </div>
+  </section>
+
+  <section id="scrEnd" class="screen hidden">
+    <div class="menu-card narrow">
+      <h1 id="endTitle" class="small">Victory</h1>
+      <p id="endSub" class="tag"></p>
+      <div id="endStats" class="end-stats"></div>
+      <button id="bAgain" class="primary big">Play again</button>
+      <button id="bEndMenu" class="ghost">Main menu</button>
+    </div>
+  </section>
+
+  <section id="scrHelp" class="screen hidden">
+    <div class="menu-card help">
+      <h1 class="small">Field manual</h1>
+      <div class="help-cols">
+        <div>
+          <h2>Basics</h2>
+          <ul>
+            <li>Enemies march from the red portals to your core. Each one that gets through costs lives.</li>
+            <li>Pick a tower from the dock, then click/tap an empty tile to build. On touch, tap once to preview, again to confirm.</li>
+            <li>Click a tower to upgrade it, change its targeting, or sell it (70% refund, 100% within 3s of building).</li>
+            <li>Call the next wave early for bonus credits.</li>
+          </ul>
+          <h2>Controls</h2>
+          <table class="keys">
+            <tr><td><kbd>1</kbd>–<kbd>5</kbd></td><td>Select tower</td></tr>
+            <tr><td><kbd>U</kbd> / <kbd>X</kbd></td><td>Upgrade / sell selected</td></tr>
+            <tr><td><kbd>T</kbd></td><td>Cycle targeting</td></tr>
+            <tr><td><kbd>N</kbd> / <kbd>Enter</kbd></td><td>Next wave</td></tr>
+            <tr><td><kbd>Space</kbd> / <kbd>P</kbd></td><td>Pause</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Cycle speed 1×/2×/4×</td></tr>
+            <tr><td>Wheel · pinch</td><td>Zoom</td></tr>
+            <tr><td>Drag · <kbd>WASD</kbd></td><td>Pan · <kbd>0</kbd> resets view</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Cancel / deselect / pause</td></tr>
+            <tr><td><kbd>`</kbd></td><td>Performance overlay</td></tr>
+          </table>
+        </div>
+        <div>
+          <h2>Towers</h2>
+          <div id="helpTowers" class="codex"></div>
+          <h2>Enemies</h2>
+          <div id="helpEnemies" class="codex"></div>
+        </div>
+      </div>
+      <button id="bHelpClose" class="primary">Got it</button>
+    </div>
+  </section>
+
+  <section id="scrBench" class="screen hidden">
+    <div class="menu-card narrow">
+      <h1 class="small">Stress test results</h1>
+      <div id="benchStats" class="end-stats"></div>
+      <button id="bBenchAgain" class="primary">Run again</button>
+      <button id="bBenchClose" class="ghost">Keep watching</button>
+      <button id="bBenchMenu" class="ghost">Main menu</button>
+    </div>
+  </section>
+
+  <div id="fatal" class="screen hidden"><div class="menu-card narrow"><h1 class="small">Something went wrong</h1><pre id="fatalMsg"></pre></div></div>
+</div>
+
+<script src="js/core/util.js"></script>
+<script src="js/core/data.js"></script>
+<script src="js/core/map.js"></script>
+<script src="js/core/sim.js"></script>
+<script src="js/core/bot.js"></script>
+<script src="js/core/stress.js"></script>
+<script src="js/render/atlas.js"></script>
+<script src="js/render/background.js"></script>
+<script src="js/render/renderer.js"></script>
+<script src="js/game/fx.js"></script>
+<script src="js/render/scene.js"></script>
+<script src="js/game/audio.js"></script>
+<script src="js/game/input.js"></script>
+<script src="js/game/ui.js"></script>
+<script src="js/game/main.js"></script>
+</body>
+</html>
