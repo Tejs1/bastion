@@ -17,6 +17,7 @@ Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes 
 |---|---|---|---|---|
 | 0 | baseline | — | — | 10 |
 | 1 | Targeting: fused query and scoring, culling of grid cells outside the range circle, per-cell cached best target used as an upper bound | **−24.5%** | **−25.7%** | 10 |
+| 2 | Tesla chain: nearest-first cell walk with distance pruning | **−10.3%** vs #1 | **−11.2%** vs #1 | 10 |
 
 ## 0 · Baseline: where it breaks
 
@@ -58,3 +59,17 @@ Each tick ran 84 range queries that returned about 47 500 candidates, because 5 
 
 Node: 0.690 → 0.518 ms/tick (−25%). Chrome: ms/tick −26% at 4×, 6× and 20× CPU.
 At 4× CPU and 8× speed the achieved speed rose from 5.13× to 7.02×. At 6× CPU and 4× speed, FPS went from 15.8 to 31.6.
+
+## 2 · Tesla chain nearest-neighbour search
+
+After step 1, `fireChain` became the largest user of `queryCircle`.
+Each tick it ran 18.7 queries over 6 655 candidates just to find one nearest enemy per jump.
+`nearestUnhit` replaces those queries:
+- It visits the current enemy's own grid cell first, then the other cells.
+- It skips any cell whose nearest point is farther than the best distance found so far.
+- Ties go to the lower grid item index. That index is the order a row-major scan meets the items, so the result is identical to the old linear scan.
+
+Node: 0.518 → 0.434 ms/tick (−16%). In Chrome, sim cost fell 9–13% in every cell.
+At 6× CPU and 4× speed, FPS went from 31.6 to 49.0, and the frame CPU there fell 37%.
+
+I tried using the same routine for findTarget's *close* mode. It gave no measurable gain, so I dropped it.

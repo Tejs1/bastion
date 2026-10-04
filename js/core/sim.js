@@ -598,18 +598,49 @@ var TD = globalThis.TD;
       dmg *= 0.88;
       px = cx; py = cy;
       // nearest un-hit enemy within jump range
-      const n = this.queryCircle(cx, cy, jump);
-      let buf = this.qBuf, best = -1, bd = Infinity;
-      for (let i = 0; i < n; i++) {
-        let s = buf[i], seen = false;
-        for (let h = 0; h < nh; h++) if (hits[h] === s) { seen = true; break; }
-        if (seen) continue;
-        const dx = this.eX[s] - cx, dy = this.eY[s] - cy, d2 = dx * dx + dy * dy;
-        if (d2 < bd) { bd = d2; best = s; }
-      }
-      cur = best;
+      cur = this.nearestUnhit(cx, cy, jump, hits, nh);
     }
     this.fx.sound('zap');
+  };
+
+  /** Nearest live enemy within r of (x,y) that is not in hits[0..nh).
+   *  Visits the centre cell first and skips cells that cannot hold anything
+   *  closer than the best so far. Ties go to the lower grid item index, which
+   *  is the order a row-major scan would meet them, so the pick is identical. */
+  S.nearestUnhit = function (x, y, r, hits, nh) {
+    var gc = this.gCols, gr = this.gRows;
+    var c0 = ((x - r) / CELL) | 0, c1 = ((x + r) / CELL) | 0;
+    var r0 = ((y - r) / CELL) | 0, r1 = ((y + r) / CELL) | 0;
+    if (c0 < 0) c0 = 0; if (r0 < 0) r0 = 0;
+    if (c1 >= gc) c1 = gc - 1; if (r1 >= gr) r1 = gr - 1;
+    var mx = (x / CELL) | 0, my = (y / CELL) | 0;
+    if (mx < c0) mx = c0; else if (mx > c1) mx = c1;
+    if (my < r0) my = r0; else if (my > r1) my = r1;
+    var start = this.gStart, items = this.gItems, ex = this.eX, ey = this.eY, alive = this.eAlive;
+    var rr = r * r, best = -1, bd = Infinity, bk = 0;
+    for (let pass = 0; pass < 2; pass++) {
+      for (let cy = r0; cy <= r1; cy++) {
+        const ny = y < cy * CELL ? cy * CELL - y : y > (cy + 1) * CELL ? y - (cy + 1) * CELL : 0;
+        for (let cx = c0; cx <= c1; cx++) {
+          if ((cx === mx && cy === my) !== (pass === 0)) continue;
+          const nx = x < cx * CELL ? cx * CELL - x : x > (cx + 1) * CELL ? x - (cx + 1) * CELL : 0;
+          const cm = nx * nx + ny * ny;
+          if (cm > rr || cm > bd) continue;
+          const c = cy * gc + cx;
+          for (let k = start[c], e = start[c + 1]; k < e; k++) {
+            const s = items[k];
+            if (!alive[s]) continue;
+            const dx = ex[s] - x, dy = ey[s] - y, d2 = dx * dx + dy * dy;
+            if (d2 > rr || d2 > bd || (d2 === bd && k > bk)) continue;
+            let seen = false;
+            for (let h = 0; h < nh; h++) if (hits[h] === s) { seen = true; break; }
+            if (seen) continue;
+            best = s; bd = d2; bk = k;
+          }
+        }
+      }
+    }
+    return best;
   };
 
   S.fireBeam = function (t, L, _tg) {
