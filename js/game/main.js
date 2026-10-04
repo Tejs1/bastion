@@ -84,7 +84,10 @@ var TD = globalThis.TD;
     this.newGame(0, 'normal', 'backdrop');
     this.ui.enterMenu();
 
-    if (params.has('stress')) this.newGame(0, 'normal', 'stress');
+    if (params.has('stress')) {
+      this.newGame(0, 'normal', 'stress');
+      if (params.has('speed')) this.setSpeed(+params.get('speed'));
+    }
     else if (params.has('autoplay')) {
       this.newGame(+(params.get('map') || 0), params.get('diff') || 'normal', 'demo');
       if (params.has('turbo')) { this.speed = +params.get('turbo'); this.loop.maxSteps = this.speed * 3; }
@@ -404,7 +407,8 @@ var TD = globalThis.TD;
 
   // ------------------------------------------------------------ benchmark
   G.startBench = function () {
-    this.bench = { warm: 3, dur: 20, t: 0, frames: [], cpu: [], sim: [], render: [], ticks: 0, heap0: heapMB() };
+    this.bench = { warm: +(params.get('benchwarm') || 3), dur: +(params.get('benchdur') || 20), t: 0,
+      frames: [], cpu: [], sim: [], render: [], ticks: 0, want: 0, heap0: heapMB() };
   };
 
   G.benchFrame = function (dtMs, cpuMs, simMs, renderMs, ticks) {
@@ -413,6 +417,7 @@ var TD = globalThis.TD;
     b.t += dtMs / 1000;
     if (b.t < b.warm) return;
     b.frames.push(dtMs); b.cpu.push(cpuMs); b.sim.push(simMs); b.render.push(renderMs); b.ticks += ticks;
+    if (!this.paused) b.want += Math.min(dtMs / 1000, 0.25) * this.speed / TD.DT;
     if (b.t < b.warm + b.dur) return;
     b.done = true;
     var f = b.frames.slice().sort((a, c) => a - c);
@@ -428,6 +433,8 @@ var TD = globalThis.TD;
       p50: pct(f, 0.5), p95: pct(f, 0.95), p99: pct(f, 0.99),
       cpuAvg: avg(b.cpu), cpuP95: pct(cpu, 0.95), simAvg: avg(b.sim), renderAvg: avg(b.render),
       simPerTick: avg(b.sim) * b.frames.length / Math.max(1, b.ticks), ticksPerFrame: b.ticks / b.frames.length,
+      // share of the requested game speed actually simulated (1 = keeping up)
+      speed: this.speed, simRate: b.want ? b.ticks / b.want : 1, maxFrame: f[f.length - 1],
       renderScale: this.renderScale, lockstep: this.lockstep,
       backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls`,
       heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)'
