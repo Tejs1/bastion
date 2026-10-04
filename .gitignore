@@ -2,3 +2,5 @@ node_modules/
 shots/
 .vercel/
 .DS_Store
+.vercel
+.env*
