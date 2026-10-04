@@ -45,6 +45,11 @@ var TD = globalThis.TD;
     this.drsAcc = 0; this.drsFrames = 0; this.drsCpu = 0; this.drsGood = 0;
     this.drsPrevAvg = 0; this.drsPrevScale = 1; this.drsLocked = false;
     this.lockstep = params.has('lockstep');
+    // sim time budget per frame: whatever is left of a ~13 ms frame after the
+    // (smoothed) render + UI cost, so a slow CPU keeps ~60 FPS and the game
+    // runs slower instead of the frame rate collapsing. ?nobudget disables.
+    this.simBudget = !params.has('nobudget');
+    this.renderEma = 2;
     this.view = { x0: 0, y0: 0, x1: 0, y1: 0 };
     this.bgRect = { x: 0, y: 0, w: 1, h: 1 };
     // one reusable step closure: no per-frame function allocation
@@ -460,6 +465,7 @@ var TD = globalThis.TD;
     var ticks = 0;
     var running = !this.paused && (this.mode !== 'menu');
     var tSim0 = performance.now();
+    if (this.simBudget) this.loop.budgetMs = Math.max(3, 13 - this.renderEma);
     if (running) ticks = this.loop.advance(this.lockstep ? TD.DT : dt, this.speed, this.stepFn);
     var tSim1 = performance.now();
     this.fx.update(running ? dt * this.speed : 0, dt);
@@ -488,6 +494,7 @@ var TD = globalThis.TD;
 
     // ---- UI + stats
     if (this.mode !== 'backdrop' && this.mode !== 'menu') this.ui.update(sim, this);
+    this.renderEma += (performance.now() - tSim1 - this.renderEma) * 0.1;
     var h = this.fHead;
     this.fDelta[h] = dtMs; this.fCpu[h] = tEnd - t0; this.fSim[h] = tSim1 - tSim0; this.fRender[h] = tEnd - tSim1; this.fTicks[h] = ticks;
     this.fHead = (h + 1) % this.statN; if (this.fCount < this.statN) this.fCount++;

@@ -8,13 +8,19 @@ var TD = globalThis.TD;
    *  gameplay is identical at 30, 60, 144 or 240 Hz; only interpolation
    *  (alpha) differs. Large frame gaps are clamped so a stall never causes a
    *  catch-up spiral. */
-  function FixedLoop() { this.acc = 0; this.alpha = 0; this.maxSteps = 12; this.dropped = 0; }
+  function FixedLoop() { this.acc = 0; this.alpha = 0; this.maxSteps = 12; this.dropped = 0; this.budgetMs = 0; }
+  /** budgetMs > 0 caps the wall-clock time spent stepping in one frame (at
+   *  least one tick always runs). When the CPU can't keep up, the backlog is
+   *  dropped so the game slows down instead of the frame rate collapsing. */
   FixedLoop.prototype.advance = function (frameSeconds, speed, stepFn) {
     if (frameSeconds > 0.25) frameSeconds = 0.25;
     if (frameSeconds < 0) frameSeconds = 0;
     this.acc += frameSeconds * speed;
-    var n = 0, DT = TD.DT;
-    while (this.acc >= DT && n < this.maxSteps) { stepFn(); this.acc -= DT; n++; }
+    var n = 0, DT = TD.DT, budget = this.budgetMs, t0 = budget > 0 ? performance.now() : 0;
+    while (this.acc >= DT && n < this.maxSteps) {
+      stepFn(); this.acc -= DT; n++;
+      if (budget > 0 && performance.now() - t0 > budget) break;
+    }
     if (this.acc >= DT) { this.dropped += Math.floor(this.acc / DT); this.acc = this.acc % DT; }
     this.alpha = this.acc / DT;
     return n;

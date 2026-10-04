@@ -18,6 +18,7 @@ Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes 
 | 0 | baseline | — | — | 10 |
 | 1 | Targeting: fused query and scoring, culling of grid cells outside the range circle, per-cell cached best target used as an upper bound | **−24.5%** | **−25.7%** | 10 |
 | 2 | Tesla chain: nearest-first cell walk with distance pruning | **−10.3%** vs #1 | **−11.2%** vs #1 | 10 |
+| 3 | *(branch `perf/frame-budget`)* Frame-time budget for sim catch-up | +2% (noise) | **−55.5%** vs #2 | 10 |
 
 ## 0 · Baseline: where it breaks
 
@@ -73,3 +74,39 @@ Node: 0.518 → 0.434 ms/tick (−16%). In Chrome, sim cost fell 9–13% in ever
 At 6× CPU and 4× speed, FPS went from 31.6 to 49.0, and the frame CPU there fell 37%.
 
 I tried using the same routine for findTarget's *close* mode. It gave no measurable gain, so I dropped it.
+
+### Tried and dropped (sim hot path)
+
+These changes gave less than 3% each, so I did not keep them:
+
+| Change | Result |
+|---|---|
+| Flatten the per-path sample tables | 0% |
+| Invalidate the per-cell cache only when the cached argmax itself is hit | 0% |
+| Use `nearestUnhit` for the *close* targeting mode | 0% |
+| Walk enemies in slot order instead of the dense list | −2%, and it changes gameplay hashes, because healer pulses see positions mid-update |
+
+Exact-equivalence work on the sim has plateaued at about −35% versus baseline.
+
+## 3 · Frame-time budget for sim catch-up (`perf/frame-budget`)
+
+At high game speed, `FixedLoop` ran up to `speed × 3` ticks in one frame (36 at 12×).
+On a slow CPU each frame then needed more ticks, which made frames slower still, and FPS collapsed:
+- 4× CPU at 12× speed: 13.8 FPS
+- 20× CPU at 12× speed: 2.6 FPS
+
+`FixedLoop.budgetMs` now stops stepping once a frame's sim time passes the budget. At least one tick always runs, and the leftover backlog is dropped.
+`main.js` sets the budget to `max(3, 13 ms − smoothed render+UI cost)`, so the whole frame fits in a 60 Hz vsync slot. `?nobudget` restores the old behaviour.
+
+| Cell | FPS before → after | Achieved speed before → after |
+|---|---|---|
+| 4× CPU, 8× | 24.2 → **60.0** | 7.93× → 5.94× |
+| 4× CPU, 12× | 13.8 → **60.0** | 8.26× → 6.12× |
+| 6× CPU, 4× | 49.0 → **60.0** | 4.00× → 3.59× |
+| 6× CPU, 12× | 8.9 → **60.0** | 5.33× → 3.82× |
+| 20× CPU, 1× | 21.1 → **36.8** | 1.00× → 0.61× |
+| 20× CPU, 12× | 2.6 → **41.4** | 2.40× → 0.69× |
+
+Frame CPU fell 55.5% (geomean), and the game stays responsive at every throttle and speed.
+The cost is sim throughput when the CPU is overloaded, because render overhead is now paid on every frame.
+So no new cell passes, since the speed criterion fails. Getting 60 FPS and full throughput together needs the sim on another core (step 4).
