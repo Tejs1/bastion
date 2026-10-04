@@ -211,7 +211,8 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
   .tcard kbd { display: none; }
 }
 @media (max-width: 700px) {
-  .topbar { padding-top: calc(6px + env(safe-area-inset-top)); }
+  .topbar { padding-top: calc(6px + env(safe-area-inset-top)); flex-wrap: wrap; row-gap: 6px; }
+  .controls { margin-left: auto; }
   .stat { padding: 6px 8px; font-size: 14px; }
   .stat .lbl { display: none; }
   .stat.score { display: none; }
@@ -280,7 +281,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
       </div>
       <div class="controls">
         <fieldset class="seg" id="speedSeg" aria-label="Game speed">
-          <button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button>
+          <button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button><button type="button" data-speed="8">8×</button><button type="button" data-speed="12">12×</button>
         </fieldset>
         <button type="button" class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
         <button type="button" class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -366,7 +367,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
             <tr><td><kbd>T</kbd></td><td>Cycle targeting</td></tr>
             <tr><td><kbd>N</kbd> / <kbd>Enter</kbd></td><td>Next wave</td></tr>
             <tr><td><kbd>Space</kbd> / <kbd>P</kbd></td><td>Pause</td></tr>
-            <tr><td><kbd>F</kbd></td><td>Cycle speed 1×/2×/4×</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Cycle speed 1×/2×/4×/8×/12×</td></tr>
             <tr><td>Wheel · pinch</td><td>Zoom</td></tr>
             <tr><td>Drag · <kbd>WASD</kbd></td><td>Pan · <kbd>0</kbd> resets view</td></tr>
             <tr><td><kbd>Esc</kbd></td><td>Cancel / deselect / pause</td></tr>
@@ -4019,8 +4020,15 @@ var TD = globalThis.TD;
     if (b > 0) this.ui.toast(`Early call bonus +${b} credits`);
   };
 
-  G.setSpeed = function (s) { this.speed = s; this.ui.showSpeed(s); this.sfx('click'); };
-  G.cycleSpeed = function () { this.setSpeed(this.speed === 1 ? 2 : this.speed === 2 ? 4 : 1); };
+  var SPEEDS = [1, 2, 4, 8, 12];
+  G.setSpeed = function (s) {
+    this.speed = s;
+    // let high speeds keep up on low-refresh displays instead of dropping ticks
+    this.loop.maxSteps = Math.max(12, s * 3);
+    this.ui.showSpeed(s);
+    this.sfx('click');
+  };
+  G.cycleSpeed = function () { this.setSpeed(SPEEDS[(SPEEDS.indexOf(this.speed) + 1) % SPEEDS.length]); };
 
   G.setPaused = function (p) {
     if (!this.isPlay()) return;

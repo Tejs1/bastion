@@ -330,8 +330,15 @@ var TD = globalThis.TD;
     if (b > 0) this.ui.toast(`Early call bonus +${b} credits`);
   };
 
-  G.setSpeed = function (s) { this.speed = s; this.ui.showSpeed(s); this.sfx('click'); };
-  G.cycleSpeed = function () { this.setSpeed(this.speed === 1 ? 2 : this.speed === 2 ? 4 : 1); };
+  var SPEEDS = [1, 2, 4, 8, 12];
+  G.setSpeed = function (s) {
+    this.speed = s;
+    // let high speeds keep up on low-refresh displays instead of dropping ticks
+    this.loop.maxSteps = Math.max(12, s * 3);
+    this.ui.showSpeed(s);
+    this.sfx('click');
+  };
+  G.cycleSpeed = function () { this.setSpeed(SPEEDS[(SPEEDS.indexOf(this.speed) + 1) % SPEEDS.length]); };
 
   G.setPaused = function (p) {
     if (!this.isPlay()) return;
