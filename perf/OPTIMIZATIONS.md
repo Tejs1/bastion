@@ -237,3 +237,28 @@ It might help on phones with small caches, but I cannot measure that here, so it
 What I kept is test rigour:
 - The state hash now identifies enemies by **uid instead of slot**, so it describes gameplay rather than memory layout.
 - `simbench` now records 41 mid-game checkpoint hashes. The final victory hash alone has no enemies left to hash.
+
+## Final run (`06-final-fx-lod`)
+
+This is the full matrix on `perf/fx-lod`, over HTTP with the sim in the worker. The machine load average was about 5.4 during the run.
+Full table: `runs/06-final-fx-lod.md`.
+
+Against `00-baseline`:
+
+| Metric | Change |
+|---|---|
+| Passing cells | **10 → 12 of 20** |
+| Main-thread frame CPU (geomean) | **−90.8%** |
+| Avg FPS, every cell | **59.4–60** (baseline 1.8–60) |
+| Sim ms/tick (geomean) | −18.1% (the worker's ms/tick includes snapshot encoding) |
+
+Breaking points, as the highest passing game speed:
+
+| CPU throttle | Baseline | Final |
+|---|---|---|
+| 1× | 12× | 12× |
+| 4× | 4× | 4× |
+| 6× | 2× | **4×** |
+| 20× | none | **1×** |
+
+The remaining failures only miss the game-speed condition: they need more than one core of simulation.
