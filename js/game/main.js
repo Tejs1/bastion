@@ -432,12 +432,14 @@ var TD = globalThis.TD;
     if (k === '`' || k === '~') { this.ui.setPerf(!this.ui.perfOn); return true; }
     if (!this.isPlay()) return false;
     if (k === 'Escape') {
+      if (this.ui.statsOpen()) { this.ui.hide('scrStats'); return true; }
       if (!document.getElementById('scrHelp').classList.contains('hidden')) { this.ui.hide('scrHelp'); return true; }
       if (!this.cancel()) this.togglePause();
       return true;
     }
     if (k === ' ' || k === 'p' || k === 'P') { this.togglePause(); return true; }
     if (k === '?') { this.ui.show('scrHelp'); return true; }
+    if (k === 'i' || k === 'I') { if (this.ui.statsOpen()) this.ui.hide('scrStats'); else this.ui.showStats(); return true; }
     if (k === 'm' || k === 'M') { this.toggleMute(); return true; }
     if (this.paused) return false;
     if (k >= '1' && k <= '5') { const i = +k - 1; this.selectTowerType(this.placing === i ? -1 : i); return true; }

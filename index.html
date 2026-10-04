@@ -40,7 +40,7 @@
       <div id="waveBox" class="panel">
         <div class="wb-head"><span id="wbTitle">Wave 1</span><span id="wbSub"></span></div>
         <div id="wbList" class="wb-list"></div>
-        <button type="button" id="bNext" class="primary"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><i id="bNextBar"></i></button>
+        <button type="button" id="bNext" class="primary" title="Start / call next wave (N or Enter)"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><span class="keys-hint"><kbd>N</kbd><kbd aria-label="Enter">↵</kbd></span><i id="bNextBar"></i></button>
       </div>
     </footer>
 
@@ -76,6 +76,7 @@
       <label class="check"><input type="checkbox" id="optPerf"> Show performance overlay</label>
       <label class="check"><input type="checkbox" id="optAuto" checked> Auto-start next wave</label>
       <button type="button" id="bHelp2" class="ghost">How to play</button>
+      <button type="button" id="bStats2" class="ghost">Detailed stats</button>
       <button type="button" id="bQuit" class="ghost">Quit to menu</button>
     </div>
   </section>
@@ -113,6 +114,7 @@
             <tr><td>Wheel · pinch</td><td>Zoom</td></tr>
             <tr><td>Drag · <kbd>WASD</kbd></td><td>Pan · <kbd>0</kbd> resets view</td></tr>
             <tr><td><kbd>Esc</kbd></td><td>Cancel / deselect / pause</td></tr>
+            <tr><td><kbd>I</kbd></td><td>Detailed tower &amp; enemy stats</td></tr>
             <tr><td><kbd>`</kbd></td><td>Performance overlay</td></tr>
           </table>
         </div>
@@ -123,7 +125,30 @@
           <div id="helpEnemies" class="codex"></div>
         </div>
       </div>
-      <button type="button" id="bHelpClose" class="primary">Got it</button>
+      <div class="menu-row">
+        <button type="button" id="bStatsOpen" class="ghost">Detailed stats</button>
+        <button type="button" id="bHelpClose" class="primary">Got it</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="scrStats" class="screen hidden">
+    <div class="menu-card help">
+      <h1 class="small">Detailed stats</h1>
+      <div class="stats-bar">
+        <div class="seg" id="statsTab">
+          <button type="button" data-tab="towers" class="on">Towers</button><button type="button" data-tab="enemies">Enemies</button>
+        </div>
+        <div class="stepper" id="statsWaveBox">
+          <span>Wave</span>
+          <button type="button" class="ghost" data-dw="-1" aria-label="Previous wave">−</button>
+          <b id="statsWave">1</b>
+          <button type="button" class="ghost" data-dw="1" aria-label="Next wave">+</button>
+        </div>
+      </div>
+      <p id="statsNote" class="fine"></p>
+      <div id="statsBody" class="stats-body"></div>
+      <button type="button" id="bStatsClose" class="primary">Close</button>
     </div>
   </section>
 

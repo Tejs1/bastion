@@ -21,6 +21,8 @@ var TD = globalThis.TD;
     this.mapIndex = 0;
     this.diff = 'normal';
     this.perfOn = false;
+    this.statsTab = 'towers';
+    this.statsWave = 1;
   }
   TD.UI = UI;
   var U = UI.prototype;
@@ -96,6 +98,18 @@ var TD = globalThis.TD;
     $('bHelp').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelp2').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelpClose').addEventListener('click', () => { this.hide('scrHelp'); });
+    $('bStatsOpen').addEventListener('click', () => { this.showStats(); });
+    $('bStats2').addEventListener('click', () => { this.showStats(); });
+    $('bStatsClose').addEventListener('click', () => { this.hide('scrStats'); });
+    $('statsTab').addEventListener('click', (e) => {
+      var b = e.target.closest('button'); if (!b) return;
+      this.statsTab = b.dataset.tab; this.renderStats(); g.sfx('click');
+    });
+    $('statsWaveBox').addEventListener('click', (e) => {
+      var b = e.target.closest('button'); if (!b) return;
+      this.statsWave = Math.max(1, Math.min(TD.TOTAL_WAVES, this.statsWave + +b.dataset.dw));
+      this.renderStats();
+    });
     $('bResume').addEventListener('click', () => { g.setPaused(false); });
     $('bRestart').addEventListener('click', () => { g.restart(); });
     $('bQuit').addEventListener('click', () => { g.quit(); });
@@ -124,7 +138,7 @@ var TD = globalThis.TD;
   // ------------------------------------------------------------ screens
   U.show = (id) => { $(id).classList.remove('hidden'); };
   U.hide = (id) => { $(id).classList.add('hidden'); };
-  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench', 'scrStress'].forEach(this.hide); };
+  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench', 'scrStress', 'scrStats'].forEach(this.hide); };
 
   U.refreshMenu = function () {
     this.mapCards.forEach((c, i) => {
@@ -227,6 +241,84 @@ var TD = globalThis.TD;
     this.show('scrBench');
   };
 
+  // ------------------------------------------------------------ detailed stats
+  /** Open the detailed stats screen. In a match it is scaled to the current
+   *  wave and difficulty; from the menu it uses the selected difficulty. */
+  U.showStats = function () {
+    var sim = this.game.isPlay() ? this.game.sim : null;
+    this.statsWave = sim ? Math.max(1, Math.min(TD.TOTAL_WAVES, sim.wave)) : 1;
+    this.renderStats();
+    this.show('scrStats');
+  };
+  U.statsOpen = () => !$('scrStats').classList.contains('hidden');
+
+  U.statsDiff = function () {
+    var sim = this.game.isPlay() ? this.game.sim : null;
+    return sim ? sim.diff : TD.DIFFICULTY[this.diff];
+  };
+
+  U.renderStats = function () {
+    var tab = this.statsTab, w = this.statsWave, diff = this.statsDiff();
+    Array.prototype.forEach.call($('statsTab').children, (b) => { b.classList.toggle('on', b.dataset.tab === tab); });
+    $('statsWave').textContent = w;
+    $('statsNote').textContent = tab === 'towers'
+      ? `"vs armour" is DPS against a wave ${w} Juggernaut (armour ${fmt1(enemyArmor(TD.ENEMIES[TD.ENEMY_INDEX.tank], w))}). Hits always deal at least 20%.`
+      : `Scaled for wave ${w} on ${diff.name} (HP ×${fmt1(TD.hpMult(w) * diff.hp)}, reward ×${fmt1(TD.rewardMult(w) * diff.reward)}).`;
+    $('statsBody').innerHTML = tab === 'towers' ? this.towerStatsHtml(w) : this.enemyStatsHtml(w, diff);
+  };
+
+  U.towerStatsHtml = function (w) {
+    var armor = enemyArmor(TD.ENEMIES[TD.ENEMY_INDEX.tank], w);
+    return TD.TOWERS.map((t, i) => {
+      var pierce = t.pierce || 0, total = 0;
+      var notes = [`${t.cost} cr`, KIND_LABEL[t.kind]];
+      if (t.projSpeed) notes.push(`projectile ${t.projSpeed} px/s`);
+      if (pierce) notes.push(`ignores ${Math.round(pierce * 100)}% armour`);
+      if (t.kind === 'chain') notes.push(`jumps ${t.jump} px, −12% damage per jump`);
+      if (t.kind === 'beam') notes.push('hits every enemy in line');
+      if (t.kind === 'pulse') notes.push('hits every enemy in range');
+      var rows = t.levels.map((L, lv) => {
+        total += lv === 0 ? t.cost : L.up;
+        var hit = Math.max(L.dmg - armor * (1 - pierce), L.dmg * 0.2);
+        var dps = L.dmg * L.rate;
+        var special = L.splash ? `splash ${L.splash}`
+          : L.slow ? `slow ${Math.round(L.slow * 100)}% · ${L.dur}s`
+          : L.chains ? `${L.chains} targets` : '—';
+        var icon = this.icons.tower[lv === 0 ? i : `${i}_${lv}`];
+        return `<tr><td class="st-lv"><img alt="" src="${icon}">Lv ${lv + 1}</td><td>${L.dmg}</td><td>${L.rate}/s</td><td>${fmt1(dps)}</td><td>${fmt1(hit * L.rate)}</td>` +
+          `<td>${L.range}</td><td>${special}</td><td>${lv === 0 ? '—' : L.up}</td><td>${total}</td><td>${fmt1(dps / total * 100)}</td></tr>`;
+      }).join('');
+      return `<div class="st-block" style="--c:${t.color}"><div class="st-head"><img alt="" src="${this.icons.tower[`${i}_3`]}">` +
+        `<div><b>${t.name}</b><div class="st-sub">${notes.join(' · ')}</div></div></div>` +
+        '<div class="st-scroll"><table class="st-table"><thead><tr><th>Level</th><th>Damage</th><th>Rate</th><th>DPS</th><th>vs armour</th>' +
+        '<th>Range</th><th>Special</th><th>Upgrade</th><th>Total cost</th><th>DPS / 100 cr</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+    }).join('');
+  };
+
+  U.enemyStatsHtml = function (w, diff) {
+    var hpM = TD.hpMult(w) * diff.hp, rwM = TD.rewardMult(w) * diff.reward;
+    var rows = TD.ENEMIES.map((e, i) => {
+      var hp = e.id === 'spawnling' ? '24% of Splitter' : fmt(Math.round(e.hp * hpM));
+      var special = ENEMY_SPECIAL[e.id] || '—';
+      if (e.slowResist) special += ` · slows ${Math.round(e.slowResist * 100)}% as effective`;
+      return `<tr><td class="st-name"><img alt="" src="${this.icons.enemy[i]}">${e.name}</td><td>${hp}</td><td>${fmt1(enemyArmor(e, w))}</td>` +
+        `<td>${e.speed}</td><td>${Math.max(1, Math.round(e.reward * rwM))}</td><td>${e.leak}</td><td class="st-sp">${special}</td></tr>`;
+    }).join('');
+    return '<div class="st-scroll"><table class="st-table"><thead><tr><th>Enemy</th><th>HP</th><th>Armour</th><th>Speed</th><th>Reward</th>' +
+      '<th>Lives lost</th><th>Special</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="fine st-foot">Armour is subtracted from every hit (minimum 20% gets through). Speed varies ±6% per enemy. Boss waves can scale Behemoth HP further.</p>';
+  };
+
+  var KIND_LABEL = { bullet: 'single target', shell: 'splash', pulse: 'area pulse', chain: 'chain', beam: 'piercing beam' };
+  var ENEMY_SPECIAL = {
+    healer: 'heals allies within 78 px for 7% max HP every 2.2 s',
+    splitter: 'splits into 3 Spawnlings on death',
+    spawnling: 'released by Splitters',
+    boss: 'summons 3 Swarmlings every 4.5 s (4 from wave 30)'
+  };
+  function enemyArmor(e, w) { return e.armor + (e.armorGrowth || 0) * (w - 1); }
+  function fmt1(v) { return v >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10); }
+
   // ------------------------------------------------------------ toast/banner
   U.toast = function (msg, err) {
     var t = $('toast');
@@ -308,7 +400,7 @@ var TD = globalThis.TD;
     var up = N ? `<button class="primary up"${sim.gold >= cost ? '' : ' disabled'}>Upgrade <b>${cost}</b></button>`
       : '<button class="primary up max" disabled>Max level</button>';
     p.innerHTML =
-      '<div class="tp-head"><img alt="" src="' + this.icons.tower[t.type + (t.level === 3 ? '_3' : '')] + '"><div><div class="tp-name">' + t.def.name +
+      '<div class="tp-head"><img alt="" src="' + this.icons.tower[t.level ? `${t.type}_${t.level}` : t.type] + '"><div><div class="tp-name">' + t.def.name +
       ' <span class="lvl">Lv ' + (t.level + 1) + '</span></div><div class="tp-sub">' + t.kills + ' kills · ' + fmt(t.dmgDone) + ' damage</div></div>' +
       '<button class="x" aria-label="Close">×</button></div>' +
       '<div class="tp-stats">' + s + '</div>' + target +
