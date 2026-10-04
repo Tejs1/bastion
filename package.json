@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "start": "npx --yes http-server -c-1 -p 8080 .",
+    "dev": "node tools/dev.mjs",
     "build": "node tools/build.mjs && node tools/build.mjs --fragment",
     "test": "node tools/headless.mjs determinism && node --expose-gc tools/headless.mjs memory && node tools/headless.mjs stress",
     "balance": "node tools/headless.mjs balance",
