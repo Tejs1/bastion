@@ -209,7 +209,7 @@ var TD = globalThis.TD;
     var early = res.stopped && res.planned !== Infinity ? ` · <span class="bad">stopped early</span> (of ${res.planned} s)` : '';
     var rows = [
       ['Duration', `${res.seconds.toFixed(1)} s · ${res.frames} frames${early}`],
-      ['Enemies / towers / projectiles', `${res.enemies} / ${res.towers} / ${res.projectiles}`],
+      ['Enemies / towers / shots', `${res.enemies} / ${res.towers} / ${res.projectiles}`],
       ['Average FPS', res.avgFps.toFixed(1)],
       ['Game speed achieved', `${(res.simRate * res.speed).toFixed(2)}× of ${res.speed}×${pass(res.simRate >= 0.98)}`],
       ['Frames at ≥ 45 FPS', `${(res.pctAt45 * 100).toFixed(1)}%${pass(res.pctAt45 >= 0.95)}`],
@@ -218,8 +218,8 @@ var TD = globalThis.TD;
       ['Frames > 33 ms', `${(res.pctOver33 * 100).toFixed(2)}%${pass(res.pctOver33 < 0.05)}`],
       ['Frame time p50 / p95 / p99', `${res.p50.toFixed(1)} / ${res.p95.toFixed(1)} / ${res.p99.toFixed(1)} ms`],
       ['CPU per frame avg / p95', `${res.cpuAvg.toFixed(2)} / ${res.cpuP95.toFixed(2)} ms`],
-      ['  · simulation', `${res.simAvg.toFixed(2)} ms (${res.simPerTick.toFixed(2)} ms/tick × ${res.ticksPerFrame.toFixed(2)})`],
-      ['  · scene + draw', `${res.renderAvg.toFixed(2)} ms`],
+      ['<span class="sub">Simulation</span>', `${res.simAvg.toFixed(2)} ms (${res.simPerTick.toFixed(2)} ms/tick × ${res.ticksPerFrame.toFixed(2)})`],
+      ['<span class="sub">Scene + draw</span>', `${res.renderAvg.toFixed(2)} ms`],
       ['Renderer', `${res.backend} · ${Math.round(res.renderScale * 100)}% res`],
       ['JS heap', res.heap]
     ];

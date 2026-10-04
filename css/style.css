@@ -179,6 +179,15 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
 .end-stats .hl { color: var(--gold); }
 .end-stats .ok { color: var(--good); }
 .end-stats .bad { color: var(--danger); }
+/* results card: labels stay on one line, long values wrap in the wide column */
+.menu-card.bench { width: min(560px, 100%); }
+#benchStats { grid-template-columns: max-content minmax(0, 1fr); gap: 7px 20px; }
+#benchStats > span:nth-child(odd) { white-space: nowrap; }
+#benchStats .sub { padding-left: 12px; }
+@media (max-width: 480px) {
+  #benchStats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px 12px; font-size: 13px; padding: 10px; }
+  #benchStats > span:nth-child(odd) { white-space: normal; }
+}
 #endTitle.win { background: linear-gradient(180deg, #fff6c8, #ffd25a); -webkit-background-clip: text; background-clip: text; }
 #endTitle.lose { background: linear-gradient(180deg, #ffd0d6, #ff5d6c); -webkit-background-clip: text; background-clip: text; }
 .help-cols { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }

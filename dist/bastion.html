@@ -187,6 +187,15 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
 .end-stats .hl { color: var(--gold); }
 .end-stats .ok { color: var(--good); }
 .end-stats .bad { color: var(--danger); }
+/* results card: labels stay on one line, long values wrap in the wide column */
+.menu-card.bench { width: min(560px, 100%); }
+#benchStats { grid-template-columns: max-content minmax(0, 1fr); gap: 7px 20px; }
+#benchStats > span:nth-child(odd) { white-space: nowrap; }
+#benchStats .sub { padding-left: 12px; }
+@media (max-width: 480px) {
+  #benchStats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px 12px; font-size: 13px; padding: 10px; }
+  #benchStats > span:nth-child(odd) { white-space: normal; }
+}
 #endTitle.win { background: linear-gradient(180deg, #fff6c8, #ffd25a); -webkit-background-clip: text; background-clip: text; }
 #endTitle.lose { background: linear-gradient(180deg, #ffd0d6, #ff5d6c); -webkit-background-clip: text; background-clip: text; }
 .help-cols { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
@@ -411,12 +420,14 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
   </section>
 
   <section id="scrBench" class="screen hidden">
-    <div class="menu-card narrow">
+    <div class="menu-card bench">
       <h1 class="small">Stress test results</h1>
       <div id="benchStats" class="end-stats"></div>
-      <button type="button" id="bBenchAgain" class="primary">Run again</button>
-      <button type="button" id="bBenchClose" class="ghost">Keep watching</button>
-      <button type="button" id="bBenchMenu" class="ghost">Main menu</button>
+      <div class="menu-row">
+        <button type="button" id="bBenchAgain" class="primary">Run again</button>
+        <button type="button" id="bBenchClose" class="ghost">Keep watching</button>
+        <button type="button" id="bBenchMenu" class="ghost">Main menu</button>
+      </div>
     </div>
   </section>
 
@@ -3953,7 +3964,7 @@ var TD = globalThis.TD;
     var early = res.stopped && res.planned !== Infinity ? ` · <span class="bad">stopped early</span> (of ${res.planned} s)` : '';
     var rows = [
       ['Duration', `${res.seconds.toFixed(1)} s · ${res.frames} frames${early}`],
-      ['Enemies / towers / projectiles', `${res.enemies} / ${res.towers} / ${res.projectiles}`],
+      ['Enemies / towers / shots', `${res.enemies} / ${res.towers} / ${res.projectiles}`],
       ['Average FPS', res.avgFps.toFixed(1)],
       ['Game speed achieved', `${(res.simRate * res.speed).toFixed(2)}× of ${res.speed}×${pass(res.simRate >= 0.98)}`],
       ['Frames at ≥ 45 FPS', `${(res.pctAt45 * 100).toFixed(1)}%${pass(res.pctAt45 >= 0.95)}`],
@@ -3962,8 +3973,8 @@ var TD = globalThis.TD;
       ['Frames > 33 ms', `${(res.pctOver33 * 100).toFixed(2)}%${pass(res.pctOver33 < 0.05)}`],
       ['Frame time p50 / p95 / p99', `${res.p50.toFixed(1)} / ${res.p95.toFixed(1)} / ${res.p99.toFixed(1)} ms`],
       ['CPU per frame avg / p95', `${res.cpuAvg.toFixed(2)} / ${res.cpuP95.toFixed(2)} ms`],
-      ['  · simulation', `${res.simAvg.toFixed(2)} ms (${res.simPerTick.toFixed(2)} ms/tick × ${res.ticksPerFrame.toFixed(2)})`],
-      ['  · scene + draw', `${res.renderAvg.toFixed(2)} ms`],
+      ['<span class="sub">Simulation</span>', `${res.simAvg.toFixed(2)} ms (${res.simPerTick.toFixed(2)} ms/tick × ${res.ticksPerFrame.toFixed(2)})`],
+      ['<span class="sub">Scene + draw</span>', `${res.renderAvg.toFixed(2)} ms`],
       ['Renderer', `${res.backend} · ${Math.round(res.renderScale * 100)}% res`],
       ['JS heap', res.heap]
     ];
@@ -4758,6 +4769,8 @@ var TD = globalThis.TD;
     var view = this.view;
     view.x0 = rc.x - hw; view.x1 = rc.x + hw; view.y0 = rc.y - hh; view.y1 = rc.y + hh;
     this.renderT += running ? dt : 0;
+    // credits and the board change under a still cursor, so re-check the ghost
+    if (this.placing >= 0 && this.hoverCol >= 0) this.setHoverTile(this.hoverCol, this.hoverRow);
     this.scene.build(sim, this.fx, rc, view, alpha, this, this.renderT);
     var map = sim.map, br = this.bgRect;
     br.w = map.width; br.h = map.height;
