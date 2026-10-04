@@ -36,8 +36,12 @@ const games = [];
 for (const map of [0, 1]) {
   const sim = new TD.Sim({ map, difficulty: 'normal', seed: 7 });
   const bot = new TD.Bot(sim, { skill: 1 });
-  while (sim.state !== 'victory' && sim.state !== 'defeat' && sim.tick < 60 * 60 * 120) { bot.update(); sim.step(); }
-  games.push(`${sim.state}/w${sim.wave}/${sim.hash()}`);
+  const cps = [];
+  while (sim.state !== 'victory' && sim.state !== 'defeat' && sim.tick < 60 * 60 * 120) {
+    bot.update(); sim.step();
+    if (sim.tick % 12000 === 0) cps.push(sim.hash());   // mid-game checkpoints (enemies alive)
+  }
+  games.push(`${sim.state}/w${sim.wave}/${sim.hash()}[${cps.join(',')}]`);
 }
 console.log(`stress ms/tick mean ${best.mean.toFixed(3)} p50 ${best.p50.toFixed(3)} p95 ${best.p95.toFixed(3)}  (enemies ${best.e}, projectiles ${best.p})`);
 console.log(`hash stress ${stressHash}  games ${games.join('  ')}`);

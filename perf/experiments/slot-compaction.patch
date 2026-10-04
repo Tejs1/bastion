@@ -1,0 +1,77 @@
+diff --git a/js/core/sim.js b/js/core/sim.js
+index fdf8420..673bc05 100644
+--- a/js/core/sim.js
++++ b/js/core/sim.js
+@@ -101,6 +101,13 @@ var TD = globalThis.TD;
+     this.eCell = new Int32Array(EC);
+     this.qBuf = new Int32Array(EC);       // scratch buffer for range queries
+     this.chainHit = new Int32Array(16);
++    // per-enemy arrays permuted together by compact(); scratch views share one buffer
++    this.ePerm = [this.eAlive, this.eCell, this.eUid, this.eType, this.ePath, this.eWave, this.eDist, this.eOff, this.eSpeed, this.eHp,
++      this.eMaxHp, this.eArmor, this.eSlowT, this.eSlowF, this.eX, this.eY, this.ePX, this.ePY, this.eRot,
++      this.eFlash, this.eTimer, this.eReward];
++    var scratch = new ArrayBuffer(EC * 4);
++    this.eScratch = { Float32Array: new Float32Array(scratch), Uint32Array: new Uint32Array(scratch), Uint8Array: new Uint8Array(scratch), Int32Array: new Int32Array(scratch) };
++    this.eRemap = new Int32Array(EC);
+     // per-cell best target for modes first/last/strong, computed lazily and
+     // invalidated when an enemy in the cell is damaged or removed
+     this.aggOk = new Uint8Array(this.gN * 3);
+@@ -306,6 +313,32 @@ var TD = globalThis.TD;
+     return s;
+   };
+ 
++  /** Relabel enemy slots so memory order matches list order (slot i holds
++   *  list[i]). Swap-removes and slot reuse scatter the dense list across
++   *  memory, making every per-enemy loop cache-unfriendly. The relabeling is
++   *  a bijection over ALL slots (live ones to 0..n-1, free ones after them
++   *  in free-stack order) applied to every structure that stores a slot —
++   *  per-enemy arrays, list, free stack, last grid, tower and projectile
++   *  targets — so the simulation computes exactly the same thing. */
++  S.compact = function () {
++    var n = this.eCount, list = this.eList, remap = this.eRemap;
++    for (let i = 0; i < n; i++) remap[list[i]] = i;
++    var next = n, free = this.eFree;
++    for (let k = this.eFreeTop - 1; k >= 0; k--) remap[free[k]] = next++;   // next popped -> n
++    for (let k = 0; k < this.eFreeTop; k++) free[k] = remap[free[k]];
++    for (let a = 0; a < this.ePerm.length; a++) {
++      const arr = this.ePerm[a], tmp = this.eScratch[arr.constructor.name];
++      for (let s = 0; s < EC; s++) tmp[remap[s]] = arr[s];
++      arr.set(tmp.subarray(0, EC));
++    }
++    for (let i = 0; i < n; i++) { list[i] = i; this.eListPos[i] = i; }
++    var items = this.gItems;
++    for (let k = 0, m = this.gStart[this.gN]; k < m; k++) items[k] = remap[items[k]];
++    var towers = this.towers;
++    for (let i = 0; i < towers.length; i++) { const t = towers[i]; if (t.target >= 0) t.target = remap[t.target]; }
++    for (let p = 0; p < this.pCount; p++) { const g = this.pTgt[p]; if (g >= 0) this.pTgt[p] = remap[g]; }
++  };
++
+   S.placeEnemy = function (s) {
+     var p = this.map.paths[this.ePath[s]];
+     var k = (this.eDist[s] * p.inv) | 0;
+@@ -817,6 +850,7 @@ var TD = globalThis.TD;
+     }
+     this.tick++;
+     this.time += DT;
++    if ((this.tick & 255) === 0) this.compact();
+     if (this.stress) this.stress.update(this);
+     this.updateSpawners();
+     this.updateEnemies();
+@@ -826,14 +860,15 @@ var TD = globalThis.TD;
+     if (!this.stress) this.updateWaves();
+   };
+ 
+-  /** Cheap order-dependent hash of the full gameplay state (determinism tests). */
++  /** Cheap order-dependent hash of the full gameplay state (determinism tests).
++   *  Enemies are identified by uid, not slot, so memory layout does not count. */
+   S.hash = function () {
+     var h = 2166136261 >>> 0;
+     function mix(v) { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; }
+     mix(this.tick); mix(this.gold * 100); mix(this.lives); mix(this.score); mix(this.eCount); mix(this.pCount);
+     for (let i = 0; i < this.eCount; i++) {
+       const s = this.eList[i];
+-      mix(s); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
++      mix(this.eUid[s]); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
+     }
+     for (let i = 0; i < this.pCount; i++) { mix(this.pX[i] * 100); mix(this.pY[i] * 100); }
+     return h >>> 0;

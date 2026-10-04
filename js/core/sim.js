@@ -826,14 +826,15 @@ var TD = globalThis.TD;
     if (!this.stress) this.updateWaves();
   };
 
-  /** Cheap order-dependent hash of the full gameplay state (determinism tests). */
+  /** Cheap order-dependent hash of the full gameplay state (determinism tests).
+   *  Enemies are identified by uid, not slot, so memory layout does not count. */
   S.hash = function () {
     var h = 2166136261 >>> 0;
     function mix(v) { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; }
     mix(this.tick); mix(this.gold * 100); mix(this.lives); mix(this.score); mix(this.eCount); mix(this.pCount);
     for (let i = 0; i < this.eCount; i++) {
       const s = this.eList[i];
-      mix(s); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
+      mix(this.eUid[s]); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
     }
     for (let i = 0; i < this.pCount; i++) { mix(this.pX[i] * 100); mix(this.pY[i] * 100); }
     return h >>> 0;

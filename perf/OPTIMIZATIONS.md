@@ -12,6 +12,8 @@ A cell **passes** when it meets all three conditions:
 Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes for the stress run and for two full
 50-wave bot games, and a pure performance change has to leave all three unchanged:
 `stress 789190078`, `victory/w50/3412512395`, `victory/w50/2908296023`.
+From step 7 on, the hash identifies enemies by uid instead of slot, and `simbench` also records a hash every 12 000 ticks of both games.
+The new stress golden is `3058752934`.
 
 | # | Change | Sim ms/tick (geomean, all cells) | Frame CPU (geomean) | Passing cells (of 20) |
 |---|---|---|---|---|
@@ -208,3 +210,30 @@ So I measured it as an **interleaved A/B**: the previous commit and this change,
 | 20× CPU, 12×: FPS / speed | 59.1 / 1.48×, 60.0 / 1.55× | 59.3 / 1.48×, 59.8 / 1.39× |
 
 20× CPU at 1× speed now passes, which brings the total to 12 of 20 cells.
+
+## 7 · Tried: slot compaction for cache locality (dropped)
+
+After step 6, the cells that still fail are limited by worker throughput: the requested ticks per second need more than one emulated core.
+4× CPU at 8× speed needs about 10% cheaper ticks. In an isolated test, `updateEnemies` ran about 33% faster in slot order than in the scattered dense-list order.
+
+I built an exactly equivalent version, kept in `perf/experiments/slot-compaction.patch`.
+Every 32 ticks it relabels all 8 192 slots with a bijection: live enemies go to 0…n−1, and free slots follow in free-stack order.
+The same mapping is applied to every structure that stores a slot: the per-enemy arrays, the list, the free stack, the previous tick's grid, and tower and projectile targets.
+
+A first version only compacted the live enemies, and it diverged at tick 64.
+The cause: `healPulse` queries the previous tick's grid, and a slot that is freed and then reused within the same tick shows up there as a "ghost".
+That quirk is only reproduced when the relabeling covers every slot.
+
+The full bijection gave bit-identical hashes for the stress run and all 41 mid-game checkpoints. In-process A/B, mean ms/tick over 2 400 ticks:
+
+| Compaction interval | Off | On |
+|---|---|---|
+| Every 32 ticks | 0.446 | 0.464 |
+| Every 256 ticks | 0.439 | 0.443 |
+
+So it gave no gain. The live enemy state is about 440 KB, which fits in the M2's L2 cache, so locality is not the bottleneck here, and the relabel pass costs more than it saves.
+It might help on phones with small caches, but I cannot measure that here, so it is not shipped.
+
+What I kept is test rigour:
+- The state hash now identifies enemies by **uid instead of slot**, so it describes gameplay rather than memory layout.
+- `simbench` now records 41 mid-game checkpoint hashes. The final victory hash alone has no enemies left to hash.
