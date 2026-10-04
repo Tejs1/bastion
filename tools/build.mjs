@@ -15,6 +15,12 @@ html = html.replace(/<link rel="stylesheet" href="([^"]+)">/g, (_, href) =>
 html = html.replace(/<script src="([^"]+)"><\/script>/g, (_, src) =>
   `<script>\n${fs.readFileSync(path.join(root, src), 'utf8').replace(/<\/script/gi, '<\\/script')}\n</script>`);
 
+// The sim worker can't be loaded by URL from a single file (or from file://),
+// so its source (core modules + worker) is embedded for a Blob worker.
+const core = ['util', 'data', 'map', 'sim', 'bot', 'stress', 'snapshot'].map((f) => fs.readFileSync(path.join(root, 'js/core', `${f}.js`), 'utf8'));
+const workerSrc = [...core, fs.readFileSync(path.join(root, 'js/sim-worker.js'), 'utf8')].join('\n').replace(/<\/script/gi, '<\\/script');
+html = html.replace('</body>', `<script type="text/js-worker" id="simWorkerSrc">\n${workerSrc}\n</script>\n</body>`);
+
 if (fragment) {
   const title = html.match(/<title>[\s\S]*?<\/title>/)[0];
   const style = html.match(/<style>[\s\S]*?<\/style>/)[0];

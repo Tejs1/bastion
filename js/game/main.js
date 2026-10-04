@@ -55,6 +55,10 @@ var TD = globalThis.TD;
     // one reusable step closure: no per-frame function allocation
     this.stepFn = () => { if (this.bot) this.bot.update(); this.sim.step(); };
     this.frameFn = (t) => { this.frame(t); };
+    // simulation worker (see js/sim-worker.js); null = sim runs on this thread
+    this.worker = null; this.gameId = 0; this.applyMs = 0; this.lastTicks = 0; this.spareBuf = null;
+    this.sendFn = (c, a) => { this.worker.postMessage({ t: 'cmd', c: c, a: a }); };
+    this.onCleared = (w, bonus) => { if (this.mode !== 'backdrop') this.ui.toast(`Wave ${w} cleared  +${bonus} credits`); };
   }
   TD.Game = Game;
   var G = Game.prototype;
@@ -74,6 +78,7 @@ var TD = globalThis.TD;
     this.ui.init(this.atlas);
     this.ui.setMuted(muted);
     this.input = new TD.Input(this.canvas, this);
+    this.initWorker();
     this.renderer.onRestore = () => {
       this.renderer.initGL();
       this.renderer.setTexture('atlas', this.atlas.canvas);
@@ -95,23 +100,63 @@ var TD = globalThis.TD;
     }
     else if (params.has('autoplay')) {
       this.newGame(+(params.get('map') || 0), params.get('diff') || 'normal', 'demo');
-      if (params.has('turbo')) { this.speed = +params.get('turbo'); this.loop.maxSteps = this.speed * 3; }
+      if (params.has('turbo')) { this.speed = +params.get('turbo'); this.loop.maxSteps = this.speed * 3; this.postCmd('speed', [this.speed]); }
     }
     requestAnimationFrame((ts) => { this.frame(ts); });
     window.__td = this;
   };
 
+  /** Run the simulation in a Web Worker when the page can start one (not
+   *  from file://, which browsers block, unless the single-file build inlined
+   *  the worker source). ?noworker keeps everything on the main thread. */
+  G.initWorker = function () {
+    if (params.has('noworker') || typeof Worker === 'undefined') return;
+    try {
+      const inline = document.getElementById('simWorkerSrc');
+      if (inline) this.worker = new Worker(URL.createObjectURL(new Blob([inline.textContent], { type: 'text/javascript' })));
+      else if (location.protocol !== 'file:') this.worker = new Worker('js/sim-worker.js');
+    } catch (_e) { this.worker = null; }
+    if (!this.worker) return;
+    this.worker.onmessage = (e) => { this.onSnapshot(e.data); };
+    this.worker.onerror = () => {   // worker failed to load: fall back to the in-thread sim
+      this.worker = null;
+      if (this.sim) this.newGame(this.mapIndex, this.diffId, this.mode);
+    };
+  };
+
+  G.onSnapshot = function (m) {
+    var view = this.sim;
+    if (m.game !== this.gameId || !view || !view.isView) return;   // from a previous game
+    var t0 = performance.now();
+    var prev = view.apply(m.buf, m.towers, this.fx, this.onCleared);
+    this.applyMs += performance.now() - t0;
+    if (prev) this.spareBuf = prev;   // handed back once per rendered frame
+  };
+
+  G.postCmd = function (c, a) { if (this.worker && this.sim?.isView) this.sendFn(c, a); };
+
   // ------------------------------------------------------------ game modes
   G.newGame = function (mapIndex, diff, mode) {
     this.mapIndex = mapIndex; this.diffId = diff; this.mode = mode;
     this.fx.reset();
-    this.sim = new TD.Sim({ map: mapIndex, difficulty: diff, fx: mode === 'backdrop' ? TD.NOFX : this.fx, seed: (Math.random() * 1e9) | 0 });
-    this.sim.autoStart = this.autoStart;
-    this.sim.onWaveCleared = (w, bonus) => { if (this.mode !== 'backdrop') this.ui.toast(`Wave ${w} cleared  +${bonus} credits`); };
-    this.bot = (mode === 'demo' || mode === 'backdrop') ? new TD.Bot(this.sim, { skill: 1 }) : null;
-    if (mode === 'backdrop') { this.sim.fx = this.fx; this.fx.audio = null; }
-    else this.fx.audio = this.audio;
-    if (mode === 'stress') TD.setupStress(this.sim);
+    var seed = (Math.random() * 1e9) | 0;
+    if (this.worker) {
+      this.gameId++;
+      this.sim = new TD.SimView({ map: mapIndex, difficulty: diff });
+      this.sim.send = this.sendFn;
+      this.sim.autoStart = this.autoStart;
+      this.worker.postMessage({ t: 'new', game: this.gameId, map: mapIndex, diff: diff, seed: seed, autoStart: this.autoStart,
+        bot: mode === 'demo' || mode === 'backdrop', stress: mode === 'stress', speed: 1, slow: +(params.get('workerslow') || 1) });
+      this.bot = null; this.lastTicks = 0; this.applyMs = 0; this.spareBuf = null;
+    } else {
+      this.sim = new TD.Sim({ map: mapIndex, difficulty: diff, fx: mode === 'backdrop' ? TD.NOFX : this.fx, seed: seed });
+      this.sim.autoStart = this.autoStart;
+      this.sim.onWaveCleared = this.onCleared;
+      this.bot = (mode === 'demo' || mode === 'backdrop') ? new TD.Bot(this.sim, { skill: 1 }) : null;
+      if (mode === 'backdrop') this.sim.fx = this.fx;
+      if (mode === 'stress') TD.setupStress(this.sim);
+    }
+    this.fx.audio = mode === 'backdrop' ? null : this.audio;
     this.loop = new TD.FixedLoop();
     this.placing = -1; this.selected = 0; this.hoverTower = 0;
     this.lastWave = 0; this.endShown = false; this.endTimer = 0;
@@ -129,6 +174,7 @@ var TD = globalThis.TD;
       if (mode === 'demo') this.speed = 2;
       this.ui.showSpeed(this.speed);
     }
+    this.postCmd('speed', [this.speed]);
   };
 
   G.restart = function () {
@@ -343,6 +389,7 @@ var TD = globalThis.TD;
     this.speed = s;
     // let high speeds keep up on low-refresh displays instead of dropping ticks
     this.loop.maxSteps = Math.max(12, s * 3);
+    this.postCmd('speed', [s]);
     this.ui.showSpeed(s);
     this.sfx('click');
   };
@@ -351,6 +398,7 @@ var TD = globalThis.TD;
   G.setPaused = function (p) {
     if (!this.isPlay()) return;
     this.paused = p;
+    this.postCmd('pause', [p]);
     this.ui.showPause(p);
   };
   G.togglePause = function () { if (this.sim && (this.sim.state === 'victory' || this.sim.state === 'defeat')) return; this.setPaused(!this.paused); };
@@ -363,7 +411,7 @@ var TD = globalThis.TD;
     try { localStorage.setItem('bastion.muted', m ? '1' : '0'); } catch (_e) { /* ignore */ }
   };
 
-  G.setAutoStart = function (v) { this.autoStart = v; if (this.sim) this.sim.autoStart = v; };
+  G.setAutoStart = function (v) { this.autoStart = v; if (this.sim) this.sim.autoStart = v; this.postCmd('autoStart', [v]); };
 
   G.cancel = function () {
     if (this.placing >= 0) { this.selectTowerType(-1); return true; }
@@ -420,7 +468,7 @@ var TD = globalThis.TD;
     var b = this.bench;
     if (!b || b.done) return;
     b.t += dtMs / 1000;
-    if (b.t < b.warm) return;
+    if (b.t < b.warm) { b.busy0 = this.sim.busyMs || 0; b.tick0 = this.sim.ticks || 0; return; }
     b.frames.push(dtMs); b.cpu.push(cpuMs); b.sim.push(simMs); b.render.push(renderMs); b.ticks += ticks;
     if (!this.paused) b.want += Math.min(dtMs / 1000, 0.25) * this.speed / TD.DT;
     if (b.t < b.warm + b.dur) return;
@@ -437,15 +485,24 @@ var TD = globalThis.TD;
       avgFps: 1000 / avg(b.frames), pctAt45: at45 / f.length, pctOver33: over33 / f.length,
       p50: pct(f, 0.5), p95: pct(f, 0.95), p99: pct(f, 0.99),
       cpuAvg: avg(b.cpu), cpuP95: pct(cpu, 0.95), simAvg: avg(b.sim), renderAvg: avg(b.render),
-      simPerTick: avg(b.sim) * b.frames.length / Math.max(1, b.ticks), ticksPerFrame: b.ticks / b.frames.length,
+      // worker mode: sim cost is the worker's busy time per tick; "sim" on the
+      // main thread is only the snapshot apply cost
+      simPerTick: this.sim.isView ? (this.sim.busyMs - b.busy0) / Math.max(1, this.sim.ticks - b.tick0)
+        : avg(b.sim) * b.frames.length / Math.max(1, b.ticks),
+      ticksPerFrame: b.ticks / b.frames.length, worker: !!this.sim.isView,
       // share of the requested game speed actually simulated (1 = keeping up)
       speed: this.speed, simRate: b.want ? b.ticks / b.want : 1, maxFrame: f[f.length - 1],
       renderScale: this.renderScale, lockstep: this.lockstep,
-      backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls`,
+      backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls · sim ${this.sim.isView ? 'in worker' : 'on main thread'}`,
       heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)'
     };
     window.__benchResult = res;
-    if (this.mode === 'stress') this.ui.showBench(res);
+    if (this.mode === 'stress') {
+      // stop the sim behind the results card; no pause overlay on top of it
+      this.paused = true;
+      this.postCmd('pause', [true]);
+      this.ui.showBench(res);
+    }
   };
 
   function heapMB() { return performance.memory ? performance.memory.usedJSHeapSize / 1048576 : 0; }
@@ -465,9 +522,24 @@ var TD = globalThis.TD;
     var ticks = 0;
     var running = !this.paused && (this.mode !== 'menu');
     var tSim0 = performance.now();
-    if (this.simBudget) this.loop.budgetMs = Math.max(3, 13 - this.renderEma);
-    if (running) ticks = this.loop.advance(this.lockstep ? TD.DT : dt, this.speed, this.stepFn);
+    var alpha;
+    if (sim.isView) {
+      // worker mode: snapshots were applied as they arrived (applyMs); count
+      // the ticks the worker ran and extrapolate interpolation from post time
+      ticks = sim.ticks - this.lastTicks; this.lastTicks = sim.ticks;
+      // returning the spare buffer here caps snapshots at the display rate
+      if (this.spareBuf) { this.worker.postMessage({ t: 'buf', buf: this.spareBuf, game: this.gameId }, [this.spareBuf]); this.spareBuf = null; }
+      alpha = sim.alpha;
+      if (running && sim.postAbs) alpha += (performance.timeOrigin + tSim0 - sim.postAbs) / 1000 * this.speed / TD.DT;
+      if (!(alpha < 1)) alpha = 1;
+    } else {
+      if (this.simBudget) this.loop.budgetMs = Math.max(3, 13 - this.renderEma);
+      if (running) ticks = this.loop.advance(this.lockstep ? TD.DT : dt, this.speed, this.stepFn);
+      alpha = this.loop.alpha;
+    }
     var tSim1 = performance.now();
+    var simMs = sim.isView ? this.applyMs : tSim1 - tSim0;
+    this.applyMs = 0;
     this.fx.update(running ? dt * this.speed : 0, dt);
 
     // ---- game events
@@ -486,7 +558,7 @@ var TD = globalThis.TD;
     var view = this.view;
     view.x0 = rc.x - hw; view.x1 = rc.x + hw; view.y0 = rc.y - hh; view.y1 = rc.y + hh;
     this.renderT += running ? dt : 0;
-    this.scene.build(sim, this.fx, rc, view, this.loop.alpha, this, this.renderT);
+    this.scene.build(sim, this.fx, rc, view, alpha, this, this.renderT);
     var map = sim.map, br = this.bgRect;
     br.w = map.width; br.h = map.height;
     this.renderer.flush(rc, 'bg', 'atlas', br, CLEAR);
@@ -496,9 +568,10 @@ var TD = globalThis.TD;
     if (this.mode !== 'backdrop' && this.mode !== 'menu') this.ui.update(sim, this);
     this.renderEma += (performance.now() - tSim1 - this.renderEma) * 0.1;
     var h = this.fHead;
-    this.fDelta[h] = dtMs; this.fCpu[h] = tEnd - t0; this.fSim[h] = tSim1 - tSim0; this.fRender[h] = tEnd - tSim1; this.fTicks[h] = ticks;
+    var cpuMs = tEnd - t0 + (sim.isView ? simMs : 0);
+    this.fDelta[h] = dtMs; this.fCpu[h] = cpuMs; this.fSim[h] = simMs; this.fRender[h] = tEnd - tSim1; this.fTicks[h] = ticks;
     this.fHead = (h + 1) % this.statN; if (this.fCount < this.statN) this.fCount++;
-    if (this.mode === 'stress') this.benchFrame(dtMs, tEnd - t0, tSim1 - tSim0, tEnd - tSim1, ticks);
+    if (this.mode === 'stress') this.benchFrame(dtMs, cpuMs, simMs, tEnd - tSim1, ticks);
     if (this.drs) this.updateDRS(dtMs, tEnd - t0);
     this.perfTimer += dt;
     if (this.ui.perfOn && this.perfTimer > 0.25) { this.perfTimer = 0; this.updatePerf(); }

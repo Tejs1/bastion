@@ -1,12 +1,19 @@
 // Stress matrix: game speed × Chrome CPU throttling, real Chrome + real GPU.
 //   node tools/stressmatrix.mjs --label=baseline [--throttle=1,4,6,20] [--speeds=1,2,4,8,12]
 //                               [--warm=3] [--dur=8] [--url=https://…] [--headed]
+//                               [--serve] [--query=noworker]
+// --serve  serves the repo over a local HTTP server (a sim Web Worker needs a
+//          real origin; file:// keeps the sim on the main thread).
+// --query  extra URL flags appended to every cell.
+// The worker is not reached by DevTools CPU throttling, so every cell also
+// passes &workerslow=<throttle>: the worker then emulates the same slowdown.
 // Each cell opens a fresh tab, applies CDP Emulation.setCPUThrottlingRate (the
 // same knob as DevTools' "CPU: N× slowdown"), loads ?stress at the given game
 // speed and reads the in-game benchmark (window.__benchResult). Every cell is
 // appended to perf/results.jsonl and the matrix is written to perf/runs/<label>.md.
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import http from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,7 +28,19 @@ const label = arg('label', 'run');
 const throttles = list(arg('throttle', '1,4,6,20'));
 const speeds = list(arg('speeds', '1,2,4,8,12'));
 const warm = +arg('warm', 3), dur = +arg('dur', 8);
-const base = arg('url', `file://${path.join(root, 'index.html')}`);
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.json': 'application/json' };
+let server = null;
+if (arg('serve', false)) {
+  server = http.createServer((req, res) => {
+    const file = path.join(root, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+    fs.createReadStream(file).pipe(res);
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+}
+const base = arg('url', server ? `http://127.0.0.1:${server.address().port}/index.html` : `file://${path.join(root, 'index.html')}`);
+const extraQ = arg('query', '') ? `&${arg('query')}` : '';
 const [w, h] = String(arg('size', '1920x1080')).split('x').map(Number);
 let sha = 'unknown';
 try { sha = execSync('git rev-parse --short HEAD', { cwd: root }).toString().trim(); } catch { /* not a repo */ }
@@ -53,7 +72,7 @@ for (const thr of throttles) {
     const cdp = await ctx.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: thr });
     const sep = base.includes('?') ? '&' : '?';
-    await page.goto(`${base}${sep}stress&speed=${sp}&benchwarm=${warm}&benchdur=${dur}`, { timeout: 300000 });
+    await page.goto(`${base}${sep}stress&speed=${sp}&benchwarm=${warm}&benchdur=${dur}&workerslow=${thr}${extraQ}`, { timeout: 300000 });
     let r;
     try {
       await page.waitForFunction(() => window.__benchResult, null, { timeout: (warm + dur) * 1000 * 6 + 120000, polling: 500 });
@@ -62,7 +81,7 @@ for (const thr of throttles) {
       r = { error: String(e.message || e).slice(0, 200) };
     }
     await ctx.close();
-    const row = { ts: new Date().toISOString(), label, sha, dirty, gpu, throttle: thr, speed: sp, ...r, errors };
+    const row = { ts: new Date().toISOString(), label, sha, dirty, gpu, url: base, query: extraQ, throttle: thr, speed: sp, ...r, errors };
     row.pass = !r.error && pass(r);
     rows.push(row);
     fs.appendFileSync(path.join(root, 'perf/results.jsonl'), `${JSON.stringify(row)}\n`);
@@ -71,12 +90,13 @@ for (const thr of throttles) {
   }
 }
 await browser.close();
+if (server) server.close();
 
 // ---- markdown summary
 const f = (v, d = 1) => (v == null || Number.isNaN(v) ? '–' : v.toFixed(d));
 let md = `# Stress matrix — ${label}\n\n`;
 md += `commit \`${sha}\`${dirty ? ' (+uncommitted js changes)' : ''} · ${new Date().toISOString()} · ${w}×${h}@1 · GPU: ${gpu}\n`;
-md += `Scenario: \`?stress\` (5 000 enemies, 100 towers, ≥ 1 000 projectiles), ${warm} s warm-up + ${dur} s sampled per cell.\n\n`;
+md += `Scenario: \`?stress\` (5 000 enemies, 100 towers, ≥ 1 000 projectiles), ${warm} s warm-up + ${dur} s sampled per cell. URL: \`${base.replace(/:\d+\//, ':PORT/')}\` flags \`${extraQ || 'none'}\`. Sim: ${rows[0]?.worker ? 'Web Worker (CPU slowdown emulated in the worker)' : 'main thread'}.\n\n`;
 md += '| CPU throttle | speed | avg FPS | p50 / p95 / p99 ms | > 33 ms | CPU/frame ms | sim ms | render ms | ms/tick | ticks/frame | speed achieved | result |\n';
 md += '|---|---|---|---|---|---|---|---|---|---|---|---|\n';
 for (const r of rows) {

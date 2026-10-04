@@ -19,6 +19,7 @@ Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes 
 | 1 | Targeting: fused query and scoring, culling of grid cells outside the range circle, per-cell cached best target used as an upper bound | **−24.5%** | **−25.7%** | 10 |
 | 2 | Tesla chain: nearest-first cell walk with distance pruning | **−10.3%** vs #1 | **−11.2%** vs #1 | 10 |
 | 3 | *(branch `perf/frame-budget`)* Frame-time budget for sim catch-up | +2% (noise) | **−55.5%** vs #2 | 10 |
+| 4 | *(branch `perf/sim-worker`)* Simulation in a Web Worker, with snapshots to the main thread | +14% (includes snapshot encode) | **−63.4%** vs the same build without a worker | **11** |
 
 ## 0 · Baseline: where it breaks
 
@@ -110,3 +111,44 @@ On a slow CPU each frame then needed more ticks, which made frames slower still,
 Frame CPU fell 55.5% (geomean), and the game stays responsive at every throttle and speed.
 The cost is sim throughput when the CPU is overloaded, because render overhead is now paid on every frame.
 So no new cell passes, since the speed criterion fails. Getting 60 FPS and full throughput together needs the sim on another core (step 4).
+
+## 4 · Simulation in a Web Worker (`perf/sim-worker`)
+
+**Architecture change.** `js/sim-worker.js` owns the authoritative `Sim` and the bot, and steps them on its own fixed-step clock.
+The worker caps its own catch-up at 12 ms per pump, so it keeps posting snapshots.
+
+After each pump the worker packs the render state into one transferable `ArrayBuffer`, defined in `js/core/snapshot.js`:
+- a Float64 header of scalars
+- fixed-capacity Float32 SoA blocks for enemies and projectiles
+- per-tower dynamic state
+- the fx and sound event stream the sim emitted since the last snapshot
+
+Two buffers ping-pong: one is shown and one is in flight. The main thread hands the spare back once per rendered frame, so snapshots never outpace the display.
+On the main thread, `SimView` exposes the same field names as `Sim`, so `scene.js` and `ui.js` stay almost unchanged.
+`SimView` replays the fx events into the particle system and checks player commands locally with the same rules as `Sim`.
+It applies each command optimistically and posts it to the worker, which stays authoritative.
+
+Fallbacks:
+- `file://` blocks worker scripts, so `index.html` opened that way keeps the single-thread path.
+- `?noworker` forces the single-thread path.
+- The single-file `dist/bastion.html` inlines the worker source and starts it as a Blob worker, so it works from `file://` as well.
+
+**How the worker is measured.** DevTools CPU throttling does not reach workers.
+I confirmed this: CDP answers "Operation is only supported for pages, not workers", and a worker busy-loop ran at full speed under 4× throttle.
+So the harness passes `?workerslow=N`. After each pump, the worker busy-waits for (N − 1) × the time that pump's work took.
+The emulation holds up: the worker measures 2.2–2.5 ms/tick at an emulated 4× slowdown, against 2.0 ms/tick on the main thread under real 4× throttling.
+Both runs below use the same HTTP origin (`--serve`): `04-noworker-http` against `04-sim-worker`.
+
+| Cell | No worker | Worker |
+|---|---|---|
+| 1× CPU, 12× speed: main-thread CPU/frame | 6.3 ms | **0.7 ms** |
+| 4× CPU, 8×: FPS / achieved speed | 60 / 5.83× | 60 / **7.04×** |
+| 6× CPU, 4× | 59.9 FPS / 3.37× ❌ | 60 / **4.00× ✅** |
+| 20× CPU, 1× | 36.0 FPS / 0.60× | **51.9 FPS / 1.00×** |
+| 20× CPU, 12× | 41.5 FPS / 0.69× | **59.9 FPS / 1.56×** |
+
+- Main-thread frame CPU fell 63.4% (geomean). Against the original baseline it is down 89.3%.
+- The worker's ms/tick is about 14% higher than the in-thread sim, because it includes encoding a snapshot per pump. At low game speeds that cost is amortised over few ticks.
+- What still fails:
+  - 4× and 6× CPU at 8–12×: the worker core is saturated, and the game reaches about 7× and about 4.7×.
+  - 20× CPU at 1×: main-thread **render** CPU (scene build plus particles, about 15 ms) is now the bottleneck.

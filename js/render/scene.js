@@ -120,7 +120,20 @@ var TD = globalThis.TD;
     var ex = sim.eX, ey = sim.eY, epx = sim.ePX, epy = sim.ePY, rot = sim.eRot, type = sim.eType;
     var flash = sim.eFlash, slowT = sim.eSlowT, vis = this.vis, nv = 0;
     var eF = this.eF, ENE = TD.ENEMIES;
-    for (let cy = r0; cy <= r1; cy++) {
+    if (sim.isView) {
+      // worker snapshot: dense arrays, no grid; a bounds check per enemy
+      const slot = sim.eSlot;
+      for (let s = 0, n = sim.eCount; s < n; s++) {
+        const X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
+        if (X < x0 - 30 || X > x1 + 30 || Y < y0 - 30 || Y > y1 + 30) continue;
+        vis[nv++] = s;
+        if (dbg.noEnemies) continue;
+        const ty = type[s], fr = eF[ty];
+        const wob = Math.sin(t * 9 + slot[s]) * 0.07;
+        if (ENE[ty].radius > 12) r.push(F.shadow, X + 3, Y + 5, fr.w * 1.1, fr.h * 0.9, 0, C.shadow);
+        r.push(fr, X, Y, fr.w, fr.h, rot[s] + wob, slowT[s] > 0 ? C.slow : WHITE, flash[s] > 0 ? flash[s] * 0.55 : 0);
+      }
+    } else for (let cy = r0; cy <= r1; cy++) {
       for (let cx = c0; cx <= c1; cx++) {
         const cell = cy * gc + cx;
         for (let it = start[cell], end = start[cell + 1]; it < end; it++) {
