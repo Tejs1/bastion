@@ -3,7 +3,8 @@
  * buffers (oldest effect is overwritten), so effect storms under stress can
  * never grow memory or stall the frame. A per-frame emission budget further
  * thins particle bursts when thousands of events happen at once. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -78,8 +79,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   P.burst = function (x, y, n, speed, life, size, rgb, add, frame, drag) {
     var R = this.rnd;
-    for (var k = 0; k < n; k++) {
-      var a = R.next() * 6.283, s = speed * (0.35 + R.next() * 0.65);
+    for (let k = 0; k < n; k++) {
+      const a = R.next() * 6.283, s = speed * (0.35 + R.next() * 0.65);
       this.particle(x, y, Math.cos(a) * s, Math.sin(a) * s, life * (0.6 + R.next() * 0.5),
         size * (0.7 + R.next() * 0.6), size * 0.2, rgb[0], rgb[1], rgb[2], add, frame, drag);
     }
@@ -97,7 +98,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var ca = Math.cos(ang), sa = Math.sin(ang);
     this.particle(x, y, ca * 30, sa * 30, 0.08, 14, 6, c[0], c[1], c[2], 1, F_GLOW, 0);
     if (type === 1) {
-      for (var k = 0; k < 2; k++) this.particle(x, y, ca * 25 + (this.rnd.next() - 0.5) * 20, sa * 25 + (this.rnd.next() - 0.5) * 20,
+      for (let k = 0; k < 2; k++) this.particle(x, y, ca * 25 + (this.rnd.next() - 0.5) * 20, sa * 25 + (this.rnd.next() - 0.5) * 20,
         0.6, 8, 18, 140, 130, 120, 0, F_SMOKE, 2.5);
       this.sound('cannon');
     } else this.sound('blaster');
@@ -106,8 +107,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
   P.hit = function (x, y) {
     this.particle(x, y, 0, 0, 0.12, 12, 4, 120, 230, 255, 1, F_GLOW, 0);
     var R = this.rnd;
-    for (var k = 0; k < 2; k++) {
-      var a = R.next() * 6.283;
+    for (let k = 0; k < 2; k++) {
+      const a = R.next() * 6.283;
       this.particle(x, y, Math.cos(a) * 120, Math.sin(a) * 120, 0.18, 2.5, 0.5, 170, 240, 255, 1, F_DOT, 6);
     }
   };
@@ -143,8 +144,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var o = i * 12, R = this.rnd;
     var dx = x1 - x0, dy = y1 - y0, len = Math.sqrt(dx * dx + dy * dy) || 1;
     var nx = -dy / len, ny = dx / len, j = Math.min(14, len * 0.22);
-    for (var k = 0; k < 6; k++) {
-      var t = k / 5, off = (k === 0 || k === 5) ? 0 : (R.next() - 0.5) * 2 * j;
+    for (let k = 0; k < 6; k++) {
+      const t = k / 5, off = (k === 0 || k === 5) ? 0 : (R.next() - 0.5) * 2 * j;
       this.bPts[o + k * 2] = x0 + dx * t + nx * off;
       this.bPts[o + k * 2 + 1] = y0 + dy * t + ny * off;
     }
@@ -159,8 +160,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.bPts[o] = x0; this.bPts[o + 1] = y0; this.bPts[o + 2] = x1; this.bPts[o + 3] = y1;
     this.particle(x0, y0, 0, 0, 0.18, 26, 8, 140, 255, 170, 1, F_GLOW, 0);
     var R = this.rnd;
-    for (var k = 0; k < 6; k++) {
-      var t = R.next();
+    for (let k = 0; k < 6; k++) {
+      const t = R.next();
       this.particle(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, (R.next() - 0.5) * 60, (R.next() - 0.5) * 60,
         0.4, 3, 0.5, 160, 255, 190, 1, F_DOT, 3);
     }
@@ -171,8 +172,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.ring(x, y, 12, r, 0.45, ad(150, 235, 255, 0.85), 1);
     this.ring(x, y, r * 0.98, r, 0.25, ad(150, 235, 255, 0.35), 0);
     var R = this.rnd;
-    for (var k = 0; k < 6; k++) {
-      var a = R.next() * 6.283, d = R.next() * r * 0.8;
+    for (let k = 0; k < 6; k++) {
+      const a = R.next() * 6.283, d = R.next() * r * 0.8;
       this.particle(x + Math.cos(a) * d, y + Math.sin(a) * d, 0, -14, 0.7, 7, 3, 200, 245, 255, 1, F_FLAKE, 1);
     }
     this.sound('frost');
@@ -181,7 +182,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   P.heal = function (x, y, r) {
     this.ring(x, y, 6, r, 0.5, ad(90, 255, 150, 0.6), 1);
     var R = this.rnd;
-    for (var k = 0; k < 4; k++) {
+    for (let k = 0; k < 4; k++) {
       this.particle(x + (R.next() - 0.5) * r, y + (R.next() - 0.5) * r, 0, -30, 0.7, 7, 4, 110, 255, 160, 1, F_PLUS, 1);
     }
   };
@@ -214,23 +215,23 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (dt <= 0) return;
     var life = this.life, px = this.px, py = this.py, vx = this.vx, vy = this.vy, drag = this.drag, grav = this.grav;
     var rot = this.rot, vr = this.vr;
-    for (var i = 0; i < PCAP; i++) {
+    for (let i = 0; i < PCAP; i++) {
       if (life[i] <= 0) continue;
       life[i] -= dt;
-      var d = 1 - drag[i] * dt; if (d < 0) d = 0;
+      let d = 1 - drag[i] * dt; if (d < 0) d = 0;
       vx[i] *= d; vy[i] = vy[i] * d + grav[i] * dt;
       px[i] += vx[i] * dt; py[i] += vy[i] * dt;
       rot[i] += vr[i] * dt;
     }
-    for (i = 0; i < BCAP; i++) if (this.bLife[i] > 0) this.bLife[i] -= dt;
-    for (i = 0; i < RCAP; i++) if (this.rLife[i] > 0) this.rLife[i] -= dt;
-    for (i = 0; i < DCAP; i++) if (this.dLife[i] > 0) this.dLife[i] -= dt;
-    for (i = 0; i < TCAP; i++) if (this.tLife[i] > 0) this.tLife[i] -= dt;
+    for (let i = 0; i < BCAP; i++) if (this.bLife[i] > 0) this.bLife[i] -= dt;
+    for (let i = 0; i < RCAP; i++) if (this.rLife[i] > 0) this.rLife[i] -= dt;
+    for (let i = 0; i < DCAP; i++) if (this.dLife[i] > 0) this.dLife[i] -= dt;
+    for (let i = 0; i < TCAP; i++) if (this.tLife[i] > 0) this.tLife[i] -= dt;
   };
 
   P.count = function () {
     var n = 0;
-    for (var i = 0; i < PCAP; i++) if (this.life[i] > 0) n++;
+    for (let i = 0; i < PCAP; i++) if (this.life[i] > 0) n++;
     return n;
   };
 })();

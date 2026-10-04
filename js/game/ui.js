@@ -2,7 +2,8 @@
  * The HUD is plain DOM layered over the canvas. Values are diffed against a
  * cache and only written when they change, so the UI adds ~0 layout cost per
  * frame even while the game renders thousands of sprites. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -311,9 +312,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.set('hScore', sim.score.toLocaleString());
 
     // palette affordability / selection
-    for (var i = 0; i < this.cards.length; i++) {
-      var poor = gold < TD.TOWERS[i].cost, sel = game.placing === i;
-      var k = (poor ? 1 : 0) + (sel ? 2 : 0);
+    for (let i = 0; i < this.cards.length; i++) {
+      const poor = gold < TD.TOWERS[i].cost, sel = game.placing === i;
+      const k = (poor ? 1 : 0) + (sel ? 2 : 0);
       if (c[`card${i}`] !== k) {
         c[`card${i}`] = k;
         this.cards[i].classList.toggle('poor', poor);
@@ -336,12 +337,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var cd = sim.countdown > 0 ? sim.countdown : 0;
     var bonus = 0;
     if (can && sim.wave > 0) {
-      var frac = cd > 0 ? cd / TD.WAVE_COUNTDOWN : 1;
+      const frac = cd > 0 ? cd / TD.WAVE_COUNTDOWN : 1;
       bonus = Math.round(TD.earlyCallBonus(next) * frac);
     }
     var key = `${next}:${can}:${final}:${bonus}:${Math.ceil(cd)}`;
     if (key !== this.wbKey) {
-      var nk = this.wbKey.split(':')[0];
+      const nk = this.wbKey.split(':')[0];
       this.wbKey = key;
       if (nk !== String(next)) {
         if (final) {
@@ -350,14 +351,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
           $('wbList').innerHTML = '';
         } else {
           $('wbTitle').textContent = `Wave ${next}`;
-          var boss = next % 10 === 0;
-          var sub = $('wbSub');
+          const boss = next % 10 === 0;
+          const sub = $('wbSub');
           sub.textContent = boss ? 'BOSS' : next === TD.TOTAL_WAVES ? 'FINAL' : '';
           sub.className = boss ? 'boss' : '';
           $('wbList').innerHTML = TD.waveSummary(next, sim.map.paths.length).map((g) => `<span class="wb-item" title="${TD.ENEMIES[g.type].name}"><img alt="" src="${this.icons.enemy[g.type]}">${g.count}</span>`).join('');
         }
       }
-      var label = final ? (sim.state === 'running' ? 'Hold the line!' : '—')
+      const label = final ? (sim.state === 'running' ? 'Hold the line!' : '—')
         : sim.wave === 0 ? 'Start wave 1'
         : !can ? 'Incoming…'
         : cd > 0 ? `Next wave · ${Math.ceil(cd)}s`
@@ -370,7 +371,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (this.cache.bar !== bar) { this.cache.bar = bar; $('bNextBar').style.width = bar; }
   };
 
-  U.setPerfText = (txt) => { $('perf').firstChild ? ($('perf').firstChild.nodeValue = txt) : $('perf').appendChild(document.createTextNode(txt)); };
+  U.setPerfText = (txt) => {
+    if ($('perf').firstChild) $('perf').firstChild.nodeValue = txt;
+    else $('perf').appendChild(document.createTextNode(txt));
+  };
 
   function formatTime(s) {
     var m = Math.floor(s / 60), ss = Math.floor(s % 60);

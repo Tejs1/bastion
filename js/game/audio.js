@@ -1,7 +1,8 @@
 /* Bastion — tiny synthesized sound effects (WebAudio, no assets).
  * Each sound has a minimum re-trigger interval and there is a global voice
  * cap, so a 5,000-enemy firefight can't flood the audio graph. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -52,7 +53,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var len = this.ctx.sampleRate * 0.6;
     this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     var d = this.noise.getChannelData(0);
-    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   };
 
   A.setMuted = function (m) {
@@ -129,7 +130,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.env(this.osc('square', 233, 116, t, 0.3), t, v * 0.6, 0.005, 0.3);
   };
   A.chord = function (t, notes, type, v, step, dur) {
-    for (var i = 0; i < notes.length; i++) {
+    for (let i = 0; i < notes.length; i++) {
       this.env(this.osc(type, notes[i], notes[i], t + i * step, dur), t + i * step, v, 0.01, dur);
     }
   };

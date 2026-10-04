@@ -3,7 +3,8 @@
  * single 2048x2048 texture, so the whole scene renders from one texture with
  * one draw call. Sprites are authored in world units and rasterised at SS
  * pixels per world unit, which keeps them crisp up to ~2x zoom on hi-dpi. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -64,13 +65,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
   function poly(c, pts) {
     c.beginPath();
     c.moveTo(pts[0], pts[1]);
-    for (var i = 2; i < pts.length; i += 2) c.lineTo(pts[i], pts[i + 1]);
+    for (let i = 2; i < pts.length; i += 2) c.lineTo(pts[i], pts[i + 1]);
     c.closePath();
   }
   function ngon(c, n, r, rot) {
     c.beginPath();
-    for (var i = 0; i < n; i++) {
-      var a = rot + i * Math.PI * 2 / n;
+    for (let i = 0; i < n; i++) {
+      const a = rot + i * Math.PI * 2 / n;
       if (i) c.lineTo(Math.cos(a) * r, Math.sin(a) * r); else c.moveTo(Math.cos(a) * r, Math.sin(a) * r);
     }
     c.closePath();
@@ -86,7 +87,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   }
   function radial(c, r, stops) {
     var g = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    for (var i = 0; i < stops.length; i += 2) g.addColorStop(stops[i], stops[i + 1]);
+    for (let i = 0; i < stops.length; i += 2) g.addColorStop(stops[i], stops[i + 1]);
     return g;
   }
   function shade(hex, f) {
@@ -135,7 +136,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     A.add('shard', 8, 8, (c) => { poly(c, [0, -3.6, 2.4, 0, 0, 3.6, -2.4, 0]); c.fillStyle = '#fff'; c.fill(); });
     A.add('flake', 12, 12, (c) => {
       c.strokeStyle = '#fff'; c.lineWidth = 1.1; c.lineCap = 'round';
-      for (var i = 0; i < 3; i++) { c.save(); c.rotate(i * Math.PI / 3); c.beginPath(); c.moveTo(-5, 0); c.lineTo(5, 0); c.stroke(); c.restore(); }
+      for (let i = 0; i < 3; i++) { c.save(); c.rotate(i * Math.PI / 3); c.beginPath(); c.moveTo(-5, 0); c.lineTo(5, 0); c.stroke(); c.restore(); }
     });
     A.add('plus', 12, 12, (c) => { c.fillStyle = '#fff'; rrect(c, -1.6, -5, 3.2, 10, 1); c.fill(); rrect(c, -5, -1.6, 10, 3.2, 1); c.fill(); });
     A.add('scorch', 48, 48, (c) => {
@@ -143,8 +144,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
       c.fillRect(-24, -24, 48, 48);
     });
     A.add('smoke', 32, 32, (c) => {
-      for (var i = 0; i < 5; i++) {
-        var a = i * 1.3, r = 6 + (i % 3) * 2;
+      for (let i = 0; i < 5; i++) {
+        const a = i * 1.3, r = 6 + (i % 3) * 2;
         c.beginPath(); c.arc(Math.cos(a) * 5, Math.sin(a) * 5, r, 0, 7);
         c.fillStyle = 'rgba(255,255,255,0.22)'; c.fill();
       }
@@ -187,7 +188,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       rrect(c, -12, -13.5, 24, 5, 2); c.fillStyle = '#2b3240'; c.fill(); outline(c, 0.8);
       rrect(c, -12, 8.5, 24, 5, 2); c.fillStyle = '#2b3240'; c.fill(); outline(c, 0.8);
       c.fillStyle = '#4a5466';
-      for (var i = -10; i < 12; i += 4) { c.fillRect(i, -13, 1.4, 4); c.fillRect(i, 9, 1.4, 4); }
+      for (let i = -10; i < 12; i += 4) { c.fillRect(i, -13, 1.4, 4); c.fillRect(i, 9, 1.4, 4); }
       rrect(c, -11, -9.5, 22, 19, 4); c.fillStyle = bodyFill(c, col, 12); c.fill(); outline(c, 1.3);
       rrect(c, -6.5, -6, 13, 12, 3); c.fillStyle = shade(col, -0.35); c.fill(); outline(c, 0.8);
       c.beginPath(); c.arc(1, 0, 3.2, 0, 7); c.fillStyle = '#ff5a5a'; c.fill();
@@ -214,7 +215,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     enemy('boss', 58, (c) => {
       var col = EN[7].color;
       c.fillStyle = shade(col, -0.5);
-      for (var i = 0; i < 8; i++) {
+      for (let i = 0; i < 8; i++) {
         c.save(); c.rotate(i * Math.PI / 4 + Math.PI / 8);
         poly(c, [20, -4, 27, 0, 20, 4]); c.fill(); outline(c, 1);
         c.restore();
@@ -223,7 +224,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       ngon(c, 8, 15, Math.PI / 8); c.fillStyle = shade(col, -0.62); c.fill();
       c.lineWidth = 1.2; c.strokeStyle = shade(col, 0.1); c.stroke();
       c.beginPath(); c.arc(4, 0, 6, 0, 7); c.fillStyle = radial(c, 6, [0, '#fff', 0.4, '#ffd0dc', 1, '#ff3d6e']); c.fill();
-      for (i = 0; i < 4; i++) { c.beginPath(); c.arc(-7, (i - 1.5) * 4.5, 1.4, 0, 7); c.fillStyle = '#ffb3c6'; c.fill(); }
+      for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(-7, (i - 1.5) * 4.5, 1.4, 0, 7); c.fillStyle = '#ffb3c6'; c.fill(); }
     });
 
     // towers: shared base plate tinted per type + turret per level
@@ -243,7 +244,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fillStyle = '#121822'; c.fill();
         c.lineWidth = 1.2; c.strokeStyle = shade(col, -0.35); c.stroke();
       });
-      for (var lv = 0; lv < 4; lv++) {
+      for (let lv = 0; lv < 4; lv++) {
         A.add(`tt_${def.id}${lv}`, 44, 44, turretDrawer(def.id, col, lv));
       }
     });
@@ -252,7 +253,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     A.add('core', 80, 80, (c) => {
       ngon(c, 6, 30, 0); c.fillStyle = '#1a2233'; c.fill(); c.lineWidth = 2.5; c.strokeStyle = '#3a4a66'; c.stroke();
       ngon(c, 6, 24, 0); c.lineWidth = 1.2; c.strokeStyle = 'rgba(79,209,255,0.6)'; c.stroke();
-      for (var i = 0; i < 6; i++) {
+      for (let i = 0; i < 6; i++) {
         c.save(); c.rotate(i * Math.PI / 3);
         rrect(c, 24, -3, 9, 6, 2); c.fillStyle = '#2a3650'; c.fill(); outline(c, 0.8);
         c.restore();
@@ -260,7 +261,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       ngon(c, 6, 13, Math.PI / 6); c.fillStyle = radial(c, 14, [0, '#ffffff', 0.35, '#bff3ff', 1, '#2aa9e0']); c.fill();
     });
     A.add('portal', 48, 48, (c) => {
-      for (var i = 0; i < 3; i++) {
+      for (let i = 0; i < 3; i++) {
         c.beginPath(); c.arc(0, 0, 20 - i * 5, i, i + 4.2);
         c.lineWidth = 2.4 - i * 0.5; c.strokeStyle = `rgba(255,255,255,${0.9 - i * 0.2})`; c.stroke();
       }
@@ -283,9 +284,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     return (c) => {
       var dark = shade(col, -0.55), mid = shade(col, -0.2);
       if (id === 'blaster') {
-        var n = lv >= 2 ? 2 : 1, len = 13 + lv * 1.5;
-        for (var i = 0; i < n; i++) {
-          var y = n === 1 ? 0 : (i ? 3.6 : -3.6);
+        const n = lv >= 2 ? 2 : 1, len = 13 + lv * 1.5;
+        for (let i = 0; i < n; i++) {
+          const y = n === 1 ? 0 : (i ? 3.6 : -3.6);
           rrect(c, 2, y - 1.8, len, 3.6, 1.2); c.fillStyle = '#2b3446'; c.fill(); outline(c, 0.8);
           c.fillStyle = col; c.fillRect(len - 1, y - 1.2, 2.4, 2.4);
         }
@@ -293,17 +294,17 @@ var TD = globalThis.TD || (globalThis.TD = {});
         c.beginPath(); c.arc(0, 0, 7.5 + lv * 0.4, 0, 7); c.fillStyle = bodyFill(c, col, 8); c.fill(); outline(c, 1.1);
         c.beginPath(); c.arc(0, 0, 3, 0, 7); c.fillStyle = '#e8fbff'; c.fill();
       } else if (id === 'cannon') {
-        var bw = 6 + lv * 0.8;
+        const bw = 6 + lv * 0.8;
         rrect(c, 0, -bw / 2, 13 + lv, bw, 2); c.fillStyle = '#3a2c22'; c.fill(); outline(c, 1);
         c.fillStyle = col; c.fillRect(10 + lv, -bw / 2 - 0.6, 2.2, bw + 1.2);
         if (lv >= 2) { c.fillStyle = mid; c.fillRect(5, -bw / 2 - 0.4, 1.6, bw + 0.8); }
         ngon(c, 8, 9 + lv * 0.5, Math.PI / 8); c.fillStyle = bodyFill(c, '#8a6038', 9); c.fill(); outline(c, 1.1);
         ngon(c, 8, 5, Math.PI / 8); c.fillStyle = dark; c.fill();
         c.beginPath(); c.arc(0, 0, 2.2, 0, 7); c.fillStyle = col; c.fill();
-        if (lv === 3) { for (var k = 0; k < 4; k++) { c.save(); c.rotate(k * Math.PI / 2 + Math.PI / 4); c.fillStyle = col; c.fillRect(7.5, -1, 3, 2); c.restore(); } }
+        if (lv === 3) { for (let k = 0; k < 4; k++) { c.save(); c.rotate(k * Math.PI / 2 + Math.PI / 4); c.fillStyle = col; c.fillRect(7.5, -1, 3, 2); c.restore(); } }
       } else if (id === 'frost') {
-        var r = 8 + lv * 1.2;
-        for (k = 0; k < 6; k++) {
+        const r = 8 + lv * 1.2;
+        for (let k = 0; k < 6; k++) {
           c.save(); c.rotate(k * Math.PI / 3);
           poly(c, [r * 0.55, -2.2, r + 3, 0, r * 0.55, 2.2]); c.fillStyle = k % 2 ? '#d8fbff' : col; c.fill(); outline(c, 0.7);
           c.restore();
@@ -311,8 +312,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
         ngon(c, 6, r * 0.62, Math.PI / 6); c.fillStyle = bodyFill(c, col, r); c.fill(); outline(c, 1);
         ngon(c, 6, r * 0.3, 0); c.fillStyle = '#ffffff'; c.fill();
       } else if (id === 'tesla') {
-        var prongs = 2 + lv;
-        for (k = 0; k < prongs; k++) {
+        const prongs = 2 + lv;
+        for (let k = 0; k < prongs; k++) {
           c.save(); c.rotate(k * Math.PI * 2 / prongs);
           rrect(c, 5, -1.3, 7 + lv * 0.6, 2.6, 1); c.fillStyle = '#3b2a55'; c.fill(); outline(c, 0.7);
           c.beginPath(); c.arc(12 + lv * 0.6, 0, 1.8, 0, 7); c.fillStyle = col; c.fill();
@@ -322,7 +323,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         c.beginPath(); c.arc(0, 0, 6.5, 0, 7); c.lineWidth = 1.4; c.strokeStyle = mid; c.stroke();
         c.beginPath(); c.arc(0, 0, 4.6, 0, 7); c.fillStyle = radial(c, 4.6, [0, '#ffffff', 0.5, '#e6d2ff', 1, col]); c.fill();
       } else if (id === 'rail') {
-        var L = 17 + lv * 1.6;
+        const L = 17 + lv * 1.6;
         rrect(c, 0, -3.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         rrect(c, 0, 1.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         c.fillStyle = col; c.globalAlpha = 0.85; c.fillRect(2, -0.7, L - 3, 1.4); c.globalAlpha = 1;

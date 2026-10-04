@@ -132,7 +132,7 @@ if (mode === 'trace') {
   while (sim.state !== 'victory' && sim.state !== 'defeat') {
     bot.update(); sim.step();
     if (sim.wave !== last) {
-      const counts = [0,0,0,0,0]; sim.towers.forEach(t => counts[t.type]++);
+      const counts = [0,0,0,0,0]; sim.towers.forEach(t => { counts[t.type]++; });
       console.log(`w${String(last).padStart(2)} lost ${lives - sim.lives} gold ${Math.floor(sim.gold)} towers ${counts.join('/')} levels ${sim.towers.reduce((a, t) => a + t.level, 0)}`);
       last = sim.wave; lives = sim.lives;
     }

@@ -1,5 +1,6 @@
 /* Bastion — shared namespace and small utilities (no DOM). */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -7,7 +8,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
    *  so that runs are reproducible regardless of frame rate. */
   function RNG(seed) { this.s = seed >>> 0; }
   RNG.prototype.next = function () {
-    var t = (this.s = (this.s + 0x6D2B79F5) >>> 0);
+    this.s = (this.s + 0x6D2B79F5) >>> 0;
+    var t = this.s;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;

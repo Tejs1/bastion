@@ -1,7 +1,8 @@
 /* Bastion — pointer/touch/keyboard input. Converts raw events into game
  * intents (tap, hover, pan, zoom). Handlers run immediately on the event, so
  * the UI stays responsive regardless of simulation load. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -44,7 +45,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     try { this.canvas.setPointerCapture(e.pointerId); } catch (_err) { /* ignore */ }
     this.pointers.set(e.pointerId, { x: p.x, y: p.y, sx: p.x, sy: p.y, type: e.pointerType, button: e.button, t: performance.now() });
     if (this.pointers.size === 2) {
-      var pts = Array.from(this.pointers.values());
+      const pts = Array.from(this.pointers.values());
       this.pinch = { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), cx: (pts[0].x + pts[1].x) / 2, cy: (pts[0].y + pts[1].y) / 2 };
       this.dragging = true;
     }
@@ -61,9 +62,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var dx = p.x - ptr.x, dy = p.y - ptr.y;
     ptr.x = p.x; ptr.y = p.y;
     if (this.pinch && this.pointers.size >= 2) {
-      var pts = Array.from(this.pointers.values());
-      var d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      var cx = (pts[0].x + pts[1].x) / 2, cy = (pts[0].y + pts[1].y) / 2;
+      const pts = Array.from(this.pointers.values());
+      const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const cx = (pts[0].x + pts[1].x) / 2, cy = (pts[0].y + pts[1].y) / 2;
       this.game.pan(cx - this.pinch.cx, cy - this.pinch.cy);
       if (this.pinch.d > 10) this.game.zoomAt(cx, cy, d / this.pinch.d);
       this.pinch.d = d; this.pinch.cx = cx; this.pinch.cy = cy;

@@ -30,6 +30,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 #view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: default; }
 #view.placing { cursor: crosshair; }
 #view.panning { cursor: grabbing; }
+/* biome-ignore lint/complexity/noImportantStyles: .hidden must beat id/class display rules */
 .hidden { display: none !important; }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; touch-action: manipulation; }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -52,6 +53,7 @@ b, .num { font-variant-numeric: tabular-nums; }
 .seg button { padding: 6px 10px; border-radius: 7px; font-weight: 700; font-size: 13px; color: var(--muted); }
 .seg button.on { background: rgba(79, 209, 255, 0.18); color: var(--text); box-shadow: inset 0 0 0 1px rgba(79, 209, 255, 0.45); }
 .seg.wide { display: flex; width: 100%; }
+fieldset.seg { margin: 0; min-width: 0; }
 .seg.wide button { flex: 1; padding: 9px 6px; }
 .icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--line); }
 .icon svg { width: 18px; height: 18px; fill: currentColor; }
@@ -271,17 +273,17 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
   <div id="hud" class="hidden">
     <header class="topbar">
       <div class="stats">
-        <div class="stat" id="stLives" title="Base integrity"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.3 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.7 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"/></svg><b id="hLives">20</b></div>
-        <div class="stat gold" id="stGold" title="Credits"><svg viewBox="0 0 24 24"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg><b id="hGold">0</b></div>
+        <div class="stat" id="stLives" title="Base integrity"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.3 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.7 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"/></svg><b id="hLives">20</b></div>
+        <div class="stat gold" id="stGold" title="Credits"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg><b id="hGold">0</b></div>
         <div class="stat wave" title="Wave"><span class="lbl">Wave</span><b id="hWave">0</b><span class="of">/50</span></div>
         <div class="stat score" title="Score"><span class="lbl">Score</span><b id="hScore">0</b></div>
       </div>
       <div class="controls">
-        <div class="seg" id="speedSeg" role="group" aria-label="Game speed">
-          <button data-speed="1" class="on">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button>
-        </div>
-        <button class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
-        <button class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <fieldset class="seg" id="speedSeg" aria-label="Game speed">
+          <button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button>
+        </fieldset>
+        <button type="button" class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+        <button type="button" class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
     </header>
 
@@ -295,7 +297,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
       <div id="waveBox" class="panel">
         <div class="wb-head"><span id="wbTitle">Wave 1</span><span id="wbSub"></span></div>
         <div id="wbList" class="wb-list"></div>
-        <button id="bNext" class="primary"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><i id="bNextBar"></i></button>
+        <button type="button" id="bNext" class="primary"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><i id="bNextBar"></i></button>
       </div>
     </footer>
 
@@ -306,18 +308,18 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
   <section id="scrMenu" class="screen">
     <div class="menu-card">
       <div class="brand">
-        <div class="logo"><svg viewBox="0 0 64 64"><path d="M32 4l24 14v28L32 60 8 46V18z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M32 18l12 7v14l-12 7-12-7V25z" fill="currentColor"/></svg></div>
+        <div class="logo"><svg aria-hidden="true" viewBox="0 0 64 64"><path d="M32 4l24 14v28L32 60 8 46V18z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M32 18l12 7v14l-12 7-12-7V25z" fill="currentColor"/></svg></div>
         <div><h1>BASTION</h1><p class="tag">Hold the line for fifty waves.</p></div>
       </div>
       <h2>Battlefield</h2>
       <div id="mapList" class="map-list"></div>
       <h2>Difficulty</h2>
       <div class="seg wide" id="diffSeg"></div>
-      <button id="bPlay" class="primary big">Deploy</button>
+      <button type="button" id="bPlay" class="primary big">Deploy</button>
       <div class="menu-row">
-        <button id="bHelp" class="ghost">How to play</button>
-        <button id="bDemo" class="ghost">Watch AI demo</button>
-        <button id="bStress" class="ghost">Stress test</button>
+        <button type="button" id="bHelp" class="ghost">How to play</button>
+        <button type="button" id="bDemo" class="ghost">Watch AI demo</button>
+        <button type="button" id="bStress" class="ghost">Stress test</button>
       </div>
       <p class="fine">Mouse, touch or keyboard · Press <kbd>?</kbd> in game for shortcuts</p>
     </div>
@@ -326,12 +328,12 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
   <section id="scrPause" class="screen hidden">
     <div class="menu-card narrow">
       <h1 class="small">Paused</h1>
-      <button id="bResume" class="primary big">Resume</button>
-      <button id="bRestart" class="ghost">Restart battle</button>
+      <button type="button" id="bResume" class="primary big">Resume</button>
+      <button type="button" id="bRestart" class="ghost">Restart battle</button>
       <label class="check"><input type="checkbox" id="optPerf"> Show performance overlay</label>
       <label class="check"><input type="checkbox" id="optAuto" checked> Auto-start next wave</label>
-      <button id="bHelp2" class="ghost">How to play</button>
-      <button id="bQuit" class="ghost">Quit to menu</button>
+      <button type="button" id="bHelp2" class="ghost">How to play</button>
+      <button type="button" id="bQuit" class="ghost">Quit to menu</button>
     </div>
   </section>
 
@@ -340,8 +342,8 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
       <h1 id="endTitle" class="small">Victory</h1>
       <p id="endSub" class="tag"></p>
       <div id="endStats" class="end-stats"></div>
-      <button id="bAgain" class="primary big">Play again</button>
-      <button id="bEndMenu" class="ghost">Main menu</button>
+      <button type="button" id="bAgain" class="primary big">Play again</button>
+      <button type="button" id="bEndMenu" class="ghost">Main menu</button>
     </div>
   </section>
 
@@ -378,7 +380,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
           <div id="helpEnemies" class="codex"></div>
         </div>
       </div>
-      <button id="bHelpClose" class="primary">Got it</button>
+      <button type="button" id="bHelpClose" class="primary">Got it</button>
     </div>
   </section>
 
@@ -386,9 +388,9 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
     <div class="menu-card narrow">
       <h1 class="small">Stress test results</h1>
       <div id="benchStats" class="end-stats"></div>
-      <button id="bBenchAgain" class="primary">Run again</button>
-      <button id="bBenchClose" class="ghost">Keep watching</button>
-      <button id="bBenchMenu" class="ghost">Main menu</button>
+      <button type="button" id="bBenchAgain" class="primary">Run again</button>
+      <button type="button" id="bBenchClose" class="ghost">Keep watching</button>
+      <button type="button" id="bBenchMenu" class="ghost">Main menu</button>
     </div>
   </section>
 
@@ -397,7 +399,8 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
 
 <script>
 /* Bastion — shared namespace and small utilities (no DOM). */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -405,7 +408,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
    *  so that runs are reproducible regardless of frame rate. */
   function RNG(seed) { this.s = seed >>> 0; }
   RNG.prototype.next = function () {
-    var t = (this.s = (this.s + 0x6D2B79F5) >>> 0);
+    this.s = (this.s + 0x6D2B79F5) >>> 0;
+    var t = this.s;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -438,7 +442,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 </script>
 <script>
 /* Bastion — static game data: towers, enemies, maps, difficulty, wave generator. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -593,7 +598,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var budget = 9 + 3.1 * w + 0.07 * w * w;
     var gapScale = Math.max(0.4, 1 - w * 0.011);
     var unlocked = [];
-    for (var i = 0; i < UNLOCK.length; i++) if (UNLOCK[i][1] <= w) unlocked.push(UNLOCK[i][0]);
+    for (let i = 0; i < UNLOCK.length; i++) if (UNLOCK[i][1] <= w) unlocked.push(UNLOCK[i][0]);
     var t = 0;
 
     function add(type, share, delay, hp) {
@@ -605,8 +610,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
     if (w % 10 === 0) {
       // Boss wave: behemoth(s) + escorts.
-      var bosses = w === 50 ? 1 : Math.max(1, w / 20 | 0);
-      var bossHp = w === 50 ? 3.2 : w === 10 ? 0.6 : 1;
+      const bosses = w === 50 ? 1 : Math.max(1, w / 20 | 0);
+      const bossHp = w === 50 ? 3.2 : w === 10 ? 0.6 : 1;
       groups.push({ type: E.boss, count: bosses, gap: 7, delay: 4, path: -1, hp: bossHp });
       budget *= 0.55;
       t = add(E.grunt, 0.4, 0);
@@ -617,7 +622,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     }
 
     // Introduction waves show off the new type on its own.
-    for (i = 0; i < UNLOCK.length; i++) {
+    for (let i = 0; i < UNLOCK.length; i++) {
       if (UNLOCK[i][1] === w && w > 1) {
         add(UNLOCK[i][0], 0.65, 0);
         add(E.grunt, 0.35, 4);
@@ -645,12 +650,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var nGroups = w < 4 ? 1 : (w < 15 ? 2 : 3);
     var picked = [];
     var shares = nGroups === 1 ? [1] : nGroups === 2 ? [0.6, 0.4] : [0.45, 0.33, 0.22];
-    for (var g = 0; g < nGroups; g++) {
-      var type;
-      var guard = 0;
+    for (let g = 0; g < nGroups; g++) {
+      let type;
+      let guard = 0;
       do { type = unlocked[rng.int(0, unlocked.length - 1)]; } while (picked.indexOf(type) >= 0 && ++guard < 10);
       picked.push(type);
-      var len = add(type, shares[g], t);
+      const len = add(type, shares[g], t);
       t += Math.min(len * 0.6, 8) + rng.range(0.5, 2.5);
     }
     return groups;
@@ -672,7 +677,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 </script>
 <script>
 /* Bastion — map construction: tile grid, rounded paths sampled into lookup tables. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -691,18 +697,18 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var pts = wps.map((p) => [(p[0] + 0.5) * tile, (p[1] + 0.5) * tile]);
     // 1. dense polyline with rounded corners (quadratic bezier per corner)
     var poly = [pts[0]];
-    for (var i = 1; i < pts.length - 1; i++) {
-      var A = pts[i - 1], P = pts[i], B = pts[i + 1];
-      var l1 = Math.hypot(P[0] - A[0], P[1] - A[1]);
-      var l2 = Math.hypot(B[0] - P[0], B[1] - P[1]);
-      var r = Math.min(CORNER, l1 / 2, l2 / 2);
-      var d1x = (P[0] - A[0]) / l1, d1y = (P[1] - A[1]) / l1;
-      var d2x = (B[0] - P[0]) / l2, d2y = (B[1] - P[1]) / l2;
-      var p0 = [P[0] - d1x * r, P[1] - d1y * r];
-      var p1 = [P[0] + d2x * r, P[1] + d2y * r];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const A = pts[i - 1], P = pts[i], B = pts[i + 1];
+      const l1 = Math.hypot(P[0] - A[0], P[1] - A[1]);
+      const l2 = Math.hypot(B[0] - P[0], B[1] - P[1]);
+      const r = Math.min(CORNER, l1 / 2, l2 / 2);
+      const d1x = (P[0] - A[0]) / l1, d1y = (P[1] - A[1]) / l1;
+      const d2x = (B[0] - P[0]) / l2, d2y = (B[1] - P[1]) / l2;
+      const p0 = [P[0] - d1x * r, P[1] - d1y * r];
+      const p1 = [P[0] + d2x * r, P[1] + d2y * r];
       poly.push(p0);
-      for (var s = 1; s <= 10; s++) {
-        var t = s / 10, u = 1 - t;
+      for (let s = 1; s <= 10; s++) {
+        const t = s / 10, u = 1 - t;
         poly.push([u * u * p0[0] + 2 * u * t * P[0] + t * t * p1[0],
                    u * u * p0[1] + 2 * u * t * P[1] + t * t * p1[1]]);
       }
@@ -711,7 +717,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
     // 2. cumulative lengths
     var cum = [0];
-    for (i = 1; i < poly.length; i++) {
+    for (let i = 1; i < poly.length; i++) {
       cum.push(cum[i - 1] + Math.hypot(poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]));
     }
     var len = cum[cum.length - 1];
@@ -719,23 +725,23 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var x = new Float32Array(n), y = new Float32Array(n);
     var tx = new Float32Array(n), ty = new Float32Array(n), ang = new Float32Array(n);
     var seg = 0;
-    for (var k = 0; k < n; k++) {
-      var d = Math.min(k * STEP, len);
+    for (let k = 0; k < n; k++) {
+      const d = Math.min(k * STEP, len);
       while (seg < poly.length - 2 && cum[seg + 1] < d) seg++;
-      var sl = cum[seg + 1] - cum[seg] || 1;
-      var f = (d - cum[seg]) / sl;
-      var ax = poly[seg][0], ay = poly[seg][1], bx = poly[seg + 1][0], by = poly[seg + 1][1];
+      const sl = cum[seg + 1] - cum[seg] || 1;
+      const f = (d - cum[seg]) / sl;
+      const ax = poly[seg][0], ay = poly[seg][1], bx = poly[seg + 1][0], by = poly[seg + 1][1];
       x[k] = ax + (bx - ax) * f;
       y[k] = ay + (by - ay) * f;
-      var dl = Math.hypot(bx - ax, by - ay) || 1;
+      const dl = Math.hypot(bx - ax, by - ay) || 1;
       tx[k] = (bx - ax) / dl; ty[k] = (by - ay) / dl;
     }
     // smooth tangents a bit so lateral offsets flow around corners
-    for (k = 0; k < n; k++) {
-      var a0 = Math.max(0, k - 4), a1 = Math.min(n - 1, k + 4);
-      var sx = 0, sy = 0;
-      for (var j = a0; j <= a1; j++) { sx += tx[j]; sy += ty[j]; }
-      var sl2 = Math.hypot(sx, sy) || 1;
+    for (let k = 0; k < n; k++) {
+      const a0 = Math.max(0, k - 4), a1 = Math.min(n - 1, k + 4);
+      let sx = 0, sy = 0;
+      for (let j = a0; j <= a1; j++) { sx += tx[j]; sy += ty[j]; }
+      const sl2 = Math.hypot(sx, sy) || 1;
       tx[k] = sx / sl2; ty[k] = sy / sl2;
       ang[k] = Math.atan2(ty[k], tx[k]);
     }
@@ -750,10 +756,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
     // rasterise axis-aligned path segments into the tile grid
     def.paths.forEach((wps) => {
-      for (var i = 0; i < wps.length - 1; i++) {
-        var a = wps[i], b = wps[i + 1];
-        var dx = Math.sign(b[0] - a[0]), dy = Math.sign(b[1] - a[1]);
-        var cx = a[0], cy = a[1];
+      for (let i = 0; i < wps.length - 1; i++) {
+        const a = wps[i], b = wps[i + 1];
+        const dx = Math.sign(b[0] - a[0]), dy = Math.sign(b[1] - a[1]);
+        let cx = a[0], cy = a[1];
         for (;;) {
           if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) grid[cy * cols + cx] = TD.TILE_PATH;
           if (cx === b[0] && cy === b[1]) break;
@@ -763,14 +769,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
     });
     // base: last waypoint of first path plus surrounding ring
     var end = def.paths[0][def.paths[0].length - 1];
-    for (var oy = -1; oy <= 1; oy++) for (var ox = -1; ox <= 1; ox++) {
-      var bx = end[0] + ox, by = end[1] + oy;
+    for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+      const bx = end[0] + ox, by = end[1] + oy;
       if (bx >= 0 && bx < cols && by >= 0 && by < rows) grid[by * cols + bx] = TD.TILE_BASE;
     }
     // decorative rocks: deterministic per map, never on/adjacent to spawn columns
     var rng = new TD.RNG(def.seed * 977);
-    for (var r = 0; r < rows; r++) for (var c = 1; c < cols; c++) {
-      var idx = r * cols + c;
+    for (let r = 0; r < rows; r++) for (let c = 1; c < cols; c++) {
+      const idx = r * cols + c;
       if (grid[idx] !== TD.TILE_FREE) continue;
       if (rng.next() < 0.045) grid[idx] = TD.TILE_ROCK;
     }
@@ -796,7 +802,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
  * The sim knows nothing about rendering; visual/audio side effects are emitted
  * through the optional `fx` hook object.
  */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -873,7 +880,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.eCount = 0;
     this.eFree = new Int32Array(EC);
     this.eFreeTop = EC;
-    for (var i = 0; i < EC; i++) this.eFree[i] = EC - 1 - i;
+    for (let i = 0; i < EC; i++) this.eFree[i] = EC - 1 - i;
     this.nextUid = 1;
     this.eCap = EC;
 
@@ -934,18 +941,18 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var start = this.gStart, fill = this.gFill, items = this.gItems;
     var list = this.eList, ex = this.eX, ey = this.eY, cellOf = this.eCell;
     start.fill(0);
-    for (var i = 0; i < n; i++) {
-      var s = list[i];
-      var cx = (ex[s] / CELL) | 0, cy = (ey[s] / CELL) | 0;
+    for (let i = 0; i < n; i++) {
+      const s = list[i];
+      let cx = (ex[s] / CELL) | 0, cy = (ey[s] / CELL) | 0;
       if (cx < 0) cx = 0; else if (cx >= gc) cx = gc - 1;
       if (cy < 0) cy = 0; else if (cy >= gr) cy = gr - 1;
-      var c = cy * gc + cx;
+      const c = cy * gc + cx;
       cellOf[s] = c;
       start[c + 1]++;
     }
-    for (i = 0; i < this.gN; i++) { start[i + 1] += start[i]; fill[i] = start[i]; }
-    for (i = 0; i < n; i++) {
-      s = list[i];
+    for (let i = 0; i < this.gN; i++) { start[i + 1] += start[i]; fill[i] = start[i]; }
+    for (let i = 0; i < n; i++) {
+      const s = list[i];
       items[fill[cellOf[s]]++] = s;
     }
   };
@@ -960,13 +967,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (c1 >= gc) c1 = gc - 1; if (r1 >= gr) r1 = gr - 1;
     var start = this.gStart, items = this.gItems, ex = this.eX, ey = this.eY, alive = this.eAlive;
     var rr = r * r, n = 0;
-    for (var cy = r0; cy <= r1; cy++) {
-      for (var cx = c0; cx <= c1; cx++) {
-        var c = cy * gc + cx;
-        for (var k = start[c], e = start[c + 1]; k < e; k++) {
-          var s = items[k];
+    for (let cy = r0; cy <= r1; cy++) {
+      for (let cx = c0; cx <= c1; cx++) {
+        const c = cy * gc + cx;
+        for (let k = start[c], e = start[c + 1]; k < e; k++) {
+          const s = items[k];
           if (!alive[s]) continue;
-          var dx = ex[s] - x, dy = ey[s] - y;
+          const dx = ex[s] - x, dy = ey[s] - y;
           if (dx * dx + dy * dy <= rr) out[n++] = s;
         }
       }
@@ -981,12 +988,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var buf = this.qBuf, best = -1, bestV = -Infinity, mode = t.mode;
     var dist = this.eDist, ePath = this.ePath, paths = this.map.paths, hp = this.eHp;
     var ex = this.eX, ey = this.eY;
-    for (var i = 0; i < n; i++) {
-      var s = buf[i], v;
+    for (let i = 0; i < n; i++) {
+      let s = buf[i], v;
       if (mode === 0) v = -(paths[ePath[s]].len - dist[s]);          // first: least remaining
       else if (mode === 1) v = paths[ePath[s]].len - dist[s];        // last
       else if (mode === 2) v = hp[s] - (paths[ePath[s]].len - dist[s]) * 0.001; // strong
-      else { var dx = ex[s] - t.x, dy = ey[s] - t.y; v = -(dx * dx + dy * dy); }
+      else { const dx = ex[s] - t.x, dy = ey[s] - t.y; v = -(dx * dx + dy * dy); }
       if (v > bestV) { bestV = v; best = s; }
     }
     return best;
@@ -1073,11 +1080,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.removeEnemy(s);
     if (this.stress) return;
     if (type === TD.ENEMY_INDEX.splitter) {
-      var sp = TD.ENEMY_INDEX.spawnling;
-      var baseHp = TD.ENEMIES[sp].hp * TD.hpMult(Math.max(1, wave)) * this.diff.hp;
-      var mul = (maxHp * 0.24) / baseHp;
-      for (var i = 0; i < 3; i++) {
-        var c = this.spawnEnemy(sp, path, wave, mul, Math.max(0, dist - 6 + i * 6));
+      const sp = TD.ENEMY_INDEX.spawnling;
+      const baseHp = TD.ENEMIES[sp].hp * TD.hpMult(Math.max(1, wave)) * this.diff.hp;
+      const mul = (maxHp * 0.24) / baseHp;
+      for (let i = 0; i < 3; i++) {
+        const c = this.spawnEnemy(sp, path, wave, mul, Math.max(0, dist - 6 + i * 6));
         if (c >= 0) this.eFlash[c] = 0.6;
       }
     }
@@ -1089,26 +1096,26 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var ex = this.eX, ey = this.eY, epx = this.ePX, epy = this.ePY, rot = this.eRot, off = this.eOff;
     var flash = this.eFlash, type = this.eType, timer = this.eTimer, ePath = this.ePath;
     var HEALER = TD.ENEMY_INDEX.healer, BOSS = TD.ENEMY_INDEX.boss;
-    for (var i = this.eCount - 1; i >= 0; i--) {
-      var s = list[i];
-      var sp = speed[s];
+    for (let i = this.eCount - 1; i >= 0; i--) {
+      const s = list[i];
+      let sp = speed[s];
       if (slowT[s] > 0) {
         sp *= slowF[s];
         slowT[s] -= DT;
         if (slowT[s] <= 0) { slowT[s] = 0; slowF[s] = 1; }
       }
-      var p = paths[ePath[s]];
-      var d = dist[s] + sp * DT;
+      const p = paths[ePath[s]];
+      const d = dist[s] + sp * DT;
       epx[s] = ex[s]; epy[s] = ey[s];
       if (d >= p.len) { this.leak(s); continue; }
       dist[s] = d;
-      var k = (d * p.inv) | 0;
-      var o = off[s];
+      const k = (d * p.inv) | 0;
+      const o = off[s];
       ex[s] = p.x[k] - p.ty[k] * o;
       ey[s] = p.y[k] + p.tx[k] * o;
       rot[s] = p.ang[k];
       if (flash[s] > 0) flash[s] -= DT * 6;
-      var ty = type[s];
+      const ty = type[s];
       if (ty === HEALER || ty === BOSS) {
         timer[s] -= DT;
         if (timer[s] <= 0) {
@@ -1123,8 +1130,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
   S.healPulse = function (s) {
     var n = this.queryCircle(this.eX[s], this.eY[s], 78);
     var buf = this.qBuf, hp = this.eHp, max = this.eMaxHp;
-    for (var i = 0; i < n; i++) {
-      var o = buf[i];
+    for (let i = 0; i < n; i++) {
+      const o = buf[i];
       hp[o] = Math.min(max[o], hp[o] + max[o] * 0.07);
     }
     this.fx.heal(this.eX[s], this.eY[s], 78);
@@ -1132,7 +1139,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   S.bossSummon = function (s) {
     var n = this.eWave[s] >= 30 ? 4 : 3;
-    for (var i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
       this.spawnEnemy(TD.ENEMY_INDEX.swarm, this.ePath[s], this.eWave[s], 1, Math.max(0, this.eDist[s] - 10 - i * 7));
     }
     this.fx.summon(this.eX[s], this.eY[s]);
@@ -1225,15 +1232,15 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   S.updateTowers = function () {
     var towers = this.towers;
-    for (var i = 0; i < towers.length; i++) {
-      var t = towers[i];
-      var L = t.def.levels[t.level];
+    for (let i = 0; i < towers.length; i++) {
+      const t = towers[i];
+      const L = t.def.levels[t.level];
       if (t.recoil > 0) t.recoil -= DT * 5;
       // keep aiming at the current target between shots
       if (t.target >= 0) {
         if (this.targetValid(t, L.range)) {
-          var want = Math.atan2(this.eY[t.target] - t.y, this.eX[t.target] - t.x);
-          var da = want - t.angle;
+          const want = Math.atan2(this.eY[t.target] - t.y, this.eX[t.target] - t.x);
+          let da = want - t.angle;
           da = Math.atan2(Math.sin(da), Math.cos(da));
           t.angle += da * 0.35;
         } else t.target = -1;
@@ -1241,11 +1248,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
       t.cd -= DT * this.fireMul;
       if (t.cd > 0) continue;
       if (t.scanWait > 0) { t.scanWait--; continue; }
-      var kind = t.def.kind;
+      const kind = t.def.kind;
       if (kind === 'pulse') {
         if (!this.firePulse(t, L)) { t.scanWait = 5; t.cd = 0; continue; }
       } else {
-        var tg = this.findTarget(t, L.range);
+        const tg = this.findTarget(t, L.range);
         if (tg < 0) { t.target = -1; t.scanWait = 5; t.cd = 0; continue; }
         t.target = tg; t.targetUid = this.eUid[tg];
         t.angle = Math.atan2(this.eY[tg] - t.y, this.eX[tg] - t.x);
@@ -1284,14 +1291,15 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (n === 0) return false;
     var buf = this.qBuf;
     // copy targets first: damage() may trigger kills which spawn and mutate lists
-    var tmp = this.pulseBuf || (this.pulseBuf = new Int32Array(EC));
-    for (var i = 0; i < n; i++) tmp[i] = buf[i];
+    if (!this.pulseBuf) this.pulseBuf = new Int32Array(EC);
+    var tmp = this.pulseBuf;
+    for (let i = 0; i < n; i++) tmp[i] = buf[i];
     var slow = 1 - L.slow, dur = L.dur;
-    for (i = 0; i < n; i++) {
-      var s = tmp[i];
+    for (let i = 0; i < n; i++) {
+      const s = tmp[i];
       if (!this.eAlive[s]) continue;
-      var def = TD.ENEMIES[this.eType[s]];
-      var f = def.slowResist ? 1 - L.slow * def.slowResist : slow;
+      const def = TD.ENEMIES[this.eType[s]];
+      const f = def.slowResist ? 1 - L.slow * def.slowResist : slow;
       if (this.eSlowT[s] <= 0 || f < this.eSlowF[s]) this.eSlowF[s] = f;
       if (this.eSlowT[s] < dur) this.eSlowT[s] = dur;
       this.damage(s, L.dmg, 0, t);
@@ -1304,21 +1312,21 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var hits = this.chainHit, nh = 0;
     var cur = tg, px = t.x, py = t.y - 10, dmg = L.dmg;
     var jump = t.def.jump;
-    for (var c = 0; c < L.chains && cur >= 0; c++) {
-      var cx = this.eX[cur], cy = this.eY[cur];
+    for (let c = 0; c < L.chains && cur >= 0; c++) {
+      const cx = this.eX[cur], cy = this.eY[cur];
       this.fx.arc(px, py, cx, cy, c);
       hits[nh++] = cur;
       this.damage(cur, dmg, t.def.pierce, t);
       dmg *= 0.88;
       px = cx; py = cy;
       // nearest un-hit enemy within jump range
-      var n = this.queryCircle(cx, cy, jump);
-      var buf = this.qBuf, best = -1, bd = Infinity;
-      for (var i = 0; i < n; i++) {
-        var s = buf[i], seen = false;
-        for (var h = 0; h < nh; h++) if (hits[h] === s) { seen = true; break; }
+      const n = this.queryCircle(cx, cy, jump);
+      let buf = this.qBuf, best = -1, bd = Infinity;
+      for (let i = 0; i < n; i++) {
+        let s = buf[i], seen = false;
+        for (let h = 0; h < nh; h++) if (hits[h] === s) { seen = true; break; }
         if (seen) continue;
-        var dx = this.eX[s] - cx, dy = this.eY[s] - cy, d2 = dx * dx + dy * dy;
+        const dx = this.eX[s] - cx, dy = this.eY[s] - cy, d2 = dx * dx + dy * dy;
         if (d2 < bd) { bd = d2; best = s; }
       }
       cur = best;
@@ -1336,39 +1344,40 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var c0 = (Math.min(x0, x1) - 16) / CELL | 0, c1 = (Math.max(x0, x1) + 16) / CELL | 0;
     var r0 = (Math.min(y0, y1) - 16) / CELL | 0, r1 = (Math.max(y0, y1) + 16) / CELL | 0;
     if (c0 < 0) c0 = 0; if (r0 < 0) r0 = 0; if (c1 >= gc) c1 = gc - 1; if (r1 >= gr) r1 = gr - 1;
-    var tmp = this.pulseBuf || (this.pulseBuf = new Int32Array(EC));
+    if (!this.pulseBuf) this.pulseBuf = new Int32Array(EC);
+    var tmp = this.pulseBuf;
     var n = 0, start = this.gStart, items = this.gItems;
     var dxl = x1 - x0, dyl = y1 - y0, ll = dxl * dxl + dyl * dyl;
-    for (var cy = r0; cy <= r1; cy++) for (var cx = c0; cx <= c1; cx++) {
-      var c = cy * gc + cx;
-      for (var k = start[c], e = start[c + 1]; k < e; k++) {
-        var s = items[k];
+    for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) {
+      const c = cy * gc + cx;
+      for (let k = start[c], e = start[c + 1]; k < e; k++) {
+        const s = items[k];
         if (!this.eAlive[s]) continue;
-        var ex = this.eX[s] - x0, ey = this.eY[s] - y0;
-        var u = (ex * dxl + ey * dyl) / ll;
+        const ex = this.eX[s] - x0, ey = this.eY[s] - y0;
+        const u = (ex * dxl + ey * dyl) / ll;
         if (u < 0 || u > 1) continue;
-        var qx = ex - dxl * u, qy = ey - dyl * u;
-        var rad = TD.ENEMIES[this.eType[s]].radius + 5;
+        const qx = ex - dxl * u, qy = ey - dyl * u;
+        const rad = TD.ENEMIES[this.eType[s]].radius + 5;
         if (qx * qx + qy * qy <= rad * rad) tmp[n++] = s;
       }
     }
-    for (var i = 0; i < n; i++) this.damage(tmp[i], L.dmg, 1, t);
+    for (let i = 0; i < n; i++) this.damage(tmp[i], L.dmg, 1, t);
     this.fx.beam(x0, y0, x1, y1, t.level);
   };
 
   // ============================================================= projectiles
   S.updateProjectiles = function () {
     var alive = this.eAlive, uid = this.eUid, ex = this.eX, ey = this.eY;
-    for (var p = this.pCount - 1; p >= 0; p--) {
-      var tg = this.pTgt[p];
-      var live = tg >= 0 && alive[tg] && uid[tg] === this.pTgtUid[p];
+    for (let p = this.pCount - 1; p >= 0; p--) {
+      const tg = this.pTgt[p];
+      const live = tg >= 0 && alive[tg] && uid[tg] === this.pTgtUid[p];
       if (live) { this.pTX[p] = ex[tg]; this.pTY[p] = ey[tg]; }
       else this.pTgt[p] = -1;
-      var x = this.pX[p], y = this.pY[p];
+      const x = this.pX[p], y = this.pY[p];
       this.pPX[p] = x; this.pPY[p] = y;
-      var dx = this.pTX[p] - x, dy = this.pTY[p] - y;
-      var d = Math.sqrt(dx * dx + dy * dy);
-      var step = this.pSpeed[p] * DT;
+      const dx = this.pTX[p] - x, dy = this.pTY[p] - y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      const step = this.pSpeed[p] * DT;
       this.pAge[p] += DT;
       if (d <= step + 2 || this.pAge[p] > 3) {
         this.impact(p, live ? tg : -1);
@@ -1384,14 +1393,15 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var tower = this.towerById[this.pTower[p]] || null;
     var x = this.pTX[p], y = this.pTY[p];
     if (this.pKind[p] === K_SHELL) {
-      var r = this.pSplash[p], dmg = this.pDmg[p];
-      var n = this.queryCircle(x, y, r);
-      var tmp = this.pulseBuf || (this.pulseBuf = new Int32Array(EC));
-      for (var i = 0; i < n; i++) tmp[i] = this.qBuf[i];
-      for (i = 0; i < n; i++) {
-        var s = tmp[i];
-        var dx = this.eX[s] - x, dy = this.eY[s] - y;
-        var f = 1 - 0.5 * Math.max(0, Math.sqrt(dx * dx + dy * dy) / r - 0.35) / 0.65;
+      const r = this.pSplash[p], dmg = this.pDmg[p];
+      const n = this.queryCircle(x, y, r);
+      if (!this.pulseBuf) this.pulseBuf = new Int32Array(EC);
+      const tmp = this.pulseBuf;
+      for (let i = 0; i < n; i++) tmp[i] = this.qBuf[i];
+      for (let i = 0; i < n; i++) {
+        const s = tmp[i];
+        const dx = this.eX[s] - x, dy = this.eY[s] - y;
+        const f = 1 - 0.5 * Math.max(0, Math.sqrt(dx * dx + dy * dy) / r - 0.35) / 0.65;
         this.damage(s, dmg * f, 0, tower);
       }
       this.fx.explosion(x, y, r);
@@ -1423,7 +1433,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (!this.canCallWave()) return -1;
     var bonus = 0;
     if (this.wave > 0) {
-      var frac = this.countdown > 0 ? this.countdown / TD.WAVE_COUNTDOWN : 1;
+      let frac = this.countdown > 0 ? this.countdown / TD.WAVE_COUNTDOWN : 1;
       if (this.waveDone[this.wave] && this.countdown <= 0) frac = 0;
       bonus = Math.round(TD.earlyCallBonus(this.wave + 1) * frac);
       this.gold += bonus;
@@ -1432,8 +1442,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.state = 'running';
     this.countdown = -1;
     var groups = TD.buildWave(this.wave, this.map.paths.length);
-    for (var i = 0; i < groups.length; i++) {
-      var g = groups[i];
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i];
       this.spawners.push({ wave: this.wave, type: g.type, left: g.count, gap: g.gap, t: g.delay,
         path: g.path, hp: g.hp, k: i });
       this.waveSpawning[this.wave] += g.count;
@@ -1445,11 +1455,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
   S.updateSpawners = function () {
     var sp = this.spawners;
     var nPaths = this.map.paths.length;
-    for (var i = sp.length - 1; i >= 0; i--) {
-      var g = sp[i];
+    for (let i = sp.length - 1; i >= 0; i--) {
+      const g = sp[i];
       g.t -= DT;
       while (g.t <= 0 && g.left > 0) {
-        var path = g.path >= 0 ? g.path : (g.left + g.k) % nPaths;
+        const path = g.path >= 0 ? g.path : (g.left + g.k) % nPaths;
         this.spawnEnemy(g.type, path, g.wave, g.hp, 0);
         g.left--;
         this.waveSpawning[g.wave]--;
@@ -1461,11 +1471,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   S.updateWaves = function () {
     // detect cleared waves (all spawned and none alive)
-    for (var w = this.wavesCleared + 1; w <= this.wave; w++) {
+    for (let w = this.wavesCleared + 1; w <= this.wave; w++) {
       if (!this.waveDone[w] && this.waveSpawning[w] === 0 && this.waveAlive[w] === 0) {
         this.waveDone[w] = 1;
         this.wavesCleared++;
-        var bonus = TD.waveClearBonus(w);
+        const bonus = TD.waveClearBonus(w);
         this.gold += bonus;
         this.score += 50 * w;
         this.fx.sound('clear');
@@ -1512,11 +1522,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var h = 2166136261 >>> 0;
     function mix(v) { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; }
     mix(this.tick); mix(this.gold * 100); mix(this.lives); mix(this.score); mix(this.eCount); mix(this.pCount);
-    for (var i = 0; i < this.eCount; i++) {
-      var s = this.eList[i];
+    for (let i = 0; i < this.eCount; i++) {
+      const s = this.eList[i];
       mix(s); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
     }
-    for (i = 0; i < this.pCount; i++) { mix(this.pX[i] * 100); mix(this.pY[i] * 100); }
+    for (let i = 0; i < this.pCount; i++) { mix(this.pX[i] * 100); mix(this.pY[i] * 100); }
     return h >>> 0;
   };
 })();
@@ -1526,7 +1536,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 /* Bastion — simple autoplay bot. Used for the in-game "autoplay" demo, the
  * stress/long-run harnesses and headless balance testing. Purely uses the
  * public command API of TD.Sim (placeTower / upgradeTower / callWave). */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -1547,14 +1558,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var m = this.sim.map, out = [];
     var samples = [];
     m.paths.forEach((p, pi) => {
-      for (var k = 0; k < p.n; k += 5) samples.push(p.x[k], p.y[k], pi === 0 ? 1 : 1);
+      for (let k = 0; k < p.n; k += 5) samples.push(p.x[k], p.y[k], pi === 0 ? 1 : 1);
     });
-    for (var r = 0; r < m.rows; r++) for (var c = 0; c < m.cols; c++) {
+    for (let r = 0; r < m.rows; r++) for (let c = 0; c < m.cols; c++) {
       if (m.grid[r * m.cols + c] !== TD.TILE_FREE) continue;
-      var x = (c + 0.5) * m.tile, y = (r + 0.5) * m.tile;
-      var near = 0, mid = 0, far = 0;
-      for (var i = 0; i < samples.length; i += 3) {
-        var dx = samples[i] - x, dy = samples[i + 1] - y, d2 = dx * dx + dy * dy;
+      const x = (c + 0.5) * m.tile, y = (r + 0.5) * m.tile;
+      let near = 0, mid = 0, far = 0;
+      for (let i = 0; i < samples.length; i += 3) {
+        const dx = samples[i] - x, dy = samples[i + 1] - y, d2 = dx * dx + dy * dy;
         if (d2 < 90 * 90) near++;
         if (d2 < 130 * 130) mid++;
         if (d2 < 240 * 240) far++;
@@ -1571,7 +1582,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (n < 2) plan = 0;
     else if (w < 5) plan = n % 3 === 2 ? 1 : 0;
     else {
-      var cycle = [1, 0, 2, 3, 1, 4, 0, 3, 4, 1];
+      const cycle = [1, 0, 2, 3, 1, 4, 0, 3, 4, 1];
       plan = cycle[n % cycle.length];
       if (plan === 4 && w < 10) plan = 1;
       if (plan === 3 && w < 7) plan = 0;
@@ -1583,10 +1594,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
   Bot.prototype.bestSpot = function (type) {
     var sim = this.sim, best = null, bv = -1;
     var key = type === 4 ? 'far' : type === 2 ? 'near' : 'mid';
-    for (var i = 0; i < this.spots.length; i++) {
-      var s = this.spots[i];
+    for (let i = 0; i < this.spots.length; i++) {
+      const s = this.spots[i];
       if (!sim.canBuild(s.col, s.row)) continue;
-      var v = s[key];
+      const v = s[key];
       if (v > bv) { bv = v; best = s; }
     }
     return best;
@@ -1600,20 +1611,20 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var w = sim.wave;
     // Spend: build towers up to a wave-scaled count, otherwise upgrade.
     var target = Math.min(70, 3 + Math.floor(w * 1.15 * this.skill));
-    for (var guard = 0; guard < 6; guard++) {
-      var acted = false;
+    for (let guard = 0; guard < 6; guard++) {
+      let acted = false;
       if (sim.towers.length < target) {
-        var type = this.chooseType();
+        const type = this.chooseType();
         if (sim.gold >= TD.TOWERS[type].cost) {
-          var spot = this.bestSpot(type);
+          const spot = this.bestSpot(type);
           if (spot && sim.placeTower(type, spot.col, spot.row) !== 'blocked') { acted = true; this.built++; }
         }
       }
       if (!acted && this.upgrades && (sim.towers.length >= target || w > 6)) {
         // upgrade the cheapest upgradable tower (spreads levels evenly)
-        var best = null, bc = Infinity;
-        for (var i = 0; i < sim.towers.length; i++) {
-          var t = sim.towers[i], c = sim.upgradeCost(t);
+        let best = null, bc = Infinity;
+        for (let i = 0; i < sim.towers.length; i++) {
+          const t = sim.towers[i], c = sim.upgradeCost(t);
           if (c && c < bc) { bc = c; best = t; }
         }
         if (best && sim.gold >= bc + (sim.towers.length < target ? TD.TOWERS[0].cost : 0)) {
@@ -1631,7 +1642,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 </script>
 <script>
 /* Bastion — fixed-step loop driver and the stress-test scenario. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -1673,8 +1685,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // tower mix: projectile towers dominate so the projectile target is reachable
     var mix = [0, 1, 0, 1, 0, 3, 0, 1, 2, 4];
     var placed = 0;
-    for (var i = 0; i < spots.length && placed < targetTowers; i++) {
-      var t = sim.placeTower(mix[placed % mix.length], spots[i].col, spots[i].row);
+    for (let i = 0; i < spots.length && placed < targetTowers; i++) {
+      const t = sim.placeTower(mix[placed % mix.length], spots[i].col, spots[i].row);
       if (typeof t === 'object') {
         t.level = placed % 4;
         if (t.def.kind === 'bullet') t.mode = placed % 4;
@@ -1689,9 +1701,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
       update: (s) => {
         var need = targetEnemies - s.eCount;
         if (need > 400) need = 400;
-        for (var k = 0; k < need; k++) {
-          var path = s.rng.int(0, nPaths - 1);
-          var type = types[s.rng.int(0, types.length - 1)];
+        for (let k = 0; k < need; k++) {
+          const path = s.rng.int(0, nPaths - 1);
+          const type = types[s.rng.int(0, types.length - 1)];
           s.spawnEnemy(type, path, 20, 1, s.rng.next() * s.map.paths[path].len * 0.97);
         }
         if (s.pCount < targetProj) s.fireMul = Math.min(40, s.fireMul * 1.03);
@@ -1710,7 +1722,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
  * single 2048x2048 texture, so the whole scene renders from one texture with
  * one draw call. Sprites are authored in world units and rasterised at SS
  * pixels per world unit, which keeps them crisp up to ~2x zoom on hi-dpi. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -1771,13 +1784,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
   function poly(c, pts) {
     c.beginPath();
     c.moveTo(pts[0], pts[1]);
-    for (var i = 2; i < pts.length; i += 2) c.lineTo(pts[i], pts[i + 1]);
+    for (let i = 2; i < pts.length; i += 2) c.lineTo(pts[i], pts[i + 1]);
     c.closePath();
   }
   function ngon(c, n, r, rot) {
     c.beginPath();
-    for (var i = 0; i < n; i++) {
-      var a = rot + i * Math.PI * 2 / n;
+    for (let i = 0; i < n; i++) {
+      const a = rot + i * Math.PI * 2 / n;
       if (i) c.lineTo(Math.cos(a) * r, Math.sin(a) * r); else c.moveTo(Math.cos(a) * r, Math.sin(a) * r);
     }
     c.closePath();
@@ -1793,7 +1806,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   }
   function radial(c, r, stops) {
     var g = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    for (var i = 0; i < stops.length; i += 2) g.addColorStop(stops[i], stops[i + 1]);
+    for (let i = 0; i < stops.length; i += 2) g.addColorStop(stops[i], stops[i + 1]);
     return g;
   }
   function shade(hex, f) {
@@ -1842,7 +1855,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     A.add('shard', 8, 8, (c) => { poly(c, [0, -3.6, 2.4, 0, 0, 3.6, -2.4, 0]); c.fillStyle = '#fff'; c.fill(); });
     A.add('flake', 12, 12, (c) => {
       c.strokeStyle = '#fff'; c.lineWidth = 1.1; c.lineCap = 'round';
-      for (var i = 0; i < 3; i++) { c.save(); c.rotate(i * Math.PI / 3); c.beginPath(); c.moveTo(-5, 0); c.lineTo(5, 0); c.stroke(); c.restore(); }
+      for (let i = 0; i < 3; i++) { c.save(); c.rotate(i * Math.PI / 3); c.beginPath(); c.moveTo(-5, 0); c.lineTo(5, 0); c.stroke(); c.restore(); }
     });
     A.add('plus', 12, 12, (c) => { c.fillStyle = '#fff'; rrect(c, -1.6, -5, 3.2, 10, 1); c.fill(); rrect(c, -5, -1.6, 10, 3.2, 1); c.fill(); });
     A.add('scorch', 48, 48, (c) => {
@@ -1850,8 +1863,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
       c.fillRect(-24, -24, 48, 48);
     });
     A.add('smoke', 32, 32, (c) => {
-      for (var i = 0; i < 5; i++) {
-        var a = i * 1.3, r = 6 + (i % 3) * 2;
+      for (let i = 0; i < 5; i++) {
+        const a = i * 1.3, r = 6 + (i % 3) * 2;
         c.beginPath(); c.arc(Math.cos(a) * 5, Math.sin(a) * 5, r, 0, 7);
         c.fillStyle = 'rgba(255,255,255,0.22)'; c.fill();
       }
@@ -1894,7 +1907,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       rrect(c, -12, -13.5, 24, 5, 2); c.fillStyle = '#2b3240'; c.fill(); outline(c, 0.8);
       rrect(c, -12, 8.5, 24, 5, 2); c.fillStyle = '#2b3240'; c.fill(); outline(c, 0.8);
       c.fillStyle = '#4a5466';
-      for (var i = -10; i < 12; i += 4) { c.fillRect(i, -13, 1.4, 4); c.fillRect(i, 9, 1.4, 4); }
+      for (let i = -10; i < 12; i += 4) { c.fillRect(i, -13, 1.4, 4); c.fillRect(i, 9, 1.4, 4); }
       rrect(c, -11, -9.5, 22, 19, 4); c.fillStyle = bodyFill(c, col, 12); c.fill(); outline(c, 1.3);
       rrect(c, -6.5, -6, 13, 12, 3); c.fillStyle = shade(col, -0.35); c.fill(); outline(c, 0.8);
       c.beginPath(); c.arc(1, 0, 3.2, 0, 7); c.fillStyle = '#ff5a5a'; c.fill();
@@ -1921,7 +1934,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     enemy('boss', 58, (c) => {
       var col = EN[7].color;
       c.fillStyle = shade(col, -0.5);
-      for (var i = 0; i < 8; i++) {
+      for (let i = 0; i < 8; i++) {
         c.save(); c.rotate(i * Math.PI / 4 + Math.PI / 8);
         poly(c, [20, -4, 27, 0, 20, 4]); c.fill(); outline(c, 1);
         c.restore();
@@ -1930,7 +1943,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       ngon(c, 8, 15, Math.PI / 8); c.fillStyle = shade(col, -0.62); c.fill();
       c.lineWidth = 1.2; c.strokeStyle = shade(col, 0.1); c.stroke();
       c.beginPath(); c.arc(4, 0, 6, 0, 7); c.fillStyle = radial(c, 6, [0, '#fff', 0.4, '#ffd0dc', 1, '#ff3d6e']); c.fill();
-      for (i = 0; i < 4; i++) { c.beginPath(); c.arc(-7, (i - 1.5) * 4.5, 1.4, 0, 7); c.fillStyle = '#ffb3c6'; c.fill(); }
+      for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(-7, (i - 1.5) * 4.5, 1.4, 0, 7); c.fillStyle = '#ffb3c6'; c.fill(); }
     });
 
     // towers: shared base plate tinted per type + turret per level
@@ -1950,7 +1963,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fillStyle = '#121822'; c.fill();
         c.lineWidth = 1.2; c.strokeStyle = shade(col, -0.35); c.stroke();
       });
-      for (var lv = 0; lv < 4; lv++) {
+      for (let lv = 0; lv < 4; lv++) {
         A.add(`tt_${def.id}${lv}`, 44, 44, turretDrawer(def.id, col, lv));
       }
     });
@@ -1959,7 +1972,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     A.add('core', 80, 80, (c) => {
       ngon(c, 6, 30, 0); c.fillStyle = '#1a2233'; c.fill(); c.lineWidth = 2.5; c.strokeStyle = '#3a4a66'; c.stroke();
       ngon(c, 6, 24, 0); c.lineWidth = 1.2; c.strokeStyle = 'rgba(79,209,255,0.6)'; c.stroke();
-      for (var i = 0; i < 6; i++) {
+      for (let i = 0; i < 6; i++) {
         c.save(); c.rotate(i * Math.PI / 3);
         rrect(c, 24, -3, 9, 6, 2); c.fillStyle = '#2a3650'; c.fill(); outline(c, 0.8);
         c.restore();
@@ -1967,7 +1980,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       ngon(c, 6, 13, Math.PI / 6); c.fillStyle = radial(c, 14, [0, '#ffffff', 0.35, '#bff3ff', 1, '#2aa9e0']); c.fill();
     });
     A.add('portal', 48, 48, (c) => {
-      for (var i = 0; i < 3; i++) {
+      for (let i = 0; i < 3; i++) {
         c.beginPath(); c.arc(0, 0, 20 - i * 5, i, i + 4.2);
         c.lineWidth = 2.4 - i * 0.5; c.strokeStyle = `rgba(255,255,255,${0.9 - i * 0.2})`; c.stroke();
       }
@@ -1990,9 +2003,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     return (c) => {
       var dark = shade(col, -0.55), mid = shade(col, -0.2);
       if (id === 'blaster') {
-        var n = lv >= 2 ? 2 : 1, len = 13 + lv * 1.5;
-        for (var i = 0; i < n; i++) {
-          var y = n === 1 ? 0 : (i ? 3.6 : -3.6);
+        const n = lv >= 2 ? 2 : 1, len = 13 + lv * 1.5;
+        for (let i = 0; i < n; i++) {
+          const y = n === 1 ? 0 : (i ? 3.6 : -3.6);
           rrect(c, 2, y - 1.8, len, 3.6, 1.2); c.fillStyle = '#2b3446'; c.fill(); outline(c, 0.8);
           c.fillStyle = col; c.fillRect(len - 1, y - 1.2, 2.4, 2.4);
         }
@@ -2000,17 +2013,17 @@ var TD = globalThis.TD || (globalThis.TD = {});
         c.beginPath(); c.arc(0, 0, 7.5 + lv * 0.4, 0, 7); c.fillStyle = bodyFill(c, col, 8); c.fill(); outline(c, 1.1);
         c.beginPath(); c.arc(0, 0, 3, 0, 7); c.fillStyle = '#e8fbff'; c.fill();
       } else if (id === 'cannon') {
-        var bw = 6 + lv * 0.8;
+        const bw = 6 + lv * 0.8;
         rrect(c, 0, -bw / 2, 13 + lv, bw, 2); c.fillStyle = '#3a2c22'; c.fill(); outline(c, 1);
         c.fillStyle = col; c.fillRect(10 + lv, -bw / 2 - 0.6, 2.2, bw + 1.2);
         if (lv >= 2) { c.fillStyle = mid; c.fillRect(5, -bw / 2 - 0.4, 1.6, bw + 0.8); }
         ngon(c, 8, 9 + lv * 0.5, Math.PI / 8); c.fillStyle = bodyFill(c, '#8a6038', 9); c.fill(); outline(c, 1.1);
         ngon(c, 8, 5, Math.PI / 8); c.fillStyle = dark; c.fill();
         c.beginPath(); c.arc(0, 0, 2.2, 0, 7); c.fillStyle = col; c.fill();
-        if (lv === 3) { for (var k = 0; k < 4; k++) { c.save(); c.rotate(k * Math.PI / 2 + Math.PI / 4); c.fillStyle = col; c.fillRect(7.5, -1, 3, 2); c.restore(); } }
+        if (lv === 3) { for (let k = 0; k < 4; k++) { c.save(); c.rotate(k * Math.PI / 2 + Math.PI / 4); c.fillStyle = col; c.fillRect(7.5, -1, 3, 2); c.restore(); } }
       } else if (id === 'frost') {
-        var r = 8 + lv * 1.2;
-        for (k = 0; k < 6; k++) {
+        const r = 8 + lv * 1.2;
+        for (let k = 0; k < 6; k++) {
           c.save(); c.rotate(k * Math.PI / 3);
           poly(c, [r * 0.55, -2.2, r + 3, 0, r * 0.55, 2.2]); c.fillStyle = k % 2 ? '#d8fbff' : col; c.fill(); outline(c, 0.7);
           c.restore();
@@ -2018,8 +2031,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
         ngon(c, 6, r * 0.62, Math.PI / 6); c.fillStyle = bodyFill(c, col, r); c.fill(); outline(c, 1);
         ngon(c, 6, r * 0.3, 0); c.fillStyle = '#ffffff'; c.fill();
       } else if (id === 'tesla') {
-        var prongs = 2 + lv;
-        for (k = 0; k < prongs; k++) {
+        const prongs = 2 + lv;
+        for (let k = 0; k < prongs; k++) {
           c.save(); c.rotate(k * Math.PI * 2 / prongs);
           rrect(c, 5, -1.3, 7 + lv * 0.6, 2.6, 1); c.fillStyle = '#3b2a55'; c.fill(); outline(c, 0.7);
           c.beginPath(); c.arc(12 + lv * 0.6, 0, 1.8, 0, 7); c.fillStyle = col; c.fill();
@@ -2029,7 +2042,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         c.beginPath(); c.arc(0, 0, 6.5, 0, 7); c.lineWidth = 1.4; c.strokeStyle = mid; c.stroke();
         c.beginPath(); c.arc(0, 0, 4.6, 0, 7); c.fillStyle = radial(c, 4.6, [0, '#ffffff', 0.5, '#e6d2ff', 1, col]); c.fill();
       } else if (id === 'rail') {
-        var L = 17 + lv * 1.6;
+        const L = 17 + lv * 1.6;
         rrect(c, 0, -3.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         rrect(c, 0, 1.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         c.fillStyle = col; c.globalAlpha = 0.85; c.fillRect(2, -0.7, L - 3, 1.4); c.globalAlpha = 1;
@@ -2048,14 +2061,15 @@ var TD = globalThis.TD || (globalThis.TD = {});
 </script>
 <script>
 /* Bastion — static map background, rasterised once per map into a texture. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
   function strokePath(c, poly) {
     c.beginPath();
     c.moveTo(poly[0][0], poly[0][1]);
-    for (var i = 1; i < poly.length; i++) c.lineTo(poly[i][0], poly[i][1]);
+    for (let i = 1; i < poly.length; i++) c.lineTo(poly[i][0], poly[i][1]);
   }
 
   /** Draw the map at `scale` px per world unit. Returns a canvas. */
@@ -2072,21 +2086,21 @@ var TD = globalThis.TD || (globalThis.TD = {});
     g.addColorStop(0, '#111a26'); g.addColorStop(1, '#0c131d');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
     // mottled terrain patches
-    for (var i = 0; i < 260; i++) {
-      var x = rng.next() * W, y = rng.next() * H, r = 20 + rng.next() * 70;
-      var rg = c.createRadialGradient(x, y, 0, x, y, r);
-      var tone = rng.next() < 0.5 ? '40,70,80' : '30,45,70';
+    for (let i = 0; i < 260; i++) {
+      const x = rng.next() * W, y = rng.next() * H, r = 20 + rng.next() * 70;
+      const rg = c.createRadialGradient(x, y, 0, x, y, r);
+      const tone = rng.next() < 0.5 ? '40,70,80' : '30,45,70';
       rg.addColorStop(0, `rgba(${tone},0.10)`); rg.addColorStop(1, `rgba(${tone},0)`);
       c.fillStyle = rg; c.fillRect(x - r, y - r, r * 2, r * 2);
     }
     // speckle
-    for (i = 0; i < 2600; i++) {
+    for (let i = 0; i < 2600; i++) {
       c.fillStyle = rng.next() < 0.5 ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.12)';
       c.fillRect(rng.next() * W, rng.next() * H, 1 + rng.next() * 1.5, 1 + rng.next() * 1.5);
     }
     // buildable tile grid
-    for (var r = 0; r < map.rows; r++) for (var col = 0; col < map.cols; col++) {
-      var t = map.grid[r * map.cols + col];
+    for (let r = 0; r < map.rows; r++) for (let col = 0; col < map.cols; col++) {
+      const t = map.grid[r * map.cols + col];
       if (t !== TD.TILE_FREE) continue;
       c.fillStyle = (r + col) & 1 ? 'rgba(120,170,220,0.035)' : 'rgba(120,170,220,0.018)';
       c.fillRect(col * T + 1, r * T + 1, T - 2, T - 2);
@@ -2112,8 +2126,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     });
     // direction chevrons
     map.paths.forEach((p) => {
-      for (var d = 60; d < p.len - 40; d += 120) {
-        var k = (d * p.inv) | 0;
+      for (let d = 60; d < p.len - 40; d += 120) {
+        const k = (d * p.inv) | 0;
         c.save(); c.translate(p.x[k], p.y[k]); c.rotate(p.ang[k]);
         c.beginPath(); c.moveTo(-3, -6); c.lineTo(3, 0); c.lineTo(-3, 6);
         c.lineWidth = 2; c.strokeStyle = 'rgba(160,210,255,0.13)'; c.stroke();
@@ -2126,9 +2140,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     });
 
     // rocks / crystals on blocked tiles
-    for (r = 0; r < map.rows; r++) for (col = 0; col < map.cols; col++) {
+    for (let r = 0; r < map.rows; r++) for (let col = 0; col < map.cols; col++) {
       if (map.grid[r * map.cols + col] !== TD.TILE_ROCK) continue;
-      var cx = (col + 0.5) * T, cy = (r + 0.5) * T;
+      const cx = (col + 0.5) * T, cy = (r + 0.5) * T;
       if (rng.next() < 0.7) drawRock(c, cx, cy, rng); else drawCrystal(c, cx, cy, rng);
     }
 
@@ -2154,8 +2168,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     c.fillStyle = 'rgba(0,0,0,0.35)';
     c.beginPath(); c.ellipse(2, 4, r, r * 0.7, 0, 0, 7); c.fill();
     c.beginPath();
-    for (var i = 0; i < n; i++) {
-      var a = i / n * Math.PI * 2, rr = r * (0.75 + rng.next() * 0.3);
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2, rr = r * (0.75 + rng.next() * 0.3);
       if (i) c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr * 0.85); else c.moveTo(Math.cos(a) * rr, Math.sin(a) * rr * 0.85);
     }
     c.closePath();
@@ -2174,9 +2188,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var glow = c.createRadialGradient(0, 0, 0, 0, 0, 20);
     glow.addColorStop(0, `rgba(${hue},0.25)`); glow.addColorStop(1, `rgba(${hue},0)`);
     c.fillStyle = glow; c.fillRect(-20, -20, 40, 40);
-    for (var i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i++) {
       c.save(); c.rotate(-0.5 + i * 0.5 + rng.range(-0.15, 0.15));
-      var h = 9 + rng.next() * 7;
+      const h = 9 + rng.next() * 7;
       c.beginPath(); c.moveTo(0, 3); c.lineTo(-3, -h * 0.5); c.lineTo(0, -h); c.lineTo(3, -h * 0.5); c.closePath();
       c.fillStyle = `rgba(${hue},0.75)`; c.fill();
       c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 0.8; c.stroke();
@@ -2198,7 +2212,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
  *
  * Backends: WebGL2 -> WebGL1 + ANGLE_instanced_arrays -> Canvas2D fallback.
  */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -2276,7 +2291,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     else {
       gl = this.canvas.getContext('webgl', attrs) || this.canvas.getContext('experimental-webgl', attrs);
       if (!gl) return false;
-      var ext = gl.getExtension('ANGLE_instanced_arrays');
+      const ext = gl.getExtension('ANGLE_instanced_arrays');
       if (!ext) return false;
       inst = {
         divisor: (i, d) => { ext.vertexAttribDivisorANGLE(i, d); },
@@ -2432,7 +2447,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     }
     this.drawCalls = 0;
     if (bgName && this.textures[bgName]) {
-      var b = this.bgData;
+      const b = this.bgData;
       b[0] = bgRect.x + bgRect.w / 2; b[1] = bgRect.y + bgRect.h / 2; b[2] = bgRect.w; b[3] = bgRect.h; b[4] = 0;
       b[5] = 0; b[6] = 0; b[7] = 1; b[8] = 1; b[10] = 0;
       this.bgU32[9] = 0xffffffff;
@@ -2469,17 +2484,17 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (bg) { c.setTransform(A, B, C, D, E, F); c.drawImage(bg.src, bgRect.x, bgRect.y, bgRect.w, bgRect.h); }
     var at = this.textures[atlasName], img = at.src, AW = at.w, AH = at.h;
     var d = this.f32, u = this.u32, mode = 0;
-    for (var k = 0; k < this.n; k++) {
-      var i = k * FLOATS, col = u[i + 9];
-      var a = col >>> 24, add = a === 0;
-      var lum = add ? Math.max(col & 255, col >> 8 & 255, col >> 16 & 255) / 255 : a / 255;
+    for (let k = 0; k < this.n; k++) {
+      const i = k * FLOATS, col = u[i + 9];
+      const a = col >>> 24, add = a === 0;
+      const lum = add ? Math.max(col & 255, col >> 8 & 255, col >> 16 & 255) / 255 : a / 255;
       if (lum < 0.02) continue;
       if (add !== (mode === 1)) { mode = add ? 1 : 0; c.globalCompositeOperation = add ? 'lighter' : 'source-over'; }
       c.globalAlpha = lum;
-      var x = d[i], y = d[i + 1], w = d[i + 2], h = d[i + 3], rot = d[i + 4];
-      var cs = Math.cos(rot), sn = Math.sin(rot);
+      const x = d[i], y = d[i + 1], w = d[i + 2], h = d[i + 3], rot = d[i + 4];
+      const cs = Math.cos(rot), sn = Math.sin(rot);
       c.setTransform(A * cs + C * sn, B * cs + D * sn, C * cs - A * sn, D * cs - B * sn, A * x + C * y + E, B * x + D * y + F);
-      var su = d[i + 5] * AW, sv = d[i + 6] * AH, sw = d[i + 7] * AW - su, sh = d[i + 8] * AH - sv;
+      const su = d[i + 5] * AW, sv = d[i + 6] * AH, sw = d[i + 7] * AW - su, sh = d[i + 8] * AH - sv;
       if (d[i + 10] < -0.5) {   // health bar
         c.globalAlpha = 1;
         c.fillStyle = 'rgba(5,8,13,0.85)'; c.fillRect(-w / 2, -h / 2, w, h);
@@ -2488,7 +2503,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         continue;
       }
       if (sw < 8 && sh < 8) {   // solid quads (bars, rects): honour the tint colour
-        var ia = add ? 1 : 255 / a;
+        const ia = add ? 1 : 255 / a;
         c.fillStyle = `rgb(${(col & 255) * ia | 0},${(col >> 8 & 255) * ia | 0},${(col >> 16 & 255) * ia | 0})`;
         c.fillRect(-w / 2, -h / 2, w, h);
       } else c.drawImage(img, su, sv, sw, sh, -w / 2, -h / 2, w, h);
@@ -2505,7 +2520,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
  * buffers (oldest effect is overwritten), so effect storms under stress can
  * never grow memory or stall the frame. A per-frame emission budget further
  * thins particle bursts when thousands of events happen at once. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -2580,8 +2596,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   P.burst = function (x, y, n, speed, life, size, rgb, add, frame, drag) {
     var R = this.rnd;
-    for (var k = 0; k < n; k++) {
-      var a = R.next() * 6.283, s = speed * (0.35 + R.next() * 0.65);
+    for (let k = 0; k < n; k++) {
+      const a = R.next() * 6.283, s = speed * (0.35 + R.next() * 0.65);
       this.particle(x, y, Math.cos(a) * s, Math.sin(a) * s, life * (0.6 + R.next() * 0.5),
         size * (0.7 + R.next() * 0.6), size * 0.2, rgb[0], rgb[1], rgb[2], add, frame, drag);
     }
@@ -2599,7 +2615,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var ca = Math.cos(ang), sa = Math.sin(ang);
     this.particle(x, y, ca * 30, sa * 30, 0.08, 14, 6, c[0], c[1], c[2], 1, F_GLOW, 0);
     if (type === 1) {
-      for (var k = 0; k < 2; k++) this.particle(x, y, ca * 25 + (this.rnd.next() - 0.5) * 20, sa * 25 + (this.rnd.next() - 0.5) * 20,
+      for (let k = 0; k < 2; k++) this.particle(x, y, ca * 25 + (this.rnd.next() - 0.5) * 20, sa * 25 + (this.rnd.next() - 0.5) * 20,
         0.6, 8, 18, 140, 130, 120, 0, F_SMOKE, 2.5);
       this.sound('cannon');
     } else this.sound('blaster');
@@ -2608,8 +2624,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
   P.hit = function (x, y) {
     this.particle(x, y, 0, 0, 0.12, 12, 4, 120, 230, 255, 1, F_GLOW, 0);
     var R = this.rnd;
-    for (var k = 0; k < 2; k++) {
-      var a = R.next() * 6.283;
+    for (let k = 0; k < 2; k++) {
+      const a = R.next() * 6.283;
       this.particle(x, y, Math.cos(a) * 120, Math.sin(a) * 120, 0.18, 2.5, 0.5, 170, 240, 255, 1, F_DOT, 6);
     }
   };
@@ -2645,8 +2661,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var o = i * 12, R = this.rnd;
     var dx = x1 - x0, dy = y1 - y0, len = Math.sqrt(dx * dx + dy * dy) || 1;
     var nx = -dy / len, ny = dx / len, j = Math.min(14, len * 0.22);
-    for (var k = 0; k < 6; k++) {
-      var t = k / 5, off = (k === 0 || k === 5) ? 0 : (R.next() - 0.5) * 2 * j;
+    for (let k = 0; k < 6; k++) {
+      const t = k / 5, off = (k === 0 || k === 5) ? 0 : (R.next() - 0.5) * 2 * j;
       this.bPts[o + k * 2] = x0 + dx * t + nx * off;
       this.bPts[o + k * 2 + 1] = y0 + dy * t + ny * off;
     }
@@ -2661,8 +2677,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.bPts[o] = x0; this.bPts[o + 1] = y0; this.bPts[o + 2] = x1; this.bPts[o + 3] = y1;
     this.particle(x0, y0, 0, 0, 0.18, 26, 8, 140, 255, 170, 1, F_GLOW, 0);
     var R = this.rnd;
-    for (var k = 0; k < 6; k++) {
-      var t = R.next();
+    for (let k = 0; k < 6; k++) {
+      const t = R.next();
       this.particle(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, (R.next() - 0.5) * 60, (R.next() - 0.5) * 60,
         0.4, 3, 0.5, 160, 255, 190, 1, F_DOT, 3);
     }
@@ -2673,8 +2689,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.ring(x, y, 12, r, 0.45, ad(150, 235, 255, 0.85), 1);
     this.ring(x, y, r * 0.98, r, 0.25, ad(150, 235, 255, 0.35), 0);
     var R = this.rnd;
-    for (var k = 0; k < 6; k++) {
-      var a = R.next() * 6.283, d = R.next() * r * 0.8;
+    for (let k = 0; k < 6; k++) {
+      const a = R.next() * 6.283, d = R.next() * r * 0.8;
       this.particle(x + Math.cos(a) * d, y + Math.sin(a) * d, 0, -14, 0.7, 7, 3, 200, 245, 255, 1, F_FLAKE, 1);
     }
     this.sound('frost');
@@ -2683,7 +2699,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   P.heal = function (x, y, r) {
     this.ring(x, y, 6, r, 0.5, ad(90, 255, 150, 0.6), 1);
     var R = this.rnd;
-    for (var k = 0; k < 4; k++) {
+    for (let k = 0; k < 4; k++) {
       this.particle(x + (R.next() - 0.5) * r, y + (R.next() - 0.5) * r, 0, -30, 0.7, 7, 4, 110, 255, 160, 1, F_PLUS, 1);
     }
   };
@@ -2716,23 +2732,23 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (dt <= 0) return;
     var life = this.life, px = this.px, py = this.py, vx = this.vx, vy = this.vy, drag = this.drag, grav = this.grav;
     var rot = this.rot, vr = this.vr;
-    for (var i = 0; i < PCAP; i++) {
+    for (let i = 0; i < PCAP; i++) {
       if (life[i] <= 0) continue;
       life[i] -= dt;
-      var d = 1 - drag[i] * dt; if (d < 0) d = 0;
+      let d = 1 - drag[i] * dt; if (d < 0) d = 0;
       vx[i] *= d; vy[i] = vy[i] * d + grav[i] * dt;
       px[i] += vx[i] * dt; py[i] += vy[i] * dt;
       rot[i] += vr[i] * dt;
     }
-    for (i = 0; i < BCAP; i++) if (this.bLife[i] > 0) this.bLife[i] -= dt;
-    for (i = 0; i < RCAP; i++) if (this.rLife[i] > 0) this.rLife[i] -= dt;
-    for (i = 0; i < DCAP; i++) if (this.dLife[i] > 0) this.dLife[i] -= dt;
-    for (i = 0; i < TCAP; i++) if (this.tLife[i] > 0) this.tLife[i] -= dt;
+    for (let i = 0; i < BCAP; i++) if (this.bLife[i] > 0) this.bLife[i] -= dt;
+    for (let i = 0; i < RCAP; i++) if (this.rLife[i] > 0) this.rLife[i] -= dt;
+    for (let i = 0; i < DCAP; i++) if (this.dLife[i] > 0) this.dLife[i] -= dt;
+    for (let i = 0; i < TCAP; i++) if (this.tLife[i] > 0) this.tLife[i] -= dt;
   };
 
   P.count = function () {
     var n = 0;
-    for (var i = 0; i < PCAP; i++) if (this.life[i] > 0) n++;
+    for (let i = 0; i < PCAP; i++) if (this.life[i] > 0) n++;
     return n;
   };
 })();
@@ -2743,7 +2759,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
  * Enemies are culled through the simulation's spatial grid, so only grid cells
  * overlapping the camera view are visited: off-screen enemies cost nothing to
  * render. Everything else is bounds-checked before being queued. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -2754,13 +2771,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   function Scene(renderer, atlas) {
     this.r = renderer;
-    var F = this.F = atlas.frames;
+    this.F = atlas.frames;
+    var F = this.F;
     this.eF = TD.ENEMIES.map((e) => F[`e_${e.id}`]);
     this.tB = TD.TOWERS.map((t) => F[`tb_${t.id}`]);
     this.tT = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tt_${t.id}${l}`]));
     this.pF = TD.FX_FRAMES.map((n) => F[n]);
     this.chF = {};
-    for (var d = 0; d <= 9; d++) this.chF[d] = F[`ch_${d}`];
+    for (let d = 0; d <= 9; d++) this.chF[d] = F[`ch_${d}`];
     this.chPlus = F['ch_+'];
     this.vis = new Int32Array(8192);
     this.nVis = 0;
@@ -2804,19 +2822,19 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- route preview while waiting between waves
     var paths = sim.map.paths;
     if (sim.state === 'prep' || sim.countdown > 0) {
-      for (var pi = 0; pi < paths.length; pi++) {
-        var p = paths[pi];
-        for (var d = (t * 70) % 48; d < p.len; d += 48) {
+      for (let pi = 0; pi < paths.length; pi++) {
+        const p = paths[pi];
+        for (let d = (t * 70) % 48; d < p.len; d += 48) {
           k = (d * p.inv) | 0;
-          var fade = Math.min(1, d / 80, (p.len - d) / 80);
+          const fade = Math.min(1, d / 80, (p.len - d) / 80);
           r.push(F.dot, p.x[k], p.y[k], 5, 5, 0, ad(255, 110, 140, 0.55 * fade));
         }
       }
     }
 
     // ---- spawn portals
-    for (pi = 0; pi < paths.length; pi++) {
-      var sx = 6, sy = paths[pi].waypoints[0][1];
+    for (let pi = 0; pi < paths.length; pi++) {
+      const sx = 6, sy = paths[pi].waypoints[0][1];
       r.push(F.glow, sx, sy, 70, 70, 0, ad(255, 60, 110, 0.55 + 0.15 * Math.sin(t * 3)));
       r.push(F.portal, sx, sy, 44, 44, t * 2.2, ad(255, 120, 170, 0.9));
       r.push(F.portal, sx, sy, 30, 30, -t * 3.1, ad(255, 200, 220, 0.8));
@@ -2833,7 +2851,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var showT = ui.selected ? sim.towerById[ui.selected] : null;
     if (!showT && ui.hoverTower) showT = sim.towerById[ui.hoverTower];
     if (showT) {
-      var rg = showT.def.levels[showT.level].range;
+      const rg = showT.def.levels[showT.level].range;
       r.push(F.disc, showT.x, showT.y, rg * 2, rg * 2, 0, C.rangeFill);
       r.push(F.ring, showT.x, showT.y, rg * 2, rg * 2, 0, C.rangeLine);
       if (ui.selected === showT.id) r.push(F.tile, showT.x, showT.y, 40, 40, 0, pm(120, 220, 255, 220));
@@ -2842,10 +2860,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- fx rings (under units)
     for (i = 0; i < fx.rLife.length; i++) {
       if (fx.rLife[i] <= 0) continue;
-      var e = 1 - fx.rLife[i] / fx.rMax[i];
-      var rad = fx.rR0[i] + (fx.rR1[i] - fx.rR0[i]) * (1 - (1 - e) * (1 - e));
-      var rc = fx.rCol[i], fa = 1 - e;
-      var col = TD.rgba((rc & 255) * fa, (rc >> 8 & 255) * fa, (rc >> 16 & 255) * fa, (rc >>> 24) * fa);
+      const e = 1 - fx.rLife[i] / fx.rMax[i];
+      const rad = fx.rR0[i] + (fx.rR1[i] - fx.rR0[i]) * (1 - (1 - e) * (1 - e));
+      const rc = fx.rCol[i], fa = 1 - e;
+      const col = TD.rgba((rc & 255) * fa, (rc >> 8 & 255) * fa, (rc >> 16 & 255) * fa, (rc >>> 24) * fa);
       r.push(fx.rFrame[i] === 1 ? F.shock : F.ring, fx.rX[i], fx.rY[i], rad * 2, rad * 2, 0, col);
     }
 
@@ -2859,18 +2877,18 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var ex = sim.eX, ey = sim.eY, epx = sim.ePX, epy = sim.ePY, rot = sim.eRot, type = sim.eType;
     var flash = sim.eFlash, slowT = sim.eSlowT, vis = this.vis, nv = 0;
     var eF = this.eF, ENE = TD.ENEMIES;
-    for (var cy = r0; cy <= r1; cy++) {
-      for (var cx = c0; cx <= c1; cx++) {
-        var cell = cy * gc + cx;
-        for (var it = start[cell], end = start[cell + 1]; it < end; it++) {
-          var s = items[it];
+    for (let cy = r0; cy <= r1; cy++) {
+      for (let cx = c0; cx <= c1; cx++) {
+        const cell = cy * gc + cx;
+        for (let it = start[cell], end = start[cell + 1]; it < end; it++) {
+          const s = items[it];
           if (!alive[s]) continue;
-          var X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
+          const X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
           if (X < x0 - 30 || X > x1 + 30 || Y < y0 - 30 || Y > y1 + 30) continue;
           vis[nv++] = s;
           if (dbg.noEnemies) continue;
-          var ty = type[s], fr = eF[ty];
-          var wob = Math.sin(t * 9 + s) * 0.07;
+          const ty = type[s], fr = eF[ty];
+          const wob = Math.sin(t * 9 + s) * 0.07;
           if (ENE[ty].radius > 12) r.push(F.shadow, X + 3, Y + 5, fr.w * 1.1, fr.h * 0.9, 0, C.shadow);
           r.push(fr, X, Y, fr.w, fr.h, rot[s] + wob, slowT[s] > 0 ? C.slow : WHITE, flash[s] > 0 ? flash[s] * 0.55 : 0);
         }
@@ -2881,13 +2899,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- towers
     var towers = sim.towers;
     for (i = 0; i < towers.length; i++) {
-      var tw = towers[i];
+      const tw = towers[i];
       if (tw.x < x0 - 30 || tw.x > x1 + 30 || tw.y < y0 - 30 || tw.y > y1 + 30) continue;
-      var tc = this.towerCol[tw.type];
+      const tc = this.towerCol[tw.type];
       r.push(F.shadow, tw.x + 3, tw.y + 5, 44, 40, 0, C.shadow);
       r.push(this.tB[tw.type], tw.x, tw.y, 36, 36, 0, WHITE);
-      var kind = tw.def.kind, tt = this.tT[tw.type][tw.level];
-      var ang = tw.angle, rec = tw.recoil > 0 ? tw.recoil : 0;
+      const kind = tw.def.kind, tt = this.tT[tw.type][tw.level];
+      let ang = tw.angle, rec = tw.recoil > 0 ? tw.recoil : 0;
       if (kind === 'pulse') {
         ang = t * 0.8 + tw.id;
         r.push(F.glow, tw.x, tw.y, 30 + tw.level * 4, 30 + tw.level * 4, 0, ad(tc[0], tc[1], tc[2], 0.25 + rec * 0.5));
@@ -2895,11 +2913,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
         ang = t * 0.6 + tw.id;
         r.push(F.glow, tw.x, tw.y, 26, 26, 0, ad(tc[0], tc[1], tc[2], 0.35 + 0.2 * Math.sin(t * 7 + tw.id) + rec * 0.4));
       }
-      var ca = Math.cos(tw.angle), sa = Math.sin(tw.angle);
-      var kick = kind === 'pulse' || kind === 'chain' ? 0 : rec * 3;
+      const ca = Math.cos(tw.angle), sa = Math.sin(tw.angle);
+      const kick = kind === 'pulse' || kind === 'chain' ? 0 : rec * 3;
       r.push(tt, tw.x - ca * kick, tw.y - sa * kick, 44, 44, ang, WHITE);
       if ((kind === 'bullet' || kind === 'beam') && rec > 0.6) {
-        var mz = kind === 'beam' ? 22 : 17;
+        const mz = kind === 'beam' ? 22 : 17;
         r.push(F.glow, tw.x + ca * mz, tw.y + sa * mz, 16 * rec, 16 * rec, 0, ad(tc[0], tc[1], tc[2], rec));
       }
       // level pips
@@ -2911,14 +2929,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- enemy health bars (over towers for readability)
     var hp = sim.eHp, mhp = sim.eMaxHp;
     for (i = 0; i < nv; i++) {
-      s = vis[i];
-      var hf = hp[s] / mhp[s];
+      const s = vis[i];
+      const hf = hp[s] / mhp[s];
       if (hf >= 0.999) continue;
-      ty = type[s];
-      var er = ENE[ty].radius, big = er > 15;
-      var bw = big ? 46 : Math.max(12, er * 2.2), bh = big ? 5 : 3;
-      var lift2 = er + (big ? 10 : 6);
-      X = epx[s] + (ex[s] - epx[s]) * alpha; Y = epy[s] + (ey[s] - epy[s]) * alpha;
+      const ty = type[s];
+      const er = ENE[ty].radius, big = er > 15;
+      const bw = big ? 46 : Math.max(12, er * 2.2), bh = big ? 5 : 3;
+      const lift2 = er + (big ? 10 : 6);
+      let X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
       if (crot) X -= lift2; else Y -= lift2;
       r.bar(F.px, X, Y, bw, bh + 1, crot, hf, barColor(hf));
     }
@@ -2926,11 +2944,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- projectiles
     var pc = sim.pCount;
     for (i = 0; i < pc; i++) {
-      var PX = sim.pPX[i] + (sim.pX[i] - sim.pPX[i]) * alpha, PY = sim.pPY[i] + (sim.pY[i] - sim.pPY[i]) * alpha;
+      const PX = sim.pPX[i] + (sim.pX[i] - sim.pPX[i]) * alpha, PY = sim.pPY[i] + (sim.pY[i] - sim.pPY[i]) * alpha;
       if (PX < x0 - 20 || PX > x1 + 20 || PY < y0 - 20 || PY > y1 + 20) continue;
-      var pa = Math.atan2(sim.pTY[i] - PY, sim.pTX[i] - PX);
+      const pa = Math.atan2(sim.pTY[i] - PY, sim.pTX[i] - PX);
       if (sim.pKind[i] === TD.PROJ_SHELL) {
-        var age = sim.pAge[i], lift = Math.min(1, age * 3);
+        const age = sim.pAge[i], lift = Math.min(1, age * 3);
         r.push(F.glow, PX, PY - 3 * lift, 18, 18, 0, ad(255, 160, 60, 0.6));
         r.push(F.shell, PX, PY - 3 * lift, 12 + lift * 2, 12 + lift * 2, pa, WHITE);
       } else {
@@ -2942,15 +2960,15 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var bp = fx.bPts;
     for (i = 0; i < fx.bLife.length; i++) {
       if (fx.bLife[i] <= 0) continue;
-      var lf = fx.bLife[i] / fx.bMax[i], bc = fx.bCol[i], o = i * 12;
-      var bcol = TD.rgba((bc & 255) * lf, (bc >> 8 & 255) * lf, (bc >> 16 & 255) * lf, 0);
+      const lf = fx.bLife[i] / fx.bMax[i], bc = fx.bCol[i], o = i * 12;
+      const bcol = TD.rgba((bc & 255) * lf, (bc >> 8 & 255) * lf, (bc >> 16 & 255) * lf, 0);
       if (fx.bKind[i] === 0) {
-        var w = fx.bW[i] * (0.4 + lf * 0.6);
+        const w = fx.bW[i] * (0.4 + lf * 0.6);
         r.line(F.beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 2.2, bcol);
         r.line(F.beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 0.7, ad(255, 255, 255, lf));
       } else {
         for (k = 0; k < 5; k++) {
-          var q = o + k * 2;
+          const q = o + k * 2;
           r.line(F.beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], fx.bW[i] * 1.8, bcol);
           r.line(F.beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], fx.bW[i] * 0.6, ad(255, 255, 255, lf));
         }
@@ -2961,12 +2979,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var pF = this.pF, life = fx.life, mx = fx.max;
     for (i = dbg.noParticles ? life.length : 0; i < life.length; i++) {
       if (life[i] <= 0) continue;
-      var X2 = fx.px[i], Y2 = fx.py[i];
+      const X2 = fx.px[i], Y2 = fx.py[i];
       if (X2 < x0 - 40 || X2 > x1 + 40 || Y2 < y0 - 40 || Y2 > y1 + 40) continue;
-      var lt = life[i] / mx[i];
-      var sz = fx.s1[i] + (fx.s0[i] - fx.s1[i]) * lt;
-      var pfr = pF[fx.frame[i]];
-      var pcol = fx.add[i] ? ad(fx.r[i], fx.g[i], fx.b[i], lt) : pm(fx.r[i], fx.g[i], fx.b[i], 255 * Math.min(1, lt * 1.5));
+      const lt = life[i] / mx[i];
+      const sz = fx.s1[i] + (fx.s0[i] - fx.s1[i]) * lt;
+      const pfr = pF[fx.frame[i]];
+      const pcol = fx.add[i] ? ad(fx.r[i], fx.g[i], fx.b[i], lt) : pm(fx.r[i], fx.g[i], fx.b[i], 255 * Math.min(1, lt * 1.5));
       if (fx.frame[i] === 7) {   // streaks align with velocity
         r.push(pfr, X2, Y2, sz * 3, sz, Math.atan2(fx.vy[i], fx.vx[i]), pcol);
       } else r.push(pfr, X2, Y2, sz, sz, fx.rot[i], pcol);
@@ -2975,16 +2993,16 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- floating reward numbers (screen-aligned, drift upward on screen)
     for (i = 0; i < fx.tLife.length; i++) {
       if (fx.tLife[i] <= 0) continue;
-      var tl = Math.min(1, fx.tLife[i] * 2.5), rise = (1.1 - fx.tLife[i]) * 26;
-      var v = fx.tV[i], digits = v >= 100 ? 3 : v >= 10 ? 2 : 1;
-      var half = (digits + 1) * 4;
+      const tl = Math.min(1, fx.tLife[i] * 2.5), rise = (1.1 - fx.tLife[i]) * 26;
+      const v = fx.tV[i], digits = v >= 100 ? 3 : v >= 10 ? 2 : 1;
+      const half = (digits + 1) * 4;
       // advance direction along screen-x, expressed in world space
-      var ax = crot ? 0 : 1, ay = crot ? -1 : 0;
-      var tx = fx.tX[i] - ax * half - (crot ? rise : 0), tyy = fx.tY[i] - ay * half - (crot ? 0 : rise);
-      var tcl = TD.rgba(255 * tl, 214 * tl, 90 * tl, 255 * tl);
+      const ax = crot ? 0 : 1, ay = crot ? -1 : 0;
+      let tx = fx.tX[i] - ax * half - (crot ? rise : 0), tyy = fx.tY[i] - ay * half - (crot ? 0 : rise);
+      const tcl = TD.rgba(255 * tl, 214 * tl, 90 * tl, 255 * tl);
       r.push(this.chPlus, tx, tyy, 9, 14, crot, tcl);
       for (k = digits - 1; k >= 0; k--) {
-        var dg = Math.floor(v / 10 ** k) % 10;
+        const dg = Math.floor(v / 10 ** k) % 10;
         tx += ax * 8; tyy += ay * 8;
         r.push(this.chF[dg], tx, tyy, 9, 14, crot, tcl);
       }
@@ -2992,9 +3010,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
     // ---- build ghost / hover
     if (ui.placing >= 0 && ui.hoverCol >= 0) {
-      var gx = (ui.hoverCol + 0.5) * TD.TILE, gy = (ui.hoverRow + 0.5) * TD.TILE;
-      var ok = ui.hoverValid;
-      var def = TD.TOWERS[ui.placing], rr = def.levels[0].range;
+      const gx = (ui.hoverCol + 0.5) * TD.TILE, gy = (ui.hoverRow + 0.5) * TD.TILE;
+      const ok = ui.hoverValid;
+      const def = TD.TOWERS[ui.placing], rr = def.levels[0].range;
       r.push(F.tilefill, gx, gy, 40, 40, 0, ok ? C.okTile : C.badTile);
       r.push(F.disc, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeFill : C.badFill);
       r.push(F.ring, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeLine : C.badLine);
@@ -3014,7 +3032,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 /* Bastion — tiny synthesized sound effects (WebAudio, no assets).
  * Each sound has a minimum re-trigger interval and there is a global voice
  * cap, so a 5,000-enemy firefight can't flood the audio graph. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -3065,7 +3084,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var len = this.ctx.sampleRate * 0.6;
     this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     var d = this.noise.getChannelData(0);
-    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   };
 
   A.setMuted = function (m) {
@@ -3142,7 +3161,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.env(this.osc('square', 233, 116, t, 0.3), t, v * 0.6, 0.005, 0.3);
   };
   A.chord = function (t, notes, type, v, step, dur) {
-    for (var i = 0; i < notes.length; i++) {
+    for (let i = 0; i < notes.length; i++) {
       this.env(this.osc(type, notes[i], notes[i], t + i * step, dur), t + i * step, v, 0.01, dur);
     }
   };
@@ -3163,7 +3182,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 /* Bastion — pointer/touch/keyboard input. Converts raw events into game
  * intents (tap, hover, pan, zoom). Handlers run immediately on the event, so
  * the UI stays responsive regardless of simulation load. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -3206,7 +3226,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     try { this.canvas.setPointerCapture(e.pointerId); } catch (_err) { /* ignore */ }
     this.pointers.set(e.pointerId, { x: p.x, y: p.y, sx: p.x, sy: p.y, type: e.pointerType, button: e.button, t: performance.now() });
     if (this.pointers.size === 2) {
-      var pts = Array.from(this.pointers.values());
+      const pts = Array.from(this.pointers.values());
       this.pinch = { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), cx: (pts[0].x + pts[1].x) / 2, cy: (pts[0].y + pts[1].y) / 2 };
       this.dragging = true;
     }
@@ -3223,9 +3243,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var dx = p.x - ptr.x, dy = p.y - ptr.y;
     ptr.x = p.x; ptr.y = p.y;
     if (this.pinch && this.pointers.size >= 2) {
-      var pts = Array.from(this.pointers.values());
-      var d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      var cx = (pts[0].x + pts[1].x) / 2, cy = (pts[0].y + pts[1].y) / 2;
+      const pts = Array.from(this.pointers.values());
+      const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const cx = (pts[0].x + pts[1].x) / 2, cy = (pts[0].y + pts[1].y) / 2;
       this.game.pan(cx - this.pinch.cx, cy - this.pinch.cy);
       if (this.pinch.d > 10) this.game.zoomAt(cx, cy, d / this.pinch.d);
       this.pinch.d = d; this.pinch.cx = cx; this.pinch.cy = cy;
@@ -3285,7 +3305,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
  * The HUD is plain DOM layered over the canvas. Values are diffed against a
  * cache and only written when they change, so the UI adds ~0 layout cost per
  * frame even while the game renders thousands of sprites. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -3594,9 +3615,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     this.set('hScore', sim.score.toLocaleString());
 
     // palette affordability / selection
-    for (var i = 0; i < this.cards.length; i++) {
-      var poor = gold < TD.TOWERS[i].cost, sel = game.placing === i;
-      var k = (poor ? 1 : 0) + (sel ? 2 : 0);
+    for (let i = 0; i < this.cards.length; i++) {
+      const poor = gold < TD.TOWERS[i].cost, sel = game.placing === i;
+      const k = (poor ? 1 : 0) + (sel ? 2 : 0);
       if (c[`card${i}`] !== k) {
         c[`card${i}`] = k;
         this.cards[i].classList.toggle('poor', poor);
@@ -3619,12 +3640,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var cd = sim.countdown > 0 ? sim.countdown : 0;
     var bonus = 0;
     if (can && sim.wave > 0) {
-      var frac = cd > 0 ? cd / TD.WAVE_COUNTDOWN : 1;
+      const frac = cd > 0 ? cd / TD.WAVE_COUNTDOWN : 1;
       bonus = Math.round(TD.earlyCallBonus(next) * frac);
     }
     var key = `${next}:${can}:${final}:${bonus}:${Math.ceil(cd)}`;
     if (key !== this.wbKey) {
-      var nk = this.wbKey.split(':')[0];
+      const nk = this.wbKey.split(':')[0];
       this.wbKey = key;
       if (nk !== String(next)) {
         if (final) {
@@ -3633,14 +3654,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
           $('wbList').innerHTML = '';
         } else {
           $('wbTitle').textContent = `Wave ${next}`;
-          var boss = next % 10 === 0;
-          var sub = $('wbSub');
+          const boss = next % 10 === 0;
+          const sub = $('wbSub');
           sub.textContent = boss ? 'BOSS' : next === TD.TOTAL_WAVES ? 'FINAL' : '';
           sub.className = boss ? 'boss' : '';
           $('wbList').innerHTML = TD.waveSummary(next, sim.map.paths.length).map((g) => `<span class="wb-item" title="${TD.ENEMIES[g.type].name}"><img alt="" src="${this.icons.enemy[g.type]}">${g.count}</span>`).join('');
         }
       }
-      var label = final ? (sim.state === 'running' ? 'Hold the line!' : '—')
+      const label = final ? (sim.state === 'running' ? 'Hold the line!' : '—')
         : sim.wave === 0 ? 'Start wave 1'
         : !can ? 'Incoming…'
         : cd > 0 ? `Next wave · ${Math.ceil(cd)}s`
@@ -3653,7 +3674,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (this.cache.bar !== bar) { this.cache.bar = bar; $('bNextBar').style.width = bar; }
   };
 
-  U.setPerfText = (txt) => { $('perf').firstChild ? ($('perf').firstChild.nodeValue = txt) : $('perf').appendChild(document.createTextNode(txt)); };
+  U.setPerfText = (txt) => {
+    if ($('perf').firstChild) $('perf').firstChild.nodeValue = txt;
+    else $('perf').appendChild(document.createTextNode(txt));
+  };
 
   function formatTime(s) {
     var m = Math.floor(s / 60), ss = Math.floor(s % 60);
@@ -3665,7 +3689,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 <script>
 /* Bastion — game controller: owns the single requestAnimationFrame loop,
  * the camera, player intents and game-mode orchestration. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -3813,12 +3838,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var W = this.sim ? this.sim.map.width : 1280, H = this.sim ? this.sim.map.height : 720;
     var top = 0, bottom = 0, left = 0;
     if (this.isPlay()) {
-      var tb = document.querySelector('.topbar').getBoundingClientRect();
+      const tb = document.querySelector('.topbar').getBoundingClientRect();
       top = tb.bottom;
-      var dockTop = this.cssH;
+      let dockTop = this.cssH;
       ['palette', 'waveBox'].forEach((id) => {
         var e = document.getElementById(id);
-        if (!e.classList.contains('hidden')) { var r = e.getBoundingClientRect(); if (r.height) dockTop = Math.min(dockTop, r.top); }
+        if (!e.classList.contains('hidden')) { const r = e.getBoundingClientRect(); if (r.height) dockTop = Math.min(dockTop, r.top); }
       });
       bottom = this.cssH - dockTop;
     }
@@ -4033,7 +4058,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (k === '?') { this.ui.show('scrHelp'); return true; }
     if (k === 'm' || k === 'M') { this.toggleMute(); return true; }
     if (this.paused) return false;
-    if (k >= '1' && k <= '5') { var i = +k - 1; this.selectTowerType(this.placing === i ? -1 : i); return true; }
+    if (k >= '1' && k <= '5') { const i = +k - 1; this.selectTowerType(this.placing === i ? -1 : i); return true; }
     if (k === 'u' || k === 'U') { this.upgradeSelected(); return true; }
     if (k === 'x' || k === 'X' || k === 'Delete' || k === 'Backspace') { this.sellSelected(); return true; }
     if (k === 't' || k === 'T') { this.cycleTarget(); return true; }
@@ -4075,9 +4100,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var f = b.frames.slice().sort((a, c) => a - c);
     var cpu = b.cpu.slice().sort((a, c) => a - c);
     var pct = (arr, p) => arr[Math.min(arr.length - 1, Math.floor(arr.length * p))];
-    var avg = (arr) => { var s = 0; for (var i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
+    var avg = (arr) => { var s = 0; for (let i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
     var at45 = 0, over33 = 0;
-    for (var i = 0; i < f.length; i++) { if (f[i] <= 1000 / 45 + 0.5) at45++; if (f[i] > 33.4) over33++; }
+    for (let i = 0; i < f.length; i++) { if (f[i] <= 1000 / 45 + 0.5) at45++; if (f[i] > 33.4) over33++; }
     var res = {
       seconds: avg(b.frames) * b.frames.length / 1000, frames: f.length,
       enemies: this.sim.eCount, towers: this.sim.towers.length, projectiles: this.sim.pCount,
@@ -4174,13 +4199,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   G.checkEvents = function (sim, dt) {
     if (sim.wave !== this.lastWave) {
-      var w = sim.wave;
+      const w = sim.wave;
       this.lastWave = w;
-      var groups = TD.buildWave(w, sim.map.paths.length);
-      var intro = '';
+      const groups = TD.buildWave(w, sim.map.paths.length);
+      let intro = '';
       [['runner', 3], ['swarm', 5], ['tank', 7], ['healer', 11], ['splitter', 14]].forEach((u) => { if (u[1] === w) intro = `New enemy: ${TD.ENEMIES[TD.ENEMY_INDEX[u[0]]].name}`; });
-      var boss = w % 10 === 0;
-      var total = groups.reduce((a, g) => a + g.count, 0);
+      const boss = w % 10 === 0;
+      const total = groups.reduce((a, g) => a + g.count, 0);
       this.ui.banner(w === TD.TOTAL_WAVES ? 'FINAL WAVE' : boss ? `BOSS WAVE ${w}` : `WAVE ${w}`, intro || (boss ? 'A Behemoth approaches' : `${total} hostiles inbound`), boss);
     }
     if ((sim.state === 'victory' || sim.state === 'defeat') && !this.endShown) {
@@ -4189,7 +4214,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         this.endShown = true;
         this.placing = -1; this.selected = 0;
         if (this.mode === 'play') {
-          var r = this.saveScore(sim, sim.state === 'victory');
+          const r = this.saveScore(sim, sim.state === 'victory');
           this.ui.showEnd(sim, sim.state === 'victory', r.best, r.isNew);
         } else this.ui.showEnd(sim, sim.state === 'victory', null, false);
       }
@@ -4199,8 +4224,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
   G.updatePerf = function () {
     var n = Math.min(this.fCount, 120), N = this.statN, s = this.sortBuf;
     var sum = 0, cpu = 0, simT = 0, rnd = 0, ticks = 0;
-    for (var i = 0; i < n; i++) {
-      var k = (this.fHead - 1 - i + N) % N;
+    for (let i = 0; i < n; i++) {
+      const k = (this.fHead - 1 - i + N) % N;
       s[i] = this.fDelta[k]; sum += this.fDelta[k]; cpu += this.fCpu[k]; simT += this.fSim[k]; rnd += this.fRender[k]; ticks += this.fTicks[k];
     }
     var sub = s.subarray(0, n); sub.sort();
@@ -4217,7 +4242,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       `speed      ${this.speed}×${performance.memory ? `   heap ${heapMB().toFixed(1)} MB` : ''}`
     ];
     if (this.bench && !this.bench.done) {
-      var b = this.bench;
+      const b = this.bench;
       lines.push(b.t < b.warm ? 'bench      warming up…' : `bench      sampling ${Math.max(0, b.warm + b.dur - b.t).toFixed(0)}s`);
     }
     this.ui.setPerfText(lines.join('\n'));
@@ -4226,7 +4251,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   // ------------------------------------------------------------ boot
   function boot() {
     try {
-      var g = new Game();
+      const g = new Game();
       g.init();
     } catch (err) {
       document.getElementById('fatal').classList.remove('hidden');

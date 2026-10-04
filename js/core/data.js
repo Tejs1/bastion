@@ -1,5 +1,6 @@
 /* Bastion — static game data: towers, enemies, maps, difficulty, wave generator. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -154,7 +155,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var budget = 9 + 3.1 * w + 0.07 * w * w;
     var gapScale = Math.max(0.4, 1 - w * 0.011);
     var unlocked = [];
-    for (var i = 0; i < UNLOCK.length; i++) if (UNLOCK[i][1] <= w) unlocked.push(UNLOCK[i][0]);
+    for (let i = 0; i < UNLOCK.length; i++) if (UNLOCK[i][1] <= w) unlocked.push(UNLOCK[i][0]);
     var t = 0;
 
     function add(type, share, delay, hp) {
@@ -166,8 +167,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
     if (w % 10 === 0) {
       // Boss wave: behemoth(s) + escorts.
-      var bosses = w === 50 ? 1 : Math.max(1, w / 20 | 0);
-      var bossHp = w === 50 ? 3.2 : w === 10 ? 0.6 : 1;
+      const bosses = w === 50 ? 1 : Math.max(1, w / 20 | 0);
+      const bossHp = w === 50 ? 3.2 : w === 10 ? 0.6 : 1;
       groups.push({ type: E.boss, count: bosses, gap: 7, delay: 4, path: -1, hp: bossHp });
       budget *= 0.55;
       t = add(E.grunt, 0.4, 0);
@@ -178,7 +179,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     }
 
     // Introduction waves show off the new type on its own.
-    for (i = 0; i < UNLOCK.length; i++) {
+    for (let i = 0; i < UNLOCK.length; i++) {
       if (UNLOCK[i][1] === w && w > 1) {
         add(UNLOCK[i][0], 0.65, 0);
         add(E.grunt, 0.35, 4);
@@ -206,12 +207,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var nGroups = w < 4 ? 1 : (w < 15 ? 2 : 3);
     var picked = [];
     var shares = nGroups === 1 ? [1] : nGroups === 2 ? [0.6, 0.4] : [0.45, 0.33, 0.22];
-    for (var g = 0; g < nGroups; g++) {
-      var type;
-      var guard = 0;
+    for (let g = 0; g < nGroups; g++) {
+      let type;
+      let guard = 0;
       do { type = unlocked[rng.int(0, unlocked.length - 1)]; } while (picked.indexOf(type) >= 0 && ++guard < 10);
       picked.push(type);
-      var len = add(type, shares[g], t);
+      const len = add(type, shares[g], t);
       t += Math.min(len * 0.6, 8) + rng.range(0.5, 2.5);
     }
     return groups;

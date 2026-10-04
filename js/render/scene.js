@@ -2,7 +2,8 @@
  * Enemies are culled through the simulation's spatial grid, so only grid cells
  * overlapping the camera view are visited: off-screen enemies cost nothing to
  * render. Everything else is bounds-checked before being queued. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -13,13 +14,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   function Scene(renderer, atlas) {
     this.r = renderer;
-    var F = this.F = atlas.frames;
+    this.F = atlas.frames;
+    var F = this.F;
     this.eF = TD.ENEMIES.map((e) => F[`e_${e.id}`]);
     this.tB = TD.TOWERS.map((t) => F[`tb_${t.id}`]);
     this.tT = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tt_${t.id}${l}`]));
     this.pF = TD.FX_FRAMES.map((n) => F[n]);
     this.chF = {};
-    for (var d = 0; d <= 9; d++) this.chF[d] = F[`ch_${d}`];
+    for (let d = 0; d <= 9; d++) this.chF[d] = F[`ch_${d}`];
     this.chPlus = F['ch_+'];
     this.vis = new Int32Array(8192);
     this.nVis = 0;
@@ -63,19 +65,19 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- route preview while waiting between waves
     var paths = sim.map.paths;
     if (sim.state === 'prep' || sim.countdown > 0) {
-      for (var pi = 0; pi < paths.length; pi++) {
-        var p = paths[pi];
-        for (var d = (t * 70) % 48; d < p.len; d += 48) {
+      for (let pi = 0; pi < paths.length; pi++) {
+        const p = paths[pi];
+        for (let d = (t * 70) % 48; d < p.len; d += 48) {
           k = (d * p.inv) | 0;
-          var fade = Math.min(1, d / 80, (p.len - d) / 80);
+          const fade = Math.min(1, d / 80, (p.len - d) / 80);
           r.push(F.dot, p.x[k], p.y[k], 5, 5, 0, ad(255, 110, 140, 0.55 * fade));
         }
       }
     }
 
     // ---- spawn portals
-    for (pi = 0; pi < paths.length; pi++) {
-      var sx = 6, sy = paths[pi].waypoints[0][1];
+    for (let pi = 0; pi < paths.length; pi++) {
+      const sx = 6, sy = paths[pi].waypoints[0][1];
       r.push(F.glow, sx, sy, 70, 70, 0, ad(255, 60, 110, 0.55 + 0.15 * Math.sin(t * 3)));
       r.push(F.portal, sx, sy, 44, 44, t * 2.2, ad(255, 120, 170, 0.9));
       r.push(F.portal, sx, sy, 30, 30, -t * 3.1, ad(255, 200, 220, 0.8));
@@ -92,7 +94,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var showT = ui.selected ? sim.towerById[ui.selected] : null;
     if (!showT && ui.hoverTower) showT = sim.towerById[ui.hoverTower];
     if (showT) {
-      var rg = showT.def.levels[showT.level].range;
+      const rg = showT.def.levels[showT.level].range;
       r.push(F.disc, showT.x, showT.y, rg * 2, rg * 2, 0, C.rangeFill);
       r.push(F.ring, showT.x, showT.y, rg * 2, rg * 2, 0, C.rangeLine);
       if (ui.selected === showT.id) r.push(F.tile, showT.x, showT.y, 40, 40, 0, pm(120, 220, 255, 220));
@@ -101,10 +103,10 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- fx rings (under units)
     for (i = 0; i < fx.rLife.length; i++) {
       if (fx.rLife[i] <= 0) continue;
-      var e = 1 - fx.rLife[i] / fx.rMax[i];
-      var rad = fx.rR0[i] + (fx.rR1[i] - fx.rR0[i]) * (1 - (1 - e) * (1 - e));
-      var rc = fx.rCol[i], fa = 1 - e;
-      var col = TD.rgba((rc & 255) * fa, (rc >> 8 & 255) * fa, (rc >> 16 & 255) * fa, (rc >>> 24) * fa);
+      const e = 1 - fx.rLife[i] / fx.rMax[i];
+      const rad = fx.rR0[i] + (fx.rR1[i] - fx.rR0[i]) * (1 - (1 - e) * (1 - e));
+      const rc = fx.rCol[i], fa = 1 - e;
+      const col = TD.rgba((rc & 255) * fa, (rc >> 8 & 255) * fa, (rc >> 16 & 255) * fa, (rc >>> 24) * fa);
       r.push(fx.rFrame[i] === 1 ? F.shock : F.ring, fx.rX[i], fx.rY[i], rad * 2, rad * 2, 0, col);
     }
 
@@ -118,18 +120,18 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var ex = sim.eX, ey = sim.eY, epx = sim.ePX, epy = sim.ePY, rot = sim.eRot, type = sim.eType;
     var flash = sim.eFlash, slowT = sim.eSlowT, vis = this.vis, nv = 0;
     var eF = this.eF, ENE = TD.ENEMIES;
-    for (var cy = r0; cy <= r1; cy++) {
-      for (var cx = c0; cx <= c1; cx++) {
-        var cell = cy * gc + cx;
-        for (var it = start[cell], end = start[cell + 1]; it < end; it++) {
-          var s = items[it];
+    for (let cy = r0; cy <= r1; cy++) {
+      for (let cx = c0; cx <= c1; cx++) {
+        const cell = cy * gc + cx;
+        for (let it = start[cell], end = start[cell + 1]; it < end; it++) {
+          const s = items[it];
           if (!alive[s]) continue;
-          var X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
+          const X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
           if (X < x0 - 30 || X > x1 + 30 || Y < y0 - 30 || Y > y1 + 30) continue;
           vis[nv++] = s;
           if (dbg.noEnemies) continue;
-          var ty = type[s], fr = eF[ty];
-          var wob = Math.sin(t * 9 + s) * 0.07;
+          const ty = type[s], fr = eF[ty];
+          const wob = Math.sin(t * 9 + s) * 0.07;
           if (ENE[ty].radius > 12) r.push(F.shadow, X + 3, Y + 5, fr.w * 1.1, fr.h * 0.9, 0, C.shadow);
           r.push(fr, X, Y, fr.w, fr.h, rot[s] + wob, slowT[s] > 0 ? C.slow : WHITE, flash[s] > 0 ? flash[s] * 0.55 : 0);
         }
@@ -140,13 +142,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- towers
     var towers = sim.towers;
     for (i = 0; i < towers.length; i++) {
-      var tw = towers[i];
+      const tw = towers[i];
       if (tw.x < x0 - 30 || tw.x > x1 + 30 || tw.y < y0 - 30 || tw.y > y1 + 30) continue;
-      var tc = this.towerCol[tw.type];
+      const tc = this.towerCol[tw.type];
       r.push(F.shadow, tw.x + 3, tw.y + 5, 44, 40, 0, C.shadow);
       r.push(this.tB[tw.type], tw.x, tw.y, 36, 36, 0, WHITE);
-      var kind = tw.def.kind, tt = this.tT[tw.type][tw.level];
-      var ang = tw.angle, rec = tw.recoil > 0 ? tw.recoil : 0;
+      const kind = tw.def.kind, tt = this.tT[tw.type][tw.level];
+      let ang = tw.angle, rec = tw.recoil > 0 ? tw.recoil : 0;
       if (kind === 'pulse') {
         ang = t * 0.8 + tw.id;
         r.push(F.glow, tw.x, tw.y, 30 + tw.level * 4, 30 + tw.level * 4, 0, ad(tc[0], tc[1], tc[2], 0.25 + rec * 0.5));
@@ -154,11 +156,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
         ang = t * 0.6 + tw.id;
         r.push(F.glow, tw.x, tw.y, 26, 26, 0, ad(tc[0], tc[1], tc[2], 0.35 + 0.2 * Math.sin(t * 7 + tw.id) + rec * 0.4));
       }
-      var ca = Math.cos(tw.angle), sa = Math.sin(tw.angle);
-      var kick = kind === 'pulse' || kind === 'chain' ? 0 : rec * 3;
+      const ca = Math.cos(tw.angle), sa = Math.sin(tw.angle);
+      const kick = kind === 'pulse' || kind === 'chain' ? 0 : rec * 3;
       r.push(tt, tw.x - ca * kick, tw.y - sa * kick, 44, 44, ang, WHITE);
       if ((kind === 'bullet' || kind === 'beam') && rec > 0.6) {
-        var mz = kind === 'beam' ? 22 : 17;
+        const mz = kind === 'beam' ? 22 : 17;
         r.push(F.glow, tw.x + ca * mz, tw.y + sa * mz, 16 * rec, 16 * rec, 0, ad(tc[0], tc[1], tc[2], rec));
       }
       // level pips
@@ -170,14 +172,14 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- enemy health bars (over towers for readability)
     var hp = sim.eHp, mhp = sim.eMaxHp;
     for (i = 0; i < nv; i++) {
-      s = vis[i];
-      var hf = hp[s] / mhp[s];
+      const s = vis[i];
+      const hf = hp[s] / mhp[s];
       if (hf >= 0.999) continue;
-      ty = type[s];
-      var er = ENE[ty].radius, big = er > 15;
-      var bw = big ? 46 : Math.max(12, er * 2.2), bh = big ? 5 : 3;
-      var lift2 = er + (big ? 10 : 6);
-      X = epx[s] + (ex[s] - epx[s]) * alpha; Y = epy[s] + (ey[s] - epy[s]) * alpha;
+      const ty = type[s];
+      const er = ENE[ty].radius, big = er > 15;
+      const bw = big ? 46 : Math.max(12, er * 2.2), bh = big ? 5 : 3;
+      const lift2 = er + (big ? 10 : 6);
+      let X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
       if (crot) X -= lift2; else Y -= lift2;
       r.bar(F.px, X, Y, bw, bh + 1, crot, hf, barColor(hf));
     }
@@ -185,11 +187,11 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- projectiles
     var pc = sim.pCount;
     for (i = 0; i < pc; i++) {
-      var PX = sim.pPX[i] + (sim.pX[i] - sim.pPX[i]) * alpha, PY = sim.pPY[i] + (sim.pY[i] - sim.pPY[i]) * alpha;
+      const PX = sim.pPX[i] + (sim.pX[i] - sim.pPX[i]) * alpha, PY = sim.pPY[i] + (sim.pY[i] - sim.pPY[i]) * alpha;
       if (PX < x0 - 20 || PX > x1 + 20 || PY < y0 - 20 || PY > y1 + 20) continue;
-      var pa = Math.atan2(sim.pTY[i] - PY, sim.pTX[i] - PX);
+      const pa = Math.atan2(sim.pTY[i] - PY, sim.pTX[i] - PX);
       if (sim.pKind[i] === TD.PROJ_SHELL) {
-        var age = sim.pAge[i], lift = Math.min(1, age * 3);
+        const age = sim.pAge[i], lift = Math.min(1, age * 3);
         r.push(F.glow, PX, PY - 3 * lift, 18, 18, 0, ad(255, 160, 60, 0.6));
         r.push(F.shell, PX, PY - 3 * lift, 12 + lift * 2, 12 + lift * 2, pa, WHITE);
       } else {
@@ -201,15 +203,15 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var bp = fx.bPts;
     for (i = 0; i < fx.bLife.length; i++) {
       if (fx.bLife[i] <= 0) continue;
-      var lf = fx.bLife[i] / fx.bMax[i], bc = fx.bCol[i], o = i * 12;
-      var bcol = TD.rgba((bc & 255) * lf, (bc >> 8 & 255) * lf, (bc >> 16 & 255) * lf, 0);
+      const lf = fx.bLife[i] / fx.bMax[i], bc = fx.bCol[i], o = i * 12;
+      const bcol = TD.rgba((bc & 255) * lf, (bc >> 8 & 255) * lf, (bc >> 16 & 255) * lf, 0);
       if (fx.bKind[i] === 0) {
-        var w = fx.bW[i] * (0.4 + lf * 0.6);
+        const w = fx.bW[i] * (0.4 + lf * 0.6);
         r.line(F.beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 2.2, bcol);
         r.line(F.beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 0.7, ad(255, 255, 255, lf));
       } else {
         for (k = 0; k < 5; k++) {
-          var q = o + k * 2;
+          const q = o + k * 2;
           r.line(F.beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], fx.bW[i] * 1.8, bcol);
           r.line(F.beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], fx.bW[i] * 0.6, ad(255, 255, 255, lf));
         }
@@ -220,12 +222,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var pF = this.pF, life = fx.life, mx = fx.max;
     for (i = dbg.noParticles ? life.length : 0; i < life.length; i++) {
       if (life[i] <= 0) continue;
-      var X2 = fx.px[i], Y2 = fx.py[i];
+      const X2 = fx.px[i], Y2 = fx.py[i];
       if (X2 < x0 - 40 || X2 > x1 + 40 || Y2 < y0 - 40 || Y2 > y1 + 40) continue;
-      var lt = life[i] / mx[i];
-      var sz = fx.s1[i] + (fx.s0[i] - fx.s1[i]) * lt;
-      var pfr = pF[fx.frame[i]];
-      var pcol = fx.add[i] ? ad(fx.r[i], fx.g[i], fx.b[i], lt) : pm(fx.r[i], fx.g[i], fx.b[i], 255 * Math.min(1, lt * 1.5));
+      const lt = life[i] / mx[i];
+      const sz = fx.s1[i] + (fx.s0[i] - fx.s1[i]) * lt;
+      const pfr = pF[fx.frame[i]];
+      const pcol = fx.add[i] ? ad(fx.r[i], fx.g[i], fx.b[i], lt) : pm(fx.r[i], fx.g[i], fx.b[i], 255 * Math.min(1, lt * 1.5));
       if (fx.frame[i] === 7) {   // streaks align with velocity
         r.push(pfr, X2, Y2, sz * 3, sz, Math.atan2(fx.vy[i], fx.vx[i]), pcol);
       } else r.push(pfr, X2, Y2, sz, sz, fx.rot[i], pcol);
@@ -234,16 +236,16 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // ---- floating reward numbers (screen-aligned, drift upward on screen)
     for (i = 0; i < fx.tLife.length; i++) {
       if (fx.tLife[i] <= 0) continue;
-      var tl = Math.min(1, fx.tLife[i] * 2.5), rise = (1.1 - fx.tLife[i]) * 26;
-      var v = fx.tV[i], digits = v >= 100 ? 3 : v >= 10 ? 2 : 1;
-      var half = (digits + 1) * 4;
+      const tl = Math.min(1, fx.tLife[i] * 2.5), rise = (1.1 - fx.tLife[i]) * 26;
+      const v = fx.tV[i], digits = v >= 100 ? 3 : v >= 10 ? 2 : 1;
+      const half = (digits + 1) * 4;
       // advance direction along screen-x, expressed in world space
-      var ax = crot ? 0 : 1, ay = crot ? -1 : 0;
-      var tx = fx.tX[i] - ax * half - (crot ? rise : 0), tyy = fx.tY[i] - ay * half - (crot ? 0 : rise);
-      var tcl = TD.rgba(255 * tl, 214 * tl, 90 * tl, 255 * tl);
+      const ax = crot ? 0 : 1, ay = crot ? -1 : 0;
+      let tx = fx.tX[i] - ax * half - (crot ? rise : 0), tyy = fx.tY[i] - ay * half - (crot ? 0 : rise);
+      const tcl = TD.rgba(255 * tl, 214 * tl, 90 * tl, 255 * tl);
       r.push(this.chPlus, tx, tyy, 9, 14, crot, tcl);
       for (k = digits - 1; k >= 0; k--) {
-        var dg = Math.floor(v / 10 ** k) % 10;
+        const dg = Math.floor(v / 10 ** k) % 10;
         tx += ax * 8; tyy += ay * 8;
         r.push(this.chF[dg], tx, tyy, 9, 14, crot, tcl);
       }
@@ -251,9 +253,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
     // ---- build ghost / hover
     if (ui.placing >= 0 && ui.hoverCol >= 0) {
-      var gx = (ui.hoverCol + 0.5) * TD.TILE, gy = (ui.hoverRow + 0.5) * TD.TILE;
-      var ok = ui.hoverValid;
-      var def = TD.TOWERS[ui.placing], rr = def.levels[0].range;
+      const gx = (ui.hoverCol + 0.5) * TD.TILE, gy = (ui.hoverRow + 0.5) * TD.TILE;
+      const ok = ui.hoverValid;
+      const def = TD.TOWERS[ui.placing], rr = def.levels[0].range;
       r.push(F.tilefill, gx, gy, 40, 40, 0, ok ? C.okTile : C.badTile);
       r.push(F.disc, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeFill : C.badFill);
       r.push(F.ring, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeLine : C.badLine);

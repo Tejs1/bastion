@@ -1,5 +1,6 @@
 /* Bastion — fixed-step loop driver and the stress-test scenario. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -41,8 +42,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
     // tower mix: projectile towers dominate so the projectile target is reachable
     var mix = [0, 1, 0, 1, 0, 3, 0, 1, 2, 4];
     var placed = 0;
-    for (var i = 0; i < spots.length && placed < targetTowers; i++) {
-      var t = sim.placeTower(mix[placed % mix.length], spots[i].col, spots[i].row);
+    for (let i = 0; i < spots.length && placed < targetTowers; i++) {
+      const t = sim.placeTower(mix[placed % mix.length], spots[i].col, spots[i].row);
       if (typeof t === 'object') {
         t.level = placed % 4;
         if (t.def.kind === 'bullet') t.mode = placed % 4;
@@ -57,9 +58,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
       update: (s) => {
         var need = targetEnemies - s.eCount;
         if (need > 400) need = 400;
-        for (var k = 0; k < need; k++) {
-          var path = s.rng.int(0, nPaths - 1);
-          var type = types[s.rng.int(0, types.length - 1)];
+        for (let k = 0; k < need; k++) {
+          const path = s.rng.int(0, nPaths - 1);
+          const type = types[s.rng.int(0, types.length - 1)];
           s.spawnEnemy(type, path, 20, 1, s.rng.next() * s.map.paths[path].len * 0.97);
         }
         if (s.pCount < targetProj) s.fireMul = Math.min(40, s.fireMul * 1.03);

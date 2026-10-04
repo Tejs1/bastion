@@ -8,7 +8,8 @@
  *
  * Backends: WebGL2 -> WebGL1 + ANGLE_instanced_arrays -> Canvas2D fallback.
  */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -86,7 +87,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     else {
       gl = this.canvas.getContext('webgl', attrs) || this.canvas.getContext('experimental-webgl', attrs);
       if (!gl) return false;
-      var ext = gl.getExtension('ANGLE_instanced_arrays');
+      const ext = gl.getExtension('ANGLE_instanced_arrays');
       if (!ext) return false;
       inst = {
         divisor: (i, d) => { ext.vertexAttribDivisorANGLE(i, d); },
@@ -242,7 +243,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     }
     this.drawCalls = 0;
     if (bgName && this.textures[bgName]) {
-      var b = this.bgData;
+      const b = this.bgData;
       b[0] = bgRect.x + bgRect.w / 2; b[1] = bgRect.y + bgRect.h / 2; b[2] = bgRect.w; b[3] = bgRect.h; b[4] = 0;
       b[5] = 0; b[6] = 0; b[7] = 1; b[8] = 1; b[10] = 0;
       this.bgU32[9] = 0xffffffff;
@@ -279,17 +280,17 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (bg) { c.setTransform(A, B, C, D, E, F); c.drawImage(bg.src, bgRect.x, bgRect.y, bgRect.w, bgRect.h); }
     var at = this.textures[atlasName], img = at.src, AW = at.w, AH = at.h;
     var d = this.f32, u = this.u32, mode = 0;
-    for (var k = 0; k < this.n; k++) {
-      var i = k * FLOATS, col = u[i + 9];
-      var a = col >>> 24, add = a === 0;
-      var lum = add ? Math.max(col & 255, col >> 8 & 255, col >> 16 & 255) / 255 : a / 255;
+    for (let k = 0; k < this.n; k++) {
+      const i = k * FLOATS, col = u[i + 9];
+      const a = col >>> 24, add = a === 0;
+      const lum = add ? Math.max(col & 255, col >> 8 & 255, col >> 16 & 255) / 255 : a / 255;
       if (lum < 0.02) continue;
       if (add !== (mode === 1)) { mode = add ? 1 : 0; c.globalCompositeOperation = add ? 'lighter' : 'source-over'; }
       c.globalAlpha = lum;
-      var x = d[i], y = d[i + 1], w = d[i + 2], h = d[i + 3], rot = d[i + 4];
-      var cs = Math.cos(rot), sn = Math.sin(rot);
+      const x = d[i], y = d[i + 1], w = d[i + 2], h = d[i + 3], rot = d[i + 4];
+      const cs = Math.cos(rot), sn = Math.sin(rot);
       c.setTransform(A * cs + C * sn, B * cs + D * sn, C * cs - A * sn, D * cs - B * sn, A * x + C * y + E, B * x + D * y + F);
-      var su = d[i + 5] * AW, sv = d[i + 6] * AH, sw = d[i + 7] * AW - su, sh = d[i + 8] * AH - sv;
+      const su = d[i + 5] * AW, sv = d[i + 6] * AH, sw = d[i + 7] * AW - su, sh = d[i + 8] * AH - sv;
       if (d[i + 10] < -0.5) {   // health bar
         c.globalAlpha = 1;
         c.fillStyle = 'rgba(5,8,13,0.85)'; c.fillRect(-w / 2, -h / 2, w, h);
@@ -298,7 +299,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         continue;
       }
       if (sw < 8 && sh < 8) {   // solid quads (bars, rects): honour the tint colour
-        var ia = add ? 1 : 255 / a;
+        const ia = add ? 1 : 255 / a;
         c.fillStyle = `rgb(${(col & 255) * ia | 0},${(col >> 8 & 255) * ia | 0},${(col >> 16 & 255) * ia | 0})`;
         c.fillRect(-w / 2, -h / 2, w, h);
       } else c.drawImage(img, su, sv, sw, sh, -w / 2, -h / 2, w, h);

@@ -15,17 +15,17 @@
   <div id="hud" class="hidden">
     <header class="topbar">
       <div class="stats">
-        <div class="stat" id="stLives" title="Base integrity"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.3 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.7 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"/></svg><b id="hLives">20</b></div>
-        <div class="stat gold" id="stGold" title="Credits"><svg viewBox="0 0 24 24"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg><b id="hGold">0</b></div>
+        <div class="stat" id="stLives" title="Base integrity"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.3 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.7 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"/></svg><b id="hLives">20</b></div>
+        <div class="stat gold" id="stGold" title="Credits"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg><b id="hGold">0</b></div>
         <div class="stat wave" title="Wave"><span class="lbl">Wave</span><b id="hWave">0</b><span class="of">/50</span></div>
         <div class="stat score" title="Score"><span class="lbl">Score</span><b id="hScore">0</b></div>
       </div>
       <div class="controls">
-        <div class="seg" id="speedSeg" role="group" aria-label="Game speed">
-          <button data-speed="1" class="on">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button>
-        </div>
-        <button class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
-        <button class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <fieldset class="seg" id="speedSeg" aria-label="Game speed">
+          <button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button>
+        </fieldset>
+        <button type="button" class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+        <button type="button" class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
     </header>
 
@@ -39,7 +39,7 @@
       <div id="waveBox" class="panel">
         <div class="wb-head"><span id="wbTitle">Wave 1</span><span id="wbSub"></span></div>
         <div id="wbList" class="wb-list"></div>
-        <button id="bNext" class="primary"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><i id="bNextBar"></i></button>
+        <button type="button" id="bNext" class="primary"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><i id="bNextBar"></i></button>
       </div>
     </footer>
 
@@ -50,18 +50,18 @@
   <section id="scrMenu" class="screen">
     <div class="menu-card">
       <div class="brand">
-        <div class="logo"><svg viewBox="0 0 64 64"><path d="M32 4l24 14v28L32 60 8 46V18z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M32 18l12 7v14l-12 7-12-7V25z" fill="currentColor"/></svg></div>
+        <div class="logo"><svg aria-hidden="true" viewBox="0 0 64 64"><path d="M32 4l24 14v28L32 60 8 46V18z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M32 18l12 7v14l-12 7-12-7V25z" fill="currentColor"/></svg></div>
         <div><h1>BASTION</h1><p class="tag">Hold the line for fifty waves.</p></div>
       </div>
       <h2>Battlefield</h2>
       <div id="mapList" class="map-list"></div>
       <h2>Difficulty</h2>
       <div class="seg wide" id="diffSeg"></div>
-      <button id="bPlay" class="primary big">Deploy</button>
+      <button type="button" id="bPlay" class="primary big">Deploy</button>
       <div class="menu-row">
-        <button id="bHelp" class="ghost">How to play</button>
-        <button id="bDemo" class="ghost">Watch AI demo</button>
-        <button id="bStress" class="ghost">Stress test</button>
+        <button type="button" id="bHelp" class="ghost">How to play</button>
+        <button type="button" id="bDemo" class="ghost">Watch AI demo</button>
+        <button type="button" id="bStress" class="ghost">Stress test</button>
       </div>
       <p class="fine">Mouse, touch or keyboard · Press <kbd>?</kbd> in game for shortcuts</p>
     </div>
@@ -70,12 +70,12 @@
   <section id="scrPause" class="screen hidden">
     <div class="menu-card narrow">
       <h1 class="small">Paused</h1>
-      <button id="bResume" class="primary big">Resume</button>
-      <button id="bRestart" class="ghost">Restart battle</button>
+      <button type="button" id="bResume" class="primary big">Resume</button>
+      <button type="button" id="bRestart" class="ghost">Restart battle</button>
       <label class="check"><input type="checkbox" id="optPerf"> Show performance overlay</label>
       <label class="check"><input type="checkbox" id="optAuto" checked> Auto-start next wave</label>
-      <button id="bHelp2" class="ghost">How to play</button>
-      <button id="bQuit" class="ghost">Quit to menu</button>
+      <button type="button" id="bHelp2" class="ghost">How to play</button>
+      <button type="button" id="bQuit" class="ghost">Quit to menu</button>
     </div>
   </section>
 
@@ -84,8 +84,8 @@
       <h1 id="endTitle" class="small">Victory</h1>
       <p id="endSub" class="tag"></p>
       <div id="endStats" class="end-stats"></div>
-      <button id="bAgain" class="primary big">Play again</button>
-      <button id="bEndMenu" class="ghost">Main menu</button>
+      <button type="button" id="bAgain" class="primary big">Play again</button>
+      <button type="button" id="bEndMenu" class="ghost">Main menu</button>
     </div>
   </section>
 
@@ -122,7 +122,7 @@
           <div id="helpEnemies" class="codex"></div>
         </div>
       </div>
-      <button id="bHelpClose" class="primary">Got it</button>
+      <button type="button" id="bHelpClose" class="primary">Got it</button>
     </div>
   </section>
 
@@ -130,9 +130,9 @@
     <div class="menu-card narrow">
       <h1 class="small">Stress test results</h1>
       <div id="benchStats" class="end-stats"></div>
-      <button id="bBenchAgain" class="primary">Run again</button>
-      <button id="bBenchClose" class="ghost">Keep watching</button>
-      <button id="bBenchMenu" class="ghost">Main menu</button>
+      <button type="button" id="bBenchAgain" class="primary">Run again</button>
+      <button type="button" id="bBenchClose" class="ghost">Keep watching</button>
+      <button type="button" id="bBenchMenu" class="ghost">Main menu</button>
     </div>
   </section>
 

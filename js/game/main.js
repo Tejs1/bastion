@@ -1,6 +1,7 @@
 /* Bastion — game controller: owns the single requestAnimationFrame loop,
  * the camera, player intents and game-mode orchestration. */
-var TD = globalThis.TD || (globalThis.TD = {});
+globalThis.TD = globalThis.TD || {};
+var TD = globalThis.TD;
 (() => {
   'use strict';
 
@@ -148,12 +149,12 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var W = this.sim ? this.sim.map.width : 1280, H = this.sim ? this.sim.map.height : 720;
     var top = 0, bottom = 0, left = 0;
     if (this.isPlay()) {
-      var tb = document.querySelector('.topbar').getBoundingClientRect();
+      const tb = document.querySelector('.topbar').getBoundingClientRect();
       top = tb.bottom;
-      var dockTop = this.cssH;
+      let dockTop = this.cssH;
       ['palette', 'waveBox'].forEach((id) => {
         var e = document.getElementById(id);
-        if (!e.classList.contains('hidden')) { var r = e.getBoundingClientRect(); if (r.height) dockTop = Math.min(dockTop, r.top); }
+        if (!e.classList.contains('hidden')) { const r = e.getBoundingClientRect(); if (r.height) dockTop = Math.min(dockTop, r.top); }
       });
       bottom = this.cssH - dockTop;
     }
@@ -368,7 +369,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
     if (k === '?') { this.ui.show('scrHelp'); return true; }
     if (k === 'm' || k === 'M') { this.toggleMute(); return true; }
     if (this.paused) return false;
-    if (k >= '1' && k <= '5') { var i = +k - 1; this.selectTowerType(this.placing === i ? -1 : i); return true; }
+    if (k >= '1' && k <= '5') { const i = +k - 1; this.selectTowerType(this.placing === i ? -1 : i); return true; }
     if (k === 'u' || k === 'U') { this.upgradeSelected(); return true; }
     if (k === 'x' || k === 'X' || k === 'Delete' || k === 'Backspace') { this.sellSelected(); return true; }
     if (k === 't' || k === 'T') { this.cycleTarget(); return true; }
@@ -410,9 +411,9 @@ var TD = globalThis.TD || (globalThis.TD = {});
     var f = b.frames.slice().sort((a, c) => a - c);
     var cpu = b.cpu.slice().sort((a, c) => a - c);
     var pct = (arr, p) => arr[Math.min(arr.length - 1, Math.floor(arr.length * p))];
-    var avg = (arr) => { var s = 0; for (var i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
+    var avg = (arr) => { var s = 0; for (let i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
     var at45 = 0, over33 = 0;
-    for (var i = 0; i < f.length; i++) { if (f[i] <= 1000 / 45 + 0.5) at45++; if (f[i] > 33.4) over33++; }
+    for (let i = 0; i < f.length; i++) { if (f[i] <= 1000 / 45 + 0.5) at45++; if (f[i] > 33.4) over33++; }
     var res = {
       seconds: avg(b.frames) * b.frames.length / 1000, frames: f.length,
       enemies: this.sim.eCount, towers: this.sim.towers.length, projectiles: this.sim.pCount,
@@ -509,13 +510,13 @@ var TD = globalThis.TD || (globalThis.TD = {});
 
   G.checkEvents = function (sim, dt) {
     if (sim.wave !== this.lastWave) {
-      var w = sim.wave;
+      const w = sim.wave;
       this.lastWave = w;
-      var groups = TD.buildWave(w, sim.map.paths.length);
-      var intro = '';
+      const groups = TD.buildWave(w, sim.map.paths.length);
+      let intro = '';
       [['runner', 3], ['swarm', 5], ['tank', 7], ['healer', 11], ['splitter', 14]].forEach((u) => { if (u[1] === w) intro = `New enemy: ${TD.ENEMIES[TD.ENEMY_INDEX[u[0]]].name}`; });
-      var boss = w % 10 === 0;
-      var total = groups.reduce((a, g) => a + g.count, 0);
+      const boss = w % 10 === 0;
+      const total = groups.reduce((a, g) => a + g.count, 0);
       this.ui.banner(w === TD.TOTAL_WAVES ? 'FINAL WAVE' : boss ? `BOSS WAVE ${w}` : `WAVE ${w}`, intro || (boss ? 'A Behemoth approaches' : `${total} hostiles inbound`), boss);
     }
     if ((sim.state === 'victory' || sim.state === 'defeat') && !this.endShown) {
@@ -524,7 +525,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
         this.endShown = true;
         this.placing = -1; this.selected = 0;
         if (this.mode === 'play') {
-          var r = this.saveScore(sim, sim.state === 'victory');
+          const r = this.saveScore(sim, sim.state === 'victory');
           this.ui.showEnd(sim, sim.state === 'victory', r.best, r.isNew);
         } else this.ui.showEnd(sim, sim.state === 'victory', null, false);
       }
@@ -534,8 +535,8 @@ var TD = globalThis.TD || (globalThis.TD = {});
   G.updatePerf = function () {
     var n = Math.min(this.fCount, 120), N = this.statN, s = this.sortBuf;
     var sum = 0, cpu = 0, simT = 0, rnd = 0, ticks = 0;
-    for (var i = 0; i < n; i++) {
-      var k = (this.fHead - 1 - i + N) % N;
+    for (let i = 0; i < n; i++) {
+      const k = (this.fHead - 1 - i + N) % N;
       s[i] = this.fDelta[k]; sum += this.fDelta[k]; cpu += this.fCpu[k]; simT += this.fSim[k]; rnd += this.fRender[k]; ticks += this.fTicks[k];
     }
     var sub = s.subarray(0, n); sub.sort();
@@ -552,7 +553,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
       `speed      ${this.speed}×${performance.memory ? `   heap ${heapMB().toFixed(1)} MB` : ''}`
     ];
     if (this.bench && !this.bench.done) {
-      var b = this.bench;
+      const b = this.bench;
       lines.push(b.t < b.warm ? 'bench      warming up…' : `bench      sampling ${Math.max(0, b.warm + b.dur - b.t).toFixed(0)}s`);
     }
     this.ui.setPerfText(lines.join('\n'));
@@ -561,7 +562,7 @@ var TD = globalThis.TD || (globalThis.TD = {});
   // ------------------------------------------------------------ boot
   function boot() {
     try {
-      var g = new Game();
+      const g = new Game();
       g.init();
     } catch (err) {
       document.getElementById('fatal').classList.remove('hidden');
