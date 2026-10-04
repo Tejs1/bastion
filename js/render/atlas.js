@@ -42,7 +42,8 @@ var TD = globalThis.TD;
     return f;
   };
 
-  /** Render one or more frames into a standalone data URL (UI icons). */
+  /** Render one or more frames into a standalone data URL (UI icons).
+   *  rot is one angle for every frame, or an array with one per frame. */
   Atlas.prototype.icon = function (names, px, rot) {
     var cv = document.createElement('canvas');
     cv.width = px; cv.height = px;
@@ -50,11 +51,11 @@ var TD = globalThis.TD;
     var maxW = 0;
     names.forEach((n) => { var f = this.frames[n]; maxW = Math.max(maxW, f.w, f.h); });
     var k = px / maxW;
-    names.forEach((n) => {
-      var f = this.frames[n];
+    names.forEach((n, i) => {
+      var f = this.frames[n], a = Array.isArray(rot) ? rot[i] : rot;
       c.save();
       c.translate(px / 2, px / 2);
-      if (rot) c.rotate(rot);
+      if (a) c.rotate(a);
       c.drawImage(this.canvas, f.x, f.y, f.pw, f.ph, -f.w * k / 2, -f.h * k / 2, f.w * k, f.h * k);
       c.restore();
     });
@@ -230,20 +231,24 @@ var TD = globalThis.TD;
     // towers: shared base plate tinted per type + turret per level
     TD.TOWERS.forEach((def) => {
       var col = def.color;
-      A.add(`tb_${def.id}`, 36, 36, (c) => {
-        rrect(c, -16, -16, 32, 32, 7);
-        var g = c.createLinearGradient(0, -16, 0, 16);
-        g.addColorStop(0, '#36435a'); g.addColorStop(1, '#1b2232');
-        c.fillStyle = g; c.fill(); outline(c, 1.4);
-        rrect(c, -13.5, -13.5, 27, 27, 5); c.lineWidth = 1; c.strokeStyle = 'rgba(255,255,255,0.08)'; c.stroke();
-        c.fillStyle = col;
-        [[-11, -11], [11, -11], [-11, 11], [11, 11]].forEach((p) => {
-          c.globalAlpha = 0.9; c.beginPath(); c.arc(p[0], p[1], 1.6, 0, 7); c.fill();
+      // one plate per level: bronze / silver / gold rim and rank bars along the
+      // bottom edge for levels 2-4 (the plate never rotates with the turret)
+      for (let lv = 0; lv < 4; lv++) {
+        A.add(`tb_${def.id}${lv}`, 36, 36, (c) => {
+          rrect(c, -16, -16, 32, 32, 7);
+          var g = c.createLinearGradient(0, -16, 0, 16);
+          g.addColorStop(0, '#36435a'); g.addColorStop(1, '#1b2232');
+          c.fillStyle = g; c.fill(); outline(c, 1.4);
+          var rank = RANK_COLORS[lv];
+          rrect(c, -13.5, -13.5, 27, 27, 5); c.lineWidth = rank ? 1.8 : 1;
+          c.strokeStyle = rank || 'rgba(255,255,255,0.08)'; c.stroke();
+          for (let k = 0; k < lv; k++) {
+            rrect(c, (k - (lv - 1) / 2) * 6 - 2.2, 11, 4.4, 3, 1); c.fillStyle = rank; c.fill(); outline(c, 0.7);
+          }
+          c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fillStyle = '#121822'; c.fill();
+          c.lineWidth = 1.2 + lv * 0.3; c.strokeStyle = shade(col, -0.35 + lv * 0.15); c.stroke();
         });
-        c.globalAlpha = 1;
-        c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fillStyle = '#121822'; c.fill();
-        c.lineWidth = 1.2; c.strokeStyle = shade(col, -0.35); c.stroke();
-      });
+      }
       for (let lv = 0; lv < 4; lv++) {
         A.add(`tt_${def.id}${lv}`, 44, 44, turretDrawer(def.id, col, lv));
       }
@@ -280,6 +285,8 @@ var TD = globalThis.TD;
     void g;
   }
 
+  var RANK_COLORS = [null, '#d08a4e', '#d4deec', '#ffd25a'];   // level 2-4: bronze, silver, gold
+
   function turretDrawer(id, col, lv) {
     return (c) => {
       var dark = shade(col, -0.55), mid = shade(col, -0.2);
@@ -292,18 +299,28 @@ var TD = globalThis.TD;
         }
         if (lv === 3) { poly(c, [-4, -9, 4, -6, 4, 6, -4, 9]); c.fillStyle = dark; c.fill(); outline(c, 0.8); }
         c.beginPath(); c.arc(0, 0, 7.5 + lv * 0.4, 0, 7); c.fillStyle = bodyFill(c, col, 8); c.fill(); outline(c, 1.1);
+        if (lv >= 1) { c.beginPath(); c.arc(0, 0, 5.2 + lv * 0.4, 0, 7); c.lineWidth = 1.2; c.strokeStyle = dark; c.stroke(); }
         c.beginPath(); c.arc(0, 0, 3, 0, 7); c.fillStyle = '#e8fbff'; c.fill();
       } else if (id === 'cannon') {
         const bw = 6 + lv * 0.8;
         rrect(c, 0, -bw / 2, 13 + lv, bw, 2); c.fillStyle = '#3a2c22'; c.fill(); outline(c, 1);
         c.fillStyle = col; c.fillRect(10 + lv, -bw / 2 - 0.6, 2.2, bw + 1.2);
-        if (lv >= 2) { c.fillStyle = mid; c.fillRect(5, -bw / 2 - 0.4, 1.6, bw + 0.8); }
+        if (lv >= 1) { c.fillStyle = mid; c.fillRect(5, -bw / 2 - 0.4, 1.6, bw + 0.8); }
+        if (lv >= 2) { c.fillStyle = mid; c.fillRect(7.6, -bw / 2 - 0.4, 1.6, bw + 0.8); }
         ngon(c, 8, 9 + lv * 0.5, Math.PI / 8); c.fillStyle = bodyFill(c, '#8a6038', 9); c.fill(); outline(c, 1.1);
         ngon(c, 8, 5, Math.PI / 8); c.fillStyle = dark; c.fill();
         c.beginPath(); c.arc(0, 0, 2.2, 0, 7); c.fillStyle = col; c.fill();
         if (lv === 3) { for (let k = 0; k < 4; k++) { c.save(); c.rotate(k * Math.PI / 2 + Math.PI / 4); c.fillStyle = col; c.fillRect(7.5, -1, 3, 2); c.restore(); } }
       } else if (id === 'frost') {
         const r = 8 + lv * 1.2;
+        if (lv >= 2) { c.beginPath(); c.arc(0, 0, r + 1, 0, 7); c.lineWidth = 1; c.strokeStyle = 'rgba(216,251,255,0.55)'; c.stroke(); }
+        if (lv >= 1) {
+          for (let k = 0; k < 6; k++) {
+            c.save(); c.rotate(k * Math.PI / 3 + Math.PI / 6);
+            poly(c, [r * 0.5, -1.5, r * 0.95, 0, r * 0.5, 1.5]); c.fillStyle = mid; c.fill(); outline(c, 0.6);
+            c.restore();
+          }
+        }
         for (let k = 0; k < 6; k++) {
           c.save(); c.rotate(k * Math.PI / 3);
           poly(c, [r * 0.55, -2.2, r + 3, 0, r * 0.55, 2.2]); c.fillStyle = k % 2 ? '#d8fbff' : col; c.fill(); outline(c, 0.7);
@@ -327,7 +344,7 @@ var TD = globalThis.TD;
         rrect(c, 0, -3.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         rrect(c, 0, 1.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         c.fillStyle = col; c.globalAlpha = 0.85; c.fillRect(2, -0.7, L - 3, 1.4); c.globalAlpha = 1;
-        if (lv >= 2) { c.fillStyle = mid; c.fillRect(L * 0.45, -4.2, 2, 8.4); }
+        for (let k = 0; k < lv; k++) { c.fillStyle = mid; c.fillRect(L * (0.35 + k * 0.2), -4.2, 2, 8.4); }
         poly(c, [-7, -7, 5, -5, 7, 0, 5, 5, -7, 7, -9, 0]); c.fillStyle = bodyFill(c, '#3f5a4a', 8); c.fill(); outline(c, 1);
         c.beginPath(); c.arc(-1, 0, 2.6, 0, 7); c.fillStyle = col; c.fill();
         if (lv === 3) { c.fillStyle = col; c.fillRect(-8.5, -1, 2, 2); }

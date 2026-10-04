@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bastion — tower sprite sheet</title>
+<style>
+  body { margin: 0; padding: 20px; background: #0a0f17; color: #c9d5e6; font: 13px system-ui, sans-serif; }
+  h2 { margin: 18px 0 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #7f8ea6; }
+  table { border-collapse: collapse; }
+  td, th { padding: 6px 14px; text-align: center; }
+  th { color: #7f8ea6; font-weight: 600; }
+  td.nm { text-align: left; font-weight: 700; }
+  .field { background: #1a2333; }
+  img { display: block; margin: auto; }
+</style>
+<div id="out"></div>
+<script src="../js/core/util.js"></script>
+<script src="../js/core/data.js"></script>
+<script src="../js/render/atlas.js"></script>
+<script>
+  // Dev page: every tower at every level, at the sizes players see them.
+  var atlas = new TD.Atlas();
+  var SIZES = [[96, 'UI icon 96px'], [40, 'Stats row 40px'], [36, 'In game 1× (36px)']];
+  var html = '';
+  SIZES.forEach(([px, label]) => {
+    html += `<h2>${label}</h2><table class="${px === 36 ? 'field' : ''}"><tr><th></th>` +
+      [1, 2, 3, 4].map((l) => `<th>Lv ${l}</th>`).join('') + '</tr>';
+    TD.TOWERS.forEach((t) => {
+      html += `<tr><td class="nm" style="color:${t.color}">${t.name}</td>`;
+      for (let lv = 0; lv < 4; lv++) {
+        const src = atlas.icon([`tb_${t.id}${lv}`, `tt_${t.id}${lv}`], px * 2, [0, -Math.PI / 2]);
+        html += `<td><img src="${src}" width="${px}" height="${px}"></td>`;
+      }
+      html += '</tr>';
+    });
+    html += '</table>';
+  });
+  document.getElementById('out').innerHTML = html;
+</script>

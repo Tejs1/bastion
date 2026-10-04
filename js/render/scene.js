@@ -18,7 +18,7 @@ var TD = globalThis.TD;
     var F = this.F;
     this.eF = TD.ENEMIES.map((e) => F[`e_${e.id}`]);
     this.eBig = new Uint8Array(TD.ENEMIES.map((e) => (e.radius > 12 ? 1 : 0)));
-    this.tB = TD.TOWERS.map((t) => F[`tb_${t.id}`]);
+    this.tB = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tb_${t.id}${l}`]));
     this.tT = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tt_${t.id}${l}`]));
     this.pF = TD.FX_FRAMES.map((n) => F[n]);
     this.chF = {};
@@ -240,7 +240,7 @@ var TD = globalThis.TD;
       if (tw.x < x0 - 30 || tw.x > x1 + 30 || tw.y < y0 - 30 || tw.y > y1 + 30) continue;
       const tc = this.towerCol[tw.type];
       r.push(F.shadow, tw.x + 3, tw.y + 5, 44, 40, 0, C.shadow);
-      r.push(this.tB[tw.type], tw.x, tw.y, 36, 36, 0, WHITE);
+      r.push(this.tB[tw.type][tw.level], tw.x, tw.y, 36, 36, 0, WHITE);
       const kind = tw.def.kind, tt = this.tT[tw.type][tw.level];
       let ang = tw.angle, rec = tw.recoil > 0 ? tw.recoil : 0;
       if (kind === 'pulse') {
@@ -297,7 +297,7 @@ var TD = globalThis.TD;
       r.push(F.tilefill, gx, gy, 40, 40, 0, ok ? C.okTile : C.badTile);
       r.push(F.disc, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeFill : C.badFill);
       r.push(F.ring, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeLine : C.badLine);
-      r.push(this.tB[ui.placing], gx, gy, 36, 36, 0, C.ghost);
+      r.push(this.tB[ui.placing][0], gx, gy, 36, 36, 0, C.ghost);
       r.push(this.tT[ui.placing][0], gx, gy, 44, 44, -Math.PI / 2, C.ghost);
     } else if (ui.hoverCol >= 0 && ui.hoverTower) {
       r.push(F.tile, (ui.hoverCol + 0.5) * TD.TILE, (ui.hoverRow + 0.5) * TD.TILE, 40, 40, 0, C.hover);

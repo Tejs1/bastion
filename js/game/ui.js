@@ -28,8 +28,8 @@ var TD = globalThis.TD;
   U.init = function (atlas) {
     var g = this.game;
     TD.TOWERS.forEach((t, i) => {
-      this.icons.tower[i] = atlas.icon([`tb_${t.id}`, `tt_${t.id}0`], 96, -Math.PI / 2);
-      this.icons.tower[`${i}_3`] = atlas.icon([`tb_${t.id}`, `tt_${t.id}3`], 96, -Math.PI / 2);
+      this.icons.tower[i] = atlas.icon([`tb_${t.id}0`, `tt_${t.id}0`], 96, [0, -Math.PI / 2]);
+      for (let lv = 1; lv < t.levels.length; lv++) this.icons.tower[`${i}_${lv}`] = atlas.icon([`tb_${t.id}${lv}`, `tt_${t.id}${lv}`], 96, [0, -Math.PI / 2]);
     });
     TD.ENEMIES.forEach((e, i) => { this.icons.enemy[i] = atlas.icon([`e_${e.id}`], 64, -Math.PI / 2); });
 
