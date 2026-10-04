@@ -37,6 +37,10 @@ var TD = globalThis.TD;
     this.fHead = 0; this.fCount = 0;
     this.sortBuf = new Float32Array(this.statN);
     this.bench = null;
+    // stress test setup: game speed, sampling seconds (0 = until stopped) and
+    // emulated slow-CPU factor for the sim worker; URL params seed the defaults
+    this.stressOpts = { speed: +(params.get('speed') || 1), dur: params.has('benchdur') ? +params.get('benchdur') : 20,
+      slow: +(params.get('workerslow') || 1) };
     this.perfTimer = 0;
     this.lastTs = 0;
     this.rc = { x: 0, y: 0, zoom: 1, rot: 0 };
@@ -94,10 +98,7 @@ var TD = globalThis.TD;
     this.newGame(0, 'normal', 'backdrop');
     this.ui.enterMenu();
 
-    if (params.has('stress')) {
-      this.newGame(0, 'normal', 'stress');
-      if (params.has('speed')) this.setSpeed(+params.get('speed'));
-    }
+    if (params.has('stress')) this.startStress(this.stressOpts);
     else if (params.has('autoplay')) {
       this.newGame(+(params.get('map') || 0), params.get('diff') || 'normal', 'demo');
       if (params.has('turbo')) { this.speed = +params.get('turbo'); this.loop.maxSteps = this.speed * 3; this.postCmd('speed', [this.speed]); }
@@ -146,7 +147,8 @@ var TD = globalThis.TD;
       this.sim.send = this.sendFn;
       this.sim.autoStart = this.autoStart;
       this.worker.postMessage({ t: 'new', game: this.gameId, map: mapIndex, diff: diff, seed: seed, autoStart: this.autoStart,
-        bot: mode === 'demo' || mode === 'backdrop', stress: mode === 'stress', speed: 1, slow: +(params.get('workerslow') || 1) });
+        bot: mode === 'demo' || mode === 'backdrop', stress: mode === 'stress', speed: 1,
+        slow: mode === 'stress' ? this.stressOpts.slow : +(params.get('workerslow') || 1) });
       this.bot = null; this.lastTicks = 0; this.applyMs = 0; this.spareBuf = null;
     } else {
       this.sim = new TD.Sim({ map: mapIndex, difficulty: diff, fx: mode === 'backdrop' ? TD.NOFX : this.fx, seed: seed });
@@ -175,6 +177,12 @@ var TD = globalThis.TD;
       this.ui.showSpeed(this.speed);
     }
     this.postCmd('speed', [this.speed]);
+  };
+
+  G.startStress = function (opts) {
+    this.stressOpts = opts;
+    this.newGame(0, 'normal', 'stress');
+    this.setSpeed(opts.speed);
   };
 
   G.restart = function () {
@@ -460,8 +468,14 @@ var TD = globalThis.TD;
 
   // ------------------------------------------------------------ benchmark
   G.startBench = function () {
-    this.bench = { warm: +(params.get('benchwarm') || 3), dur: +(params.get('benchdur') || 20), t: 0,
+    this.bench = { warm: +(params.get('benchwarm') || 3), dur: this.stressOpts.dur || Infinity, t: 0,
       frames: [], cpu: [], sim: [], render: [], ticks: 0, want: 0, heap0: heapMB() };
+    this.ui.setBenchRunning(true);
+  };
+
+  // end the run now and report whatever has been sampled so far
+  G.stopBench = function () {
+    if (this.bench && !this.bench.done) this.finishBench(true);
   };
 
   G.benchFrame = function (dtMs, cpuMs, simMs, renderMs, ticks) {
@@ -472,17 +486,34 @@ var TD = globalThis.TD;
     b.frames.push(dtMs); b.cpu.push(cpuMs); b.sim.push(simMs); b.render.push(renderMs); b.ticks += ticks;
     if (!this.paused) b.want += Math.min(dtMs / 1000, 0.25) * this.speed / TD.DT;
     if (b.t < b.warm + b.dur) return;
+    this.finishBench(false);
+  };
+
+  G.finishBench = function (stopped) {
+    var b = this.bench;
     b.done = true;
+    this.ui.setBenchRunning(false);
+    if (!b.frames.length) {
+      // stopped during warm-up: nothing sampled yet
+      window.__benchResult = { frames: 0, stopped: true };
+      this.pauseForResults(window.__benchResult);
+      return;
+    }
     var f = b.frames.slice().sort((a, c) => a - c);
     var cpu = b.cpu.slice().sort((a, c) => a - c);
     var pct = (arr, p) => arr[Math.min(arr.length - 1, Math.floor(arr.length * p))];
     var avg = (arr) => { var s = 0; for (let i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
-    var at45 = 0, over33 = 0;
-    for (let i = 0; i < f.length; i++) { if (f[i] <= 1000 / 45 + 0.5) at45++; if (f[i] > 33.4) over33++; }
+    var at45 = 0, at55 = 0, at60 = 0, over33 = 0;
+    for (let i = 0; i < f.length; i++) {
+      if (f[i] <= 1000 / 45 + 0.5) at45++;
+      if (f[i] <= 1000 / 55 + 0.5) at55++;
+      if (f[i] <= 1000 / 60 + 0.5) at60++;
+      if (f[i] > 33.4) over33++;
+    }
     var res = {
       seconds: avg(b.frames) * b.frames.length / 1000, frames: f.length,
       enemies: this.sim.eCount, towers: this.sim.towers.length, projectiles: this.sim.pCount,
-      avgFps: 1000 / avg(b.frames), pctAt45: at45 / f.length, pctOver33: over33 / f.length,
+      avgFps: 1000 / avg(b.frames), pctAt45: at45 / f.length, pctAt55: at55 / f.length, pctAt60: at60 / f.length, pctOver33: over33 / f.length,
       p50: pct(f, 0.5), p95: pct(f, 0.95), p99: pct(f, 0.99),
       cpuAvg: avg(b.cpu), cpuP95: pct(cpu, 0.95), simAvg: avg(b.sim), renderAvg: avg(b.render),
       // worker mode: sim cost is the worker's busy time per tick; "sim" on the
@@ -494,15 +525,20 @@ var TD = globalThis.TD;
       speed: this.speed, simRate: b.want ? b.ticks / b.want : 1, maxFrame: f[f.length - 1],
       renderScale: this.renderScale, lockstep: this.lockstep,
       backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls · sim ${this.sim.isView ? 'in worker' : 'on main thread'}`,
-      heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)'
+      heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)',
+      stopped: stopped, planned: b.dur
     };
     window.__benchResult = res;
-    if (this.mode === 'stress') {
-      // stop the sim behind the results card; no pause overlay on top of it
-      this.paused = true;
-      this.postCmd('pause', [true]);
-      this.ui.showBench(res);
-    }
+    this.pauseForResults(res);
+  };
+
+  G.pauseForResults = function (res) {
+    if (this.mode !== 'stress') return;
+    // stop the sim behind the results card; no pause overlay on top of it
+    this.paused = true;
+    this.postCmd('pause', [true]);
+    this.ui.showPause(false);
+    this.ui.showBench(res);
   };
 
   function heapMB() { return performance.memory ? performance.memory.usedJSHeapSize / 1048576 : 0; }
@@ -648,7 +684,8 @@ var TD = globalThis.TD;
     ];
     if (this.bench && !this.bench.done) {
       const b = this.bench;
-      lines.push(b.t < b.warm ? 'bench      warming up…' : `bench      sampling ${Math.max(0, b.warm + b.dur - b.t).toFixed(0)}s`);
+      lines.push(b.t < b.warm ? 'bench      warming up…' : b.dur === Infinity ? `bench      sampling ${(b.t - b.warm).toFixed(0)}s (until stopped)`
+        : `bench      sampling ${Math.max(0, b.warm + b.dur - b.t).toFixed(0)}s`);
     }
     this.ui.setPerfText(lines.join('\n'));
   };

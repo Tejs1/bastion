@@ -24,6 +24,7 @@
         <fieldset class="seg" id="speedSeg" aria-label="Game speed">
           <button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button><button type="button" data-speed="8">8×</button><button type="button" data-speed="12">12×</button>
         </fieldset>
+        <button type="button" id="bStopBench" class="danger hidden" title="Stop the test and show results so far">Stop test</button>
         <button type="button" class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
         <button type="button" class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
@@ -123,6 +124,29 @@
         </div>
       </div>
       <button type="button" id="bHelpClose" class="primary">Got it</button>
+    </div>
+  </section>
+
+  <section id="scrStress" class="screen hidden">
+    <div class="menu-card narrow">
+      <h1 class="small">Stress test</h1>
+      <p class="tag">Fills the field with towers and enemies and measures frame rate and sim cost.</p>
+      <h2>Game speed</h2>
+      <div class="seg wide" id="stressSpeed">
+        <button type="button" data-v="1" class="on">1×</button><button type="button" data-v="2">2×</button><button type="button" data-v="4">4×</button><button type="button" data-v="8">8×</button><button type="button" data-v="12">12×</button>
+      </div>
+      <h2>Length</h2>
+      <div class="seg wide" id="stressDur">
+        <button type="button" data-v="10">10 s</button><button type="button" data-v="20" class="on">20 s</button><button type="button" data-v="60">60 s</button><button type="button" data-v="0">Until stopped</button>
+      </div>
+      <div id="stressSlowRow">
+        <h2>Simulated CPU</h2>
+        <div class="seg wide" id="stressSlow">
+          <button type="button" data-v="1" class="on">Native</button><button type="button" data-v="4">4× slower</button><button type="button" data-v="6">6× slower</button><button type="button" data-v="20">20× slower</button>
+        </div>
+      </div>
+      <button type="button" id="bStressGo" class="primary big">Start test</button>
+      <button type="button" id="bStressBack" class="ghost">Back</button>
     </div>
   </section>
 

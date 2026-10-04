@@ -43,6 +43,7 @@ b, .num { font-variant-numeric: tabular-nums; }
 .ghost:hover { background: rgba(255,255,255,0.08); }
 .danger { background: rgba(255, 93, 108, 0.12); border: 1px solid rgba(255, 93, 108, 0.45); color: #ffb3ba; border-radius: 10px; padding: 9px 12px; font-weight: 600; }
 .danger:hover { background: rgba(255, 93, 108, 0.22); }
+#bStopBench { padding: 6px 12px; font-size: 13px; font-weight: 700; white-space: nowrap; }
 .seg { display: inline-flex; background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; }
 .seg button { padding: 6px 10px; border-radius: 7px; font-weight: 700; font-size: 13px; color: var(--muted); }
 .seg button.on { background: rgba(79, 209, 255, 0.18); color: var(--text); box-shadow: inset 0 0 0 1px rgba(79, 209, 255, 0.45); }
@@ -276,6 +277,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
         <fieldset class="seg" id="speedSeg" aria-label="Game speed">
           <button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button><button type="button" data-speed="8">8×</button><button type="button" data-speed="12">12×</button>
         </fieldset>
+        <button type="button" id="bStopBench" class="danger hidden" title="Stop the test and show results so far">Stop test</button>
         <button type="button" class="icon" id="bPause" title="Pause (Space)" aria-label="Pause"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
         <button type="button" class="icon" id="bSound" title="Sound (M)" aria-label="Toggle sound"><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg aria-hidden="true" viewBox="0 0 24 24" class="snd-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
@@ -375,6 +377,29 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
         </div>
       </div>
       <button type="button" id="bHelpClose" class="primary">Got it</button>
+    </div>
+  </section>
+
+  <section id="scrStress" class="screen hidden">
+    <div class="menu-card narrow">
+      <h1 class="small">Stress test</h1>
+      <p class="tag">Fills the field with towers and enemies and measures frame rate and sim cost.</p>
+      <h2>Game speed</h2>
+      <div class="seg wide" id="stressSpeed">
+        <button type="button" data-v="1" class="on">1×</button><button type="button" data-v="2">2×</button><button type="button" data-v="4">4×</button><button type="button" data-v="8">8×</button><button type="button" data-v="12">12×</button>
+      </div>
+      <h2>Length</h2>
+      <div class="seg wide" id="stressDur">
+        <button type="button" data-v="10">10 s</button><button type="button" data-v="20" class="on">20 s</button><button type="button" data-v="60">60 s</button><button type="button" data-v="0">Until stopped</button>
+      </div>
+      <div id="stressSlowRow">
+        <h2>Simulated CPU</h2>
+        <div class="seg wide" id="stressSlow">
+          <button type="button" data-v="1" class="on">Native</button><button type="button" data-v="4">4× slower</button><button type="button" data-v="6">6× slower</button><button type="button" data-v="20">20× slower</button>
+        </div>
+      </div>
+      <button type="button" id="bStressGo" class="primary big">Start test</button>
+      <button type="button" id="bStressBack" class="ghost">Back</button>
     </div>
   </section>
 
@@ -3145,6 +3170,7 @@ var TD = globalThis.TD;
     this.F = atlas.frames;
     var F = this.F;
     this.eF = TD.ENEMIES.map((e) => F[`e_${e.id}`]);
+    this.eBig = new Uint8Array(TD.ENEMIES.map((e) => (e.radius > 12 ? 1 : 0)));
     this.tB = TD.TOWERS.map((t) => F[`tb_${t.id}`]);
     this.tT = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tt_${t.id}${l}`]));
     this.pF = TD.FX_FRAMES.map((n) => F[n]);
@@ -3164,7 +3190,8 @@ var TD = globalThis.TD;
       badFill: pm(255, 80, 90, 28), badLine: pm(255, 100, 110, 170),
       ghost: pm(255, 255, 255, 150),
       okTile: pm(90, 255, 170, 70), badTile: pm(255, 80, 90, 80),
-      hover: pm(160, 210, 255, 60)
+      hover: pm(160, 210, 255, 60),
+      shellGlow: ad(255, 160, 60, 0.6), bolt: ad(150, 235, 255, 1)
     };
   }
   TD.Scene = Scene;
@@ -3175,6 +3202,96 @@ var TD = globalThis.TD;
     if (f > 0.5) { r = (1 - f) * 2 * 255; g = 235; } else { r = 255; g = f * 2 * 235; }
     return TD.rgba(r, g, 70, 255);
   }
+
+  /** Enemies from a worker snapshot (dense arrays, no grid): bounds check
+   *  per enemy. Kept out of build() so it optimises as its own small loop. */
+  Scene.prototype.enemiesDense = function (sim, alpha, t, x0, y0, x1, y1, skip) {
+    var r = this.r, F = this.F, C = this.C, vis = this.vis, nv = 0;
+    var ex = sim.eX, ey = sim.eY, epx = sim.ePX, epy = sim.ePY, rot = sim.eRot, type = sim.eType;
+    var flash = sim.eFlash, slowT = sim.eSlowT, slot = sim.eSlot, eF = this.eF, big = this.eBig;
+    var shadow = F.shadow, cShadow = C.shadow, cSlow = C.slow;
+    for (let s = 0, n = sim.eCount; s < n; s++) {
+      const X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
+      if (X < x0 - 30 || X > x1 + 30 || Y < y0 - 30 || Y > y1 + 30) continue;
+      vis[nv++] = s;
+      if (skip) continue;
+      const ty = type[s], fr = eF[ty];
+      if (big[ty]) r.push(shadow, X + 3, Y + 5, fr.w * 1.1, fr.h * 0.9, 0, cShadow);
+      r.push(fr, X, Y, fr.w, fr.h, rot[s] + Math.sin(t * 9 + slot[s]) * 0.07, slowT[s] > 0 ? cSlow : WHITE, flash[s] > 0 ? flash[s] * 0.55 : 0);
+    }
+    return nv;
+  };
+
+  Scene.prototype.bars = function (sim, alpha, crot, nv) {
+    var r = this.r, px = this.F.px, vis = this.vis, ENE = TD.ENEMIES, type = sim.eType;
+    var hp = sim.eHp, mhp = sim.eMaxHp, ex = sim.eX, ey = sim.eY, epx = sim.ePX, epy = sim.ePY;
+    for (let i = 0; i < nv; i++) {
+      const s = vis[i];
+      const hf = hp[s] / mhp[s];
+      if (hf >= 0.999) continue;
+      const er = ENE[type[s]].radius, big = er > 15;
+      const bw = big ? 46 : Math.max(12, er * 2.2), bh = big ? 5 : 3;
+      const lift2 = er + (big ? 10 : 6);
+      let X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
+      if (crot) X -= lift2; else Y -= lift2;
+      r.bar(px, X, Y, bw, bh + 1, crot, hf, barColor(hf));
+    }
+  };
+
+  Scene.prototype.projectiles = function (sim, alpha, x0, y0, x1, y1) {
+    var r = this.r, F = this.F, C = this.C, SHELL = TD.PROJ_SHELL;
+    var pX = sim.pX, pY = sim.pY, pPX = sim.pPX, pPY = sim.pPY, pTX = sim.pTX, pTY = sim.pTY, kind = sim.pKind, age = sim.pAge;
+    for (let i = 0, pc = sim.pCount; i < pc; i++) {
+      const PX = pPX[i] + (pX[i] - pPX[i]) * alpha, PY = pPY[i] + (pY[i] - pPY[i]) * alpha;
+      if (PX < x0 - 20 || PX > x1 + 20 || PY < y0 - 20 || PY > y1 + 20) continue;
+      const pa = Math.atan2(pTY[i] - PY, pTX[i] - PX);
+      if (kind[i] === SHELL) {
+        const lift = Math.min(1, age[i] * 3);
+        r.push(F.glow, PX, PY - 3 * lift, 18, 18, 0, C.shellGlow);
+        r.push(F.shell, PX, PY - 3 * lift, 12 + lift * 2, 12 + lift * 2, pa, WHITE);
+      } else {
+        r.push(F.bolt, PX, PY, 18, 7, pa, C.bolt);
+      }
+    }
+  };
+
+  Scene.prototype.beams = function (fx) {
+    var r = this.r, beam = this.F.beam, bp = fx.bPts, bLife = fx.bLife, bMax = fx.bMax, bCol = fx.bCol, bW = fx.bW, bKind = fx.bKind;
+    for (let i = 0; i < bLife.length; i++) {
+      if (bLife[i] <= 0) continue;
+      const lf = bLife[i] / bMax[i], bc = bCol[i], o = i * 12;
+      const bcol = TD.rgba((bc & 255) * lf, (bc >> 8 & 255) * lf, (bc >> 16 & 255) * lf, 0);
+      const core = ad(255, 255, 255, lf);
+      if (bKind[i] === 0) {
+        const w = bW[i] * (0.4 + lf * 0.6);
+        r.line(beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 2.2, bcol);
+        r.line(beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 0.7, core);
+      } else {
+        for (let k = 0; k < 5; k++) {
+          const q = o + k * 2;
+          r.line(beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], bW[i] * 1.8, bcol);
+          r.line(beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], bW[i] * 0.6, core);
+        }
+      }
+    }
+  };
+
+  Scene.prototype.particles = function (fx, x0, y0, x1, y1) {
+    var r = this.r, pF = this.pF, life = fx.life, mx = fx.max, px = fx.px, py = fx.py, s0 = fx.s0, s1 = fx.s1;
+    var frame = fx.frame, add = fx.add, R = fx.r, G = fx.g, B = fx.b, rot = fx.rot, vx = fx.vx, vy = fx.vy;
+    for (let i = 0; i < life.length; i++) {
+      if (life[i] <= 0) continue;
+      const X2 = px[i], Y2 = py[i];
+      if (X2 < x0 - 40 || X2 > x1 + 40 || Y2 < y0 - 40 || Y2 > y1 + 40) continue;
+      const lt = life[i] / mx[i];
+      const sz = s1[i] + (s0[i] - s1[i]) * lt;
+      const pfr = pF[frame[i]];
+      const pcol = add[i] ? ad(R[i], G[i], B[i], lt) : pm(R[i], G[i], B[i], 255 * Math.min(1, lt * 1.5));
+      if (frame[i] === 7) {   // streaks align with velocity
+        r.push(pfr, X2, Y2, sz * 3, sz, Math.atan2(vy[i], vx[i]), pcol);
+      } else r.push(pfr, X2, Y2, sz, sz, rot[i], pcol);
+    }
+  };
 
   Scene.prototype.build = function (sim, fx, cam, view, alpha, ui, t) {
     var r = this.r, F = this.F, C = this.C;
@@ -3249,18 +3366,7 @@ var TD = globalThis.TD;
     var flash = sim.eFlash, slowT = sim.eSlowT, vis = this.vis, nv = 0;
     var eF = this.eF, ENE = TD.ENEMIES;
     if (sim.isView) {
-      // worker snapshot: dense arrays, no grid; a bounds check per enemy
-      const slot = sim.eSlot;
-      for (let s = 0, n = sim.eCount; s < n; s++) {
-        const X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
-        if (X < x0 - 30 || X > x1 + 30 || Y < y0 - 30 || Y > y1 + 30) continue;
-        vis[nv++] = s;
-        if (dbg.noEnemies) continue;
-        const ty = type[s], fr = eF[ty];
-        const wob = Math.sin(t * 9 + slot[s]) * 0.07;
-        if (ENE[ty].radius > 12) r.push(F.shadow, X + 3, Y + 5, fr.w * 1.1, fr.h * 0.9, 0, C.shadow);
-        r.push(fr, X, Y, fr.w, fr.h, rot[s] + wob, slowT[s] > 0 ? C.slow : WHITE, flash[s] > 0 ? flash[s] * 0.55 : 0);
-      }
+      nv = this.enemiesDense(sim, alpha, t, x0, y0, x1, y1, dbg.noEnemies);
     } else for (let cy = r0; cy <= r1; cy++) {
       for (let cx = c0; cx <= c1; cx++) {
         const cell = cy * gc + cx;
@@ -3310,69 +3416,13 @@ var TD = globalThis.TD;
       }
     }
 
-    // ---- enemy health bars (over towers for readability)
-    var hp = sim.eHp, mhp = sim.eMaxHp;
-    for (i = 0; i < nv; i++) {
-      const s = vis[i];
-      const hf = hp[s] / mhp[s];
-      if (hf >= 0.999) continue;
-      const ty = type[s];
-      const er = ENE[ty].radius, big = er > 15;
-      const bw = big ? 46 : Math.max(12, er * 2.2), bh = big ? 5 : 3;
-      const lift2 = er + (big ? 10 : 6);
-      let X = epx[s] + (ex[s] - epx[s]) * alpha, Y = epy[s] + (ey[s] - epy[s]) * alpha;
-      if (crot) X -= lift2; else Y -= lift2;
-      r.bar(F.px, X, Y, bw, bh + 1, crot, hf, barColor(hf));
-    }
-
-    // ---- projectiles
-    var pc = sim.pCount;
-    for (i = 0; i < pc; i++) {
-      const PX = sim.pPX[i] + (sim.pX[i] - sim.pPX[i]) * alpha, PY = sim.pPY[i] + (sim.pY[i] - sim.pPY[i]) * alpha;
-      if (PX < x0 - 20 || PX > x1 + 20 || PY < y0 - 20 || PY > y1 + 20) continue;
-      const pa = Math.atan2(sim.pTY[i] - PY, sim.pTX[i] - PX);
-      if (sim.pKind[i] === TD.PROJ_SHELL) {
-        const age = sim.pAge[i], lift = Math.min(1, age * 3);
-        r.push(F.glow, PX, PY - 3 * lift, 18, 18, 0, ad(255, 160, 60, 0.6));
-        r.push(F.shell, PX, PY - 3 * lift, 12 + lift * 2, 12 + lift * 2, pa, WHITE);
-      } else {
-        r.push(F.bolt, PX, PY, 18, 7, pa, ad(150, 235, 255, 1));
-      }
-    }
-
-    // ---- beams & arcs
-    var bp = fx.bPts;
-    for (i = 0; i < fx.bLife.length; i++) {
-      if (fx.bLife[i] <= 0) continue;
-      const lf = fx.bLife[i] / fx.bMax[i], bc = fx.bCol[i], o = i * 12;
-      const bcol = TD.rgba((bc & 255) * lf, (bc >> 8 & 255) * lf, (bc >> 16 & 255) * lf, 0);
-      if (fx.bKind[i] === 0) {
-        const w = fx.bW[i] * (0.4 + lf * 0.6);
-        r.line(F.beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 2.2, bcol);
-        r.line(F.beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 0.7, ad(255, 255, 255, lf));
-      } else {
-        for (k = 0; k < 5; k++) {
-          const q = o + k * 2;
-          r.line(F.beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], fx.bW[i] * 1.8, bcol);
-          r.line(F.beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], fx.bW[i] * 0.6, ad(255, 255, 255, lf));
-        }
-      }
-    }
-
-    // ---- particles
-    var pF = this.pF, life = fx.life, mx = fx.max;
-    for (i = dbg.noParticles ? life.length : 0; i < life.length; i++) {
-      if (life[i] <= 0) continue;
-      const X2 = fx.px[i], Y2 = fx.py[i];
-      if (X2 < x0 - 40 || X2 > x1 + 40 || Y2 < y0 - 40 || Y2 > y1 + 40) continue;
-      const lt = life[i] / mx[i];
-      const sz = fx.s1[i] + (fx.s0[i] - fx.s1[i]) * lt;
-      const pfr = pF[fx.frame[i]];
-      const pcol = fx.add[i] ? ad(fx.r[i], fx.g[i], fx.b[i], lt) : pm(fx.r[i], fx.g[i], fx.b[i], 255 * Math.min(1, lt * 1.5));
-      if (fx.frame[i] === 7) {   // streaks align with velocity
-        r.push(pfr, X2, Y2, sz * 3, sz, Math.atan2(fx.vy[i], fx.vx[i]), pcol);
-      } else r.push(pfr, X2, Y2, sz, sz, fx.rot[i], pcol);
-    }
+    // ---- enemy health bars (over towers for readability), projectiles,
+    // beams & arcs, particles: each in its own method so every hot loop is
+    // optimised as a small function (one huge build() optimised poorly)
+    this.bars(sim, alpha, crot, nv);
+    this.projectiles(sim, alpha, x0, y0, x1, y1);
+    this.beams(fx);
+    if (!dbg.noParticles) this.particles(fx, x0, y0, x1, y1);
 
     // ---- floating reward numbers (screen-aligned, drift upward on screen)
     for (i = 0; i < fx.tLife.length; i++) {
@@ -3764,7 +3814,22 @@ var TD = globalThis.TD;
     });
     $('bPlay').addEventListener('click', () => { g.unlockAudio(); g.newGame(this.mapIndex, this.diff, 'play'); });
     $('bDemo').addEventListener('click', () => { g.unlockAudio(); g.newGame(this.mapIndex, this.diff, 'demo'); });
-    $('bStress').addEventListener('click', () => { g.unlockAudio(); g.newGame(0, 'normal', 'stress'); });
+    $('bStress').addEventListener('click', () => { this.showStressSetup(); });
+    ['stressSpeed', 'stressDur', 'stressSlow'].forEach((id) => {
+      $(id).addEventListener('click', (e) => {
+        var b = e.target.closest('button');
+        if (!b) return;
+        Array.prototype.forEach.call($(id).children, (c) => { c.classList.toggle('on', c === b); });
+        g.sfx('click');
+      });
+    });
+    $('bStressGo').addEventListener('click', () => {
+      var pick = (id) => +$(id).querySelector('.on').dataset.v;
+      g.unlockAudio();
+      g.startStress({ speed: pick('stressSpeed'), dur: pick('stressDur'), slow: g.worker ? pick('stressSlow') : 1 });
+    });
+    $('bStressBack').addEventListener('click', () => { this.hide('scrStress'); this.show('scrMenu'); });
+    $('bStopBench').addEventListener('click', () => { g.stopBench(); });
     $('bHelp').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelp2').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelpClose').addEventListener('click', () => { this.hide('scrHelp'); });
@@ -3796,7 +3861,7 @@ var TD = globalThis.TD;
   // ------------------------------------------------------------ screens
   U.show = (id) => { $(id).classList.remove('hidden'); };
   U.hide = (id) => { $(id).classList.add('hidden'); };
-  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench'].forEach(this.hide); };
+  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench', 'scrStress'].forEach(this.hide); };
 
   U.refreshMenu = function () {
     this.mapCards.forEach((c, i) => {
@@ -3818,8 +3883,18 @@ var TD = globalThis.TD;
     $('waveBox').classList.toggle('hidden', mode === 'stress');
     this.setPerf(mode === 'stress' || this.perfOn);
     this.showSpeed(this.game.speed);
+    this.setBenchRunning(false);
     this.hidePanel();
   };
+
+  U.showStressSetup = function () {
+    // the slow-CPU emulation lives in the sim worker; without one it has no effect
+    $('stressSlowRow').classList.toggle('hidden', !this.game.worker);
+    this.hide('scrMenu');
+    this.show('scrStress');
+  };
+
+  U.setBenchRunning = (on) => { $('bStopBench').classList.toggle('hidden', !on); };
 
   U.enterMenu = function () {
     this.hideAll();
@@ -3862,13 +3937,21 @@ var TD = globalThis.TD;
   };
 
   U.showBench = function (res) {
+    if (!res.frames) {
+      $('benchStats').innerHTML = '<span>Stopped during warm-up</span><span>no samples yet</span>';
+      this.show('scrBench');
+      return;
+    }
     var pass = (ok) => ok ? ' <span class="ok">✓</span>' : ' <span class="bad">✗</span>';
+    var early = res.stopped && res.planned !== Infinity ? ` · <span class="bad">stopped early</span> (of ${res.planned} s)` : '';
     var rows = [
-      ['Duration', `${res.seconds.toFixed(1)} s · ${res.frames} frames`],
+      ['Duration', `${res.seconds.toFixed(1)} s · ${res.frames} frames${early}`],
       ['Enemies / towers / projectiles', `${res.enemies} / ${res.towers} / ${res.projectiles}`],
       ['Average FPS', res.avgFps.toFixed(1)],
       ['Game speed achieved', `${(res.simRate * res.speed).toFixed(2)}× of ${res.speed}×${pass(res.simRate >= 0.98)}`],
       ['Frames at ≥ 45 FPS', `${(res.pctAt45 * 100).toFixed(1)}%${pass(res.pctAt45 >= 0.95)}`],
+      ['Frames at ≥ 55 FPS', `${(res.pctAt55 * 100).toFixed(1)}%`],
+      ['Frames at 60 FPS', `${(res.pctAt60 * 100).toFixed(1)}%`],
       ['Frames > 33 ms', `${(res.pctOver33 * 100).toFixed(2)}%${pass(res.pctOver33 < 0.05)}`],
       ['Frame time p50 / p95 / p99', `${res.p50.toFixed(1)} / ${res.p95.toFixed(1)} / ${res.p99.toFixed(1)} ms`],
       ['CPU per frame avg / p95', `${res.cpuAvg.toFixed(2)} / ${res.cpuP95.toFixed(2)} ms`],
@@ -4111,6 +4194,10 @@ var TD = globalThis.TD;
     this.fHead = 0; this.fCount = 0;
     this.sortBuf = new Float32Array(this.statN);
     this.bench = null;
+    // stress test setup: game speed, sampling seconds (0 = until stopped) and
+    // emulated slow-CPU factor for the sim worker; URL params seed the defaults
+    this.stressOpts = { speed: +(params.get('speed') || 1), dur: params.has('benchdur') ? +params.get('benchdur') : 20,
+      slow: +(params.get('workerslow') || 1) };
     this.perfTimer = 0;
     this.lastTs = 0;
     this.rc = { x: 0, y: 0, zoom: 1, rot: 0 };
@@ -4168,10 +4255,7 @@ var TD = globalThis.TD;
     this.newGame(0, 'normal', 'backdrop');
     this.ui.enterMenu();
 
-    if (params.has('stress')) {
-      this.newGame(0, 'normal', 'stress');
-      if (params.has('speed')) this.setSpeed(+params.get('speed'));
-    }
+    if (params.has('stress')) this.startStress(this.stressOpts);
     else if (params.has('autoplay')) {
       this.newGame(+(params.get('map') || 0), params.get('diff') || 'normal', 'demo');
       if (params.has('turbo')) { this.speed = +params.get('turbo'); this.loop.maxSteps = this.speed * 3; this.postCmd('speed', [this.speed]); }
@@ -4207,7 +4291,7 @@ var TD = globalThis.TD;
     if (prev) this.spareBuf = prev;   // handed back once per rendered frame
   };
 
-  G.postCmd = function (c, a) { if (this.worker && this.sim && this.sim.isView) this.sendFn(c, a); };
+  G.postCmd = function (c, a) { if (this.worker && this.sim?.isView) this.sendFn(c, a); };
 
   // ------------------------------------------------------------ game modes
   G.newGame = function (mapIndex, diff, mode) {
@@ -4220,7 +4304,8 @@ var TD = globalThis.TD;
       this.sim.send = this.sendFn;
       this.sim.autoStart = this.autoStart;
       this.worker.postMessage({ t: 'new', game: this.gameId, map: mapIndex, diff: diff, seed: seed, autoStart: this.autoStart,
-        bot: mode === 'demo' || mode === 'backdrop', stress: mode === 'stress', speed: 1, slow: +(params.get('workerslow') || 1) });
+        bot: mode === 'demo' || mode === 'backdrop', stress: mode === 'stress', speed: 1,
+        slow: mode === 'stress' ? this.stressOpts.slow : +(params.get('workerslow') || 1) });
       this.bot = null; this.lastTicks = 0; this.applyMs = 0; this.spareBuf = null;
     } else {
       this.sim = new TD.Sim({ map: mapIndex, difficulty: diff, fx: mode === 'backdrop' ? TD.NOFX : this.fx, seed: seed });
@@ -4249,6 +4334,12 @@ var TD = globalThis.TD;
       this.ui.showSpeed(this.speed);
     }
     this.postCmd('speed', [this.speed]);
+  };
+
+  G.startStress = function (opts) {
+    this.stressOpts = opts;
+    this.newGame(0, 'normal', 'stress');
+    this.setSpeed(opts.speed);
   };
 
   G.restart = function () {
@@ -4534,8 +4625,14 @@ var TD = globalThis.TD;
 
   // ------------------------------------------------------------ benchmark
   G.startBench = function () {
-    this.bench = { warm: +(params.get('benchwarm') || 3), dur: +(params.get('benchdur') || 20), t: 0,
+    this.bench = { warm: +(params.get('benchwarm') || 3), dur: this.stressOpts.dur || Infinity, t: 0,
       frames: [], cpu: [], sim: [], render: [], ticks: 0, want: 0, heap0: heapMB() };
+    this.ui.setBenchRunning(true);
+  };
+
+  // end the run now and report whatever has been sampled so far
+  G.stopBench = function () {
+    if (this.bench && !this.bench.done) this.finishBench(true);
   };
 
   G.benchFrame = function (dtMs, cpuMs, simMs, renderMs, ticks) {
@@ -4546,17 +4643,34 @@ var TD = globalThis.TD;
     b.frames.push(dtMs); b.cpu.push(cpuMs); b.sim.push(simMs); b.render.push(renderMs); b.ticks += ticks;
     if (!this.paused) b.want += Math.min(dtMs / 1000, 0.25) * this.speed / TD.DT;
     if (b.t < b.warm + b.dur) return;
+    this.finishBench(false);
+  };
+
+  G.finishBench = function (stopped) {
+    var b = this.bench;
     b.done = true;
+    this.ui.setBenchRunning(false);
+    if (!b.frames.length) {
+      // stopped during warm-up: nothing sampled yet
+      window.__benchResult = { frames: 0, stopped: true };
+      this.pauseForResults(window.__benchResult);
+      return;
+    }
     var f = b.frames.slice().sort((a, c) => a - c);
     var cpu = b.cpu.slice().sort((a, c) => a - c);
     var pct = (arr, p) => arr[Math.min(arr.length - 1, Math.floor(arr.length * p))];
     var avg = (arr) => { var s = 0; for (let i = 0; i < arr.length; i++) s += arr[i]; return s / arr.length; };
-    var at45 = 0, over33 = 0;
-    for (let i = 0; i < f.length; i++) { if (f[i] <= 1000 / 45 + 0.5) at45++; if (f[i] > 33.4) over33++; }
+    var at45 = 0, at55 = 0, at60 = 0, over33 = 0;
+    for (let i = 0; i < f.length; i++) {
+      if (f[i] <= 1000 / 45 + 0.5) at45++;
+      if (f[i] <= 1000 / 55 + 0.5) at55++;
+      if (f[i] <= 1000 / 60 + 0.5) at60++;
+      if (f[i] > 33.4) over33++;
+    }
     var res = {
       seconds: avg(b.frames) * b.frames.length / 1000, frames: f.length,
       enemies: this.sim.eCount, towers: this.sim.towers.length, projectiles: this.sim.pCount,
-      avgFps: 1000 / avg(b.frames), pctAt45: at45 / f.length, pctOver33: over33 / f.length,
+      avgFps: 1000 / avg(b.frames), pctAt45: at45 / f.length, pctAt55: at55 / f.length, pctAt60: at60 / f.length, pctOver33: over33 / f.length,
       p50: pct(f, 0.5), p95: pct(f, 0.95), p99: pct(f, 0.99),
       cpuAvg: avg(b.cpu), cpuP95: pct(cpu, 0.95), simAvg: avg(b.sim), renderAvg: avg(b.render),
       // worker mode: sim cost is the worker's busy time per tick; "sim" on the
@@ -4568,15 +4682,20 @@ var TD = globalThis.TD;
       speed: this.speed, simRate: b.want ? b.ticks / b.want : 1, maxFrame: f[f.length - 1],
       renderScale: this.renderScale, lockstep: this.lockstep,
       backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls · sim ${this.sim.isView ? 'in worker' : 'on main thread'}`,
-      heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)'
+      heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)',
+      stopped: stopped, planned: b.dur
     };
     window.__benchResult = res;
-    if (this.mode === 'stress') {
-      // stop the sim behind the results card; no pause overlay on top of it
-      this.paused = true;
-      this.postCmd('pause', [true]);
-      this.ui.showBench(res);
-    }
+    this.pauseForResults(res);
+  };
+
+  G.pauseForResults = function (res) {
+    if (this.mode !== 'stress') return;
+    // stop the sim behind the results card; no pause overlay on top of it
+    this.paused = true;
+    this.postCmd('pause', [true]);
+    this.ui.showPause(false);
+    this.ui.showBench(res);
   };
 
   function heapMB() { return performance.memory ? performance.memory.usedJSHeapSize / 1048576 : 0; }
@@ -4722,7 +4841,8 @@ var TD = globalThis.TD;
     ];
     if (this.bench && !this.bench.done) {
       const b = this.bench;
-      lines.push(b.t < b.warm ? 'bench      warming up…' : `bench      sampling ${Math.max(0, b.warm + b.dur - b.t).toFixed(0)}s`);
+      lines.push(b.t < b.warm ? 'bench      warming up…' : b.dur === Infinity ? `bench      sampling ${(b.t - b.warm).toFixed(0)}s (until stopped)`
+        : `bench      sampling ${Math.max(0, b.warm + b.dur - b.t).toFixed(0)}s`);
     }
     this.ui.setPerfText(lines.join('\n'));
   };

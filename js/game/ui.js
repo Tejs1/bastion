@@ -77,7 +77,22 @@ var TD = globalThis.TD;
     });
     $('bPlay').addEventListener('click', () => { g.unlockAudio(); g.newGame(this.mapIndex, this.diff, 'play'); });
     $('bDemo').addEventListener('click', () => { g.unlockAudio(); g.newGame(this.mapIndex, this.diff, 'demo'); });
-    $('bStress').addEventListener('click', () => { g.unlockAudio(); g.newGame(0, 'normal', 'stress'); });
+    $('bStress').addEventListener('click', () => { this.showStressSetup(); });
+    ['stressSpeed', 'stressDur', 'stressSlow'].forEach((id) => {
+      $(id).addEventListener('click', (e) => {
+        var b = e.target.closest('button');
+        if (!b) return;
+        Array.prototype.forEach.call($(id).children, (c) => { c.classList.toggle('on', c === b); });
+        g.sfx('click');
+      });
+    });
+    $('bStressGo').addEventListener('click', () => {
+      var pick = (id) => +$(id).querySelector('.on').dataset.v;
+      g.unlockAudio();
+      g.startStress({ speed: pick('stressSpeed'), dur: pick('stressDur'), slow: g.worker ? pick('stressSlow') : 1 });
+    });
+    $('bStressBack').addEventListener('click', () => { this.hide('scrStress'); this.show('scrMenu'); });
+    $('bStopBench').addEventListener('click', () => { g.stopBench(); });
     $('bHelp').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelp2').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelpClose').addEventListener('click', () => { this.hide('scrHelp'); });
@@ -86,8 +101,8 @@ var TD = globalThis.TD;
     $('bQuit').addEventListener('click', () => { g.quit(); });
     $('bAgain').addEventListener('click', () => { g.restart(); });
     $('bEndMenu').addEventListener('click', () => { g.quit(); });
-    $('bBenchAgain').addEventListener('click', () => { this.hide('scrBench'); g.startBench(); });
-    $('bBenchClose').addEventListener('click', () => { this.hide('scrBench'); });
+    $('bBenchAgain').addEventListener('click', () => { this.hide('scrBench'); g.setPaused(false); g.startBench(); });
+    $('bBenchClose').addEventListener('click', () => { this.hide('scrBench'); g.setPaused(false); });
     $('bBenchMenu').addEventListener('click', () => { g.quit(); });
     $('optPerf').addEventListener('change', (e) => { this.setPerf(e.target.checked); });
     $('optAuto').addEventListener('change', (e) => { g.setAutoStart(e.target.checked); });
@@ -109,7 +124,7 @@ var TD = globalThis.TD;
   // ------------------------------------------------------------ screens
   U.show = (id) => { $(id).classList.remove('hidden'); };
   U.hide = (id) => { $(id).classList.add('hidden'); };
-  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench'].forEach(this.hide); };
+  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench', 'scrStress'].forEach(this.hide); };
 
   U.refreshMenu = function () {
     this.mapCards.forEach((c, i) => {
@@ -131,8 +146,18 @@ var TD = globalThis.TD;
     $('waveBox').classList.toggle('hidden', mode === 'stress');
     this.setPerf(mode === 'stress' || this.perfOn);
     this.showSpeed(this.game.speed);
+    this.setBenchRunning(false);
     this.hidePanel();
   };
+
+  U.showStressSetup = function () {
+    // the slow-CPU emulation lives in the sim worker; without one it has no effect
+    $('stressSlowRow').classList.toggle('hidden', !this.game.worker);
+    this.hide('scrMenu');
+    this.show('scrStress');
+  };
+
+  U.setBenchRunning = (on) => { $('bStopBench').classList.toggle('hidden', !on); };
 
   U.enterMenu = function () {
     this.hideAll();
@@ -175,13 +200,21 @@ var TD = globalThis.TD;
   };
 
   U.showBench = function (res) {
+    if (!res.frames) {
+      $('benchStats').innerHTML = '<span>Stopped during warm-up</span><span>no samples yet</span>';
+      this.show('scrBench');
+      return;
+    }
     var pass = (ok) => ok ? ' <span class="ok">✓</span>' : ' <span class="bad">✗</span>';
+    var early = res.stopped && res.planned !== Infinity ? ` · <span class="bad">stopped early</span> (of ${res.planned} s)` : '';
     var rows = [
-      ['Duration', `${res.seconds.toFixed(1)} s · ${res.frames} frames`],
+      ['Duration', `${res.seconds.toFixed(1)} s · ${res.frames} frames${early}`],
       ['Enemies / towers / projectiles', `${res.enemies} / ${res.towers} / ${res.projectiles}`],
       ['Average FPS', res.avgFps.toFixed(1)],
       ['Game speed achieved', `${(res.simRate * res.speed).toFixed(2)}× of ${res.speed}×${pass(res.simRate >= 0.98)}`],
       ['Frames at ≥ 45 FPS', `${(res.pctAt45 * 100).toFixed(1)}%${pass(res.pctAt45 >= 0.95)}`],
+      ['Frames at ≥ 55 FPS', `${(res.pctAt55 * 100).toFixed(1)}%`],
+      ['Frames at 60 FPS', `${(res.pctAt60 * 100).toFixed(1)}%`],
       ['Frames > 33 ms', `${(res.pctOver33 * 100).toFixed(2)}%${pass(res.pctOver33 < 0.05)}`],
       ['Frame time p50 / p95 / p99', `${res.p50.toFixed(1)} / ${res.p95.toFixed(1)} / ${res.p99.toFixed(1)} ms`],
       ['CPU per frame avg / p95', `${res.cpuAvg.toFixed(2)} / ${res.cpuP95.toFixed(2)} ms`],
