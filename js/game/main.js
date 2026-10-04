@@ -492,7 +492,7 @@ var TD = globalThis.TD;
       ticksPerFrame: b.ticks / b.frames.length, worker: !!this.sim.isView,
       // share of the requested game speed actually simulated (1 = keeping up)
       speed: this.speed, simRate: b.want ? b.ticks / b.want : 1, maxFrame: f[f.length - 1],
-      renderScale: this.renderScale, lockstep: this.lockstep,
+      renderScale: this.renderScale, lockstep: this.lockstep, fxQuality: this.fx.quality,
       backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls · sim ${this.sim.isView ? 'in worker' : 'on main thread'}`,
       heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)'
     };
@@ -567,6 +567,11 @@ var TD = globalThis.TD;
     // ---- UI + stats
     if (this.mode !== 'backdrop' && this.mode !== 'menu') this.ui.update(sim, this);
     this.renderEma += (performance.now() - tSim1 - this.renderEma) * 0.1;
+    // effects quality: when main-thread render CPU runs over ~10 ms, emit
+    // fewer particles and draw simpler arcs (cosmetic only); recover slowly
+    var q = this.fx.quality;
+    if (this.renderEma > 10) q *= 0.97; else if (this.renderEma < 7) q *= 1.01;
+    this.fx.quality = q < 0.2 ? 0.2 : q > 1 ? 1 : q;
     var h = this.fHead;
     var cpuMs = tEnd - t0 + (sim.isView ? simMs : 0);
     this.fDelta[h] = dtMs; this.fCpu[h] = cpuMs; this.fSim[h] = simMs; this.fRender[h] = tEnd - tSim1; this.fTicks[h] = ticks;
@@ -643,7 +648,7 @@ var TD = globalThis.TD;
       `enemies    ${sim.eCount}  (visible ${this.scene.stats.visibleEnemies})`,
       `towers     ${sim.towers.length}   proj ${sim.pCount}`,
       `particles  ${this.fx.count()}   sprites ${this.scene.stats.instances}`,
-      `renderer   ${this.renderer.backend} · ${this.renderer.drawCalls} draws · ${Math.round(this.renderScale * 100)}% res`,
+      `renderer   ${this.renderer.backend} · ${this.renderer.drawCalls} draws · ${Math.round(this.renderScale * 100)}% res · fx ${Math.round(this.fx.quality * 100)}%`,
       `speed      ${this.speed}×${performance.memory ? `   heap ${heapMB().toFixed(1)} MB` : ''}`
     ];
     if (this.bench && !this.bench.done) {

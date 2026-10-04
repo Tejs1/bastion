@@ -21,6 +21,7 @@ Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes 
 | 3 | *(branch `perf/frame-budget`)* Frame-time budget for sim catch-up | +2% (noise) | **−55.5%** vs #2 | 10 |
 | 4 | *(branch `perf/sim-worker`)* Simulation in a Web Worker, with snapshots to the main thread | +14% (includes snapshot encode) | **−63.4%** vs the same build without a worker | **11** |
 | 5 | Split `Scene.build` into small per-section methods | — | `scene.build` **−20%** (scene bench, 20× CPU) | — |
+| 6 | *(branch `perf/fx-lod`)* Adaptive effects quality on the main thread | — | **−25%** at 20× CPU and 1× speed (A/B) | **12** |
 
 ## 0 · Baseline: where it breaks
 
@@ -181,3 +182,29 @@ Constant colours are hoisted out of the loops, and the per-type shadow flags are
 
 That is **−20%**. A micro-optimised `R.push` gave nothing measurable, so I dropped it.
 At about 30 ns per sprite unthrottled, the remaining main-thread cost scales with the sprite count.
+
+## 6 · Adaptive effects quality (`perf/fx-lod`)
+
+After step 5, the only cell bound by main-thread CPU was 20× CPU at 1× speed.
+There, about 16 k sprites took 13–15 ms of render CPU per frame, and the frame rate fell below 45 FPS on about 5% of frames.
+
+About 6 k of those sprites are purely cosmetic:
+- about 4 k particles
+- about 2 k line segments for the Tesla arcs
+
+`Fx.quality` (0.2–1) scales the per-frame particle emission budget, which is normally 900. Below 0.6, arcs draw one glow line per segment instead of two.
+`main.js` lowers the quality by 3% per frame while the smoothed render CPU is above 10 ms, and raises it by 1% per frame while it is below 7 ms.
+This is the CPU counterpart of the existing GPU dynamic-resolution scaling. The simulation is unaffected, and on normal hardware the quality stays at 100%.
+The current level shows in the perf overlay (`fx N%`) and in the benchmark result (`fxQuality`).
+
+The machine was busy during this step (load average about 6, from another Chrome and storage indexing).
+So I measured it as an **interleaved A/B**: the previous commit and this change, alternating, at 20× CPU:
+
+| Cell | Before (2 runs) | After (2 runs) |
+|---|---|---|
+| 20× CPU, 1×: FPS | 56.5, 51.5 | **59.3, 59.5** |
+| 20× CPU, 1×: frame CPU | 13.6, 14.6 ms | **10.9, 9.8 ms** |
+| 20× CPU, 1×: result | ❌ ❌ | **✅ ✅** |
+| 20× CPU, 12×: FPS / speed | 59.1 / 1.48×, 60.0 / 1.55× | 59.3 / 1.48×, 59.8 / 1.39× |
+
+20× CPU at 1× speed now passes, which brings the total to 12 of 20 cells.
