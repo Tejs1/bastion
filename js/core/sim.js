@@ -101,6 +101,11 @@ var TD = globalThis.TD;
     this.eCell = new Int32Array(EC);
     this.qBuf = new Int32Array(EC);       // scratch buffer for range queries
     this.chainHit = new Int32Array(16);
+    // per-cell best target for modes first/last/strong, computed lazily and
+    // invalidated when an enemy in the cell is damaged or removed
+    this.aggOk = new Uint8Array(this.gN * 3);
+    this.aggS = new Int32Array(this.gN * 3);
+    this.aggV = new Float64Array(this.gN * 3);
 
     // ----- projectile pool (dense SoA)
     this.pKind = new Uint8Array(PC);
@@ -125,6 +130,8 @@ var TD = globalThis.TD;
     this.towerAt = new Int32Array(this.map.cols * this.map.rows).fill(-1);
     this.towerById = {};
     this.nextTowerId = 1;
+
+    this.pathLen = new Float64Array(this.map.paths.map((p) => p.len));
 
     this.buildGrid();
   }
@@ -162,9 +169,32 @@ var TD = globalThis.TD;
       const s = list[i];
       items[fill[cellOf[s]]++] = s;
     }
+    this.aggOk.fill(0);
   };
 
-  /** Collect live enemies within radius r of (x,y) into qBuf; returns count. */
+  /** Best target in grid cell c for mode 0..2 (first occurrence of the max,
+   *  i.e. exactly what a linear scan of the cell would pick). Cached. */
+  S.cellBest = function (c, mode) {
+    var i = mode * this.gN + c;
+    if (this.aggOk[i]) return this.aggS[i];
+    var start = this.gStart, items = this.gItems, alive = this.eAlive;
+    var dist = this.eDist, ePath = this.ePath, plen = this.pathLen, hp = this.eHp;
+    var best = -1, bestV = -Infinity;
+    for (let k = start[c], e = start[c + 1]; k < e; k++) {
+      const s = items[k];
+      if (!alive[s]) continue;
+      let v;
+      if (mode === 0) v = -(plen[ePath[s]] - dist[s]);
+      else if (mode === 1) v = plen[ePath[s]] - dist[s];
+      else v = hp[s] - (plen[ePath[s]] - dist[s]) * 0.001;
+      if (v > bestV) { bestV = v; best = s; }
+    }
+    this.aggOk[i] = 1; this.aggS[i] = best; this.aggV[i] = bestV;
+    return best;
+  };
+
+  /** Collect live enemies within radius r of (x,y) into qBuf; returns count.
+   *  Grid cells whose nearest point lies outside the circle are skipped. */
   S.queryCircle = function (x, y, r, out) {
     out = out || this.qBuf;
     var gc = this.gCols, gr = this.gRows;
@@ -175,7 +205,12 @@ var TD = globalThis.TD;
     var start = this.gStart, items = this.gItems, ex = this.eX, ey = this.eY, alive = this.eAlive;
     var rr = r * r, n = 0;
     for (let cy = r0; cy <= r1; cy++) {
+      const ny = y < cy * CELL ? cy * CELL - y : y > (cy + 1) * CELL ? y - (cy + 1) * CELL : 0;
+      const ny2 = ny * ny;
+      if (ny2 > rr) continue;
       for (let cx = c0; cx <= c1; cx++) {
+        const nx = x < cx * CELL ? cx * CELL - x : x > (cx + 1) * CELL ? x - (cx + 1) * CELL : 0;
+        if (nx * nx + ny2 > rr) continue;
         const c = cy * gc + cx;
         for (let k = start[c], e = start[c + 1]; k < e; k++) {
           const s = items[k];
@@ -188,20 +223,53 @@ var TD = globalThis.TD;
     return n;
   };
 
-  /** Pick the best target for a tower according to its targeting mode. */
+  /** Pick the best target for a tower according to its targeting mode.
+   *  Fused with the circle query (one pass, no scratch buffer) and scored
+   *  from flat typed arrays; visits candidates in the same order as
+   *  queryCircle, so ties resolve identically. */
   S.findTarget = function (t, range) {
-    var n = this.queryCircle(t.x, t.y, range);
-    if (n === 0) return -1;
-    var buf = this.qBuf, best = -1, bestV = -Infinity, mode = t.mode;
-    var dist = this.eDist, ePath = this.ePath, paths = this.map.paths, hp = this.eHp;
-    var ex = this.eX, ey = this.eY;
-    for (let i = 0; i < n; i++) {
-      let s = buf[i], v;
-      if (mode === 0) v = -(paths[ePath[s]].len - dist[s]);          // first: least remaining
-      else if (mode === 1) v = paths[ePath[s]].len - dist[s];        // last
-      else if (mode === 2) v = hp[s] - (paths[ePath[s]].len - dist[s]) * 0.001; // strong
-      else { const dx = ex[s] - t.x, dy = ey[s] - t.y; v = -(dx * dx + dy * dy); }
-      if (v > bestV) { bestV = v; best = s; }
+    var x = t.x, y = t.y, gc = this.gCols, gr = this.gRows;
+    var c0 = ((x - range) / CELL) | 0, c1 = ((x + range) / CELL) | 0;
+    var r0 = ((y - range) / CELL) | 0, r1 = ((y + range) / CELL) | 0;
+    if (c0 < 0) c0 = 0; if (r0 < 0) r0 = 0;
+    if (c1 >= gc) c1 = gc - 1; if (r1 >= gr) r1 = gr - 1;
+    var start = this.gStart, items = this.gItems, ex = this.eX, ey = this.eY, alive = this.eAlive;
+    var dist = this.eDist, ePath = this.ePath, plen = this.pathLen, hp = this.eHp;
+    var rr = range * range, best = -1, bestV = -Infinity, mode = t.mode;
+    var aggV = this.aggV, gN = this.gN;
+    for (let cy = r0; cy <= r1; cy++) {
+      const ny = y < cy * CELL ? cy * CELL - y : y > (cy + 1) * CELL ? y - (cy + 1) * CELL : 0;
+      const ny2 = ny * ny;
+      if (ny2 > rr) continue;
+      for (let cx = c0; cx <= c1; cx++) {
+        const nx = x < cx * CELL ? cx * CELL - x : x > (cx + 1) * CELL ? x - (cx + 1) * CELL : 0;
+        if (nx * nx + ny2 > rr) continue;
+        const c = cy * gc + cx;
+        if (start[c] === start[c + 1]) continue;
+        // The cell's cached best over ALL its enemies bounds what any in-range
+        // enemy there can score: skip the cell if it can't win, take the
+        // cached best directly if it is itself in range, else scan the cell.
+        if (mode < 3) {
+          const b = this.cellBest(c, mode);
+          if (b < 0) continue;
+          const V = aggV[mode * gN + c];
+          if (V <= bestV) continue;
+          const bx = ex[b] - x, by = ey[b] - y;
+          if (bx * bx + by * by <= rr) { bestV = V; best = b; continue; }
+        }
+        for (let k = start[c], e = start[c + 1]; k < e; k++) {
+          const s = items[k];
+          if (!alive[s]) continue;
+          const dx = ex[s] - x, dy = ey[s] - y, d2 = dx * dx + dy * dy;
+          if (d2 > rr) continue;
+          let v;
+          if (mode === 0) v = -(plen[ePath[s]] - dist[s]);          // first: least remaining
+          else if (mode === 1) v = plen[ePath[s]] - dist[s];        // last
+          else if (mode === 2) v = hp[s] - (plen[ePath[s]] - dist[s]) * 0.001; // strong
+          else v = -d2;                                             // close
+          if (v > bestV) { bestV = v; best = s; }
+        }
+      }
     }
     return best;
   };
@@ -250,6 +318,8 @@ var TD = globalThis.TD;
 
   S.removeEnemy = function (s) {
     this.eAlive[s] = 0;
+    var c = this.eCell[s], gN = this.gN;
+    this.aggOk[c] = 0; this.aggOk[gN + c] = 0; this.aggOk[2 * gN + c] = 0;
     var pos = this.eListPos[s];
     var last = this.eList[--this.eCount];
     this.eList[pos] = last;
@@ -268,6 +338,7 @@ var TD = globalThis.TD;
     if (d > this.eHp[s]) d = this.eHp[s];
     this.eHp[s] -= d;
     this.eFlash[s] = 1;
+    this.aggOk[2 * this.gN + this.eCell[s]] = 0;
     if (tower) tower.dmgDone += d;
     if (this.eHp[s] <= 0.001) { this.kill(s, tower); return true; }
     return false;
