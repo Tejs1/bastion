@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bastion · Perf Telemetry</title>
+<meta name="description" content="Performance analytics for the Bastion stress matrix: pass/fail cells, sim cost and frame CPU across optimisation runs.">
+<meta name="theme-color" content="#0a0f17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M16 2 29 9v14L16 30 3 23V9z%22 fill=%22%230a0f17%22 stroke=%22%234fd1ff%22 stroke-width=%222%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="analytics/dashboard.css">
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand">
+    <svg class="sigil" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 29 9v14L16 30 3 23V9z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 9l6 3.5v7L16 23l-6-3.5v-7z" fill="currentColor" opacity=".85"/></svg>
+    <div>
+      <p class="eyebrow">Bastion // optimisation loop</p>
+      <h1>Perf Telemetry</h1>
+    </div>
+  </div>
+  <div class="source">
+    <p class="source-line" id="sourceLine">Loading <code>perf/results.jsonl</code>…</p>
+    <div class="source-actions">
+      <button type="button" class="btn" id="reloadBtn" title="Re-fetch perf/results.jsonl">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2v3.5H10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Reload
+      </button>
+      <label class="btn" for="fileInput">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11V2.5M4.5 6 8 2.5 11.5 6M2.5 10.5v3h11v-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Open file
+      </label>
+      <input type="file" id="fileInput" accept=".jsonl,.json,.txt,.ndjson" hidden>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+  <section class="notice" id="notice" hidden></section>
+
+  <div id="content" hidden>
+    <section class="block" aria-labelledby="h-runs">
+      <div class="block-head">
+        <h2 id="h-runs"><span class="idx">01</span>Runs</h2>
+        <p class="hint">Geomeans over all measured cells. Deltas compare the cells both runs share. Lower ms is better.</p>
+      </div>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <section class="block" aria-labelledby="h-matrix">
+      <div class="block-head">
+        <h2 id="h-matrix"><span class="idx">02</span>Stress matrix</h2>
+        <div class="controls">
+          <label class="field"><span>Run</span><select id="runSelect"></select></label>
+          <fieldset class="seg" aria-label="Colour cells by" id="colorBy">
+            <button type="button" data-mode="pass" class="on">Pass</button>
+            <button type="button" data-mode="fps">FPS</button>
+            <button type="button" data-mode="ms">ms/tick</button>
+          </fieldset>
+        </div>
+      </div>
+      <div class="panel matrix-panel">
+        <p class="run-desc" id="runDesc"></p>
+        <div class="matrix-scroll"><div class="matrix" id="matrix"></div></div>
+        <div class="legend" id="matrixLegend"></div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="h-trends">
+      <div class="block-head">
+        <h2 id="h-trends"><span class="idx">03</span>Trends</h2>
+        <p class="hint" id="trendHint">Hover or focus a chart and use ← → to step through runs.</p>
+      </div>
+      <div class="charts">
+        <figure class="panel chart-card">
+          <figcaption><b>Sim ms per tick</b><span>geomean over speeds, per CPU throttle · log scale</span></figcaption>
+          <div class="chart" id="chSim"></div>
+        </figure>
+        <figure class="panel chart-card">
+          <figcaption><b>Frame CPU</b><span>geomean ms per frame, all cells</span></figcaption>
+          <div class="chart" id="chCpu"></div>
+        </figure>
+        <figure class="panel chart-card">
+          <figcaption><b>Passing cells</b><span id="passCap">of 20</span></figcaption>
+          <div class="chart" id="chPass"></div>
+        </figure>
+        <figure class="panel chart-card">
+          <figcaption><b>Avg FPS at <span id="topSpeedCap">12×</span> speed</b><span>per CPU throttle · 45 FPS line</span></figcaption>
+          <div class="chart" id="chFps"></div>
+        </figure>
+      </div>
+      <details class="panel table-view">
+        <summary>Trend data as a table</summary>
+        <div class="scroll-x"><table class="data" id="trendTable"></table></div>
+      </details>
+    </section>
+
+    <section class="block" aria-labelledby="h-diff">
+      <div class="block-head">
+        <h2 id="h-diff"><span class="idx">04</span>Run vs run</h2>
+        <div class="controls">
+          <label class="field"><span>From</span><select id="diffA"></select></label>
+          <button type="button" class="btn icon-btn" id="swapBtn" title="Swap runs" aria-label="Swap runs">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5h10l-3-3M13 11H3l3 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <label class="field"><span>To</span><select id="diffB"></select></label>
+        </div>
+      </div>
+      <div class="diff-summary" id="diffSummary"></div>
+      <div class="panel scroll-x"><table class="data diff" id="diffTable"></table></div>
+      <p class="hint small">Green is better and red is worse. Changes under 2% are treated as noise.</p>
+    </section>
+
+    <section class="block" aria-labelledby="h-break">
+      <div class="block-head">
+        <h2 id="h-break"><span class="idx">05</span>Breaking point</h2>
+        <p class="hint">The highest game speed that passes, counting up from 1× with no failure in between.</p>
+      </div>
+      <div class="panel scroll-x"><div class="breaks" id="breaks"></div></div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot" id="foot">
+  A cell passes when at least 95% of frames run at 45 FPS or better, fewer than 5% take longer than 33 ms, and the game reaches 98% of the requested speed.
+</footer>
+
+<div class="drop" id="drop" hidden><div><b>Drop results.jsonl</b><span>Load the file into the dashboard</span></div></div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+
+<script src="analytics/dashboard.js"></script>
+</body>
+</html>
