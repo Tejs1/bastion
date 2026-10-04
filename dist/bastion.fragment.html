@@ -107,6 +107,11 @@ fieldset.seg { margin: 0; min-width: 0; }
 #bNext { position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 #bNextBonus { font-size: 12px; font-weight: 700; color: #1c3a00; background: rgba(255, 220, 90, 0.9); border-radius: 6px; padding: 2px 6px; }
 #bNextBonus:empty { display: none; }
+#bNext .keys-hint { margin-left: auto; display: flex; gap: 3px; }
+#bNext kbd { color: #04131d; border-color: rgba(4, 19, 29, 0.35); background: rgba(255, 255, 255, 0.25); }
+#bNext:disabled kbd { opacity: 0.5; }
+#bNextBonus:not(:empty) { margin-left: auto; }
+#bNextBonus:not(:empty) + .keys-hint { margin-left: 0; }
 #bNextBar { position: absolute; left: 0; bottom: 0; height: 3px; background: rgba(4, 19, 29, 0.55); width: 0; }
 
 /* ---------- tower panel ---------- */
@@ -201,6 +206,27 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
 .codex .ci { display: flex; gap: 10px; align-items: center; font-size: 12.5px; line-height: 1.35; color: #c9d5e6; }
 .codex img { width: 34px; height: 34px; flex: none; }
 .codex b { color: var(--text); }
+.stats-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.stepper { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.stepper .ghost { padding: 4px 11px; font-weight: 700; }
+.stepper b { min-width: 2ch; text-align: center; color: var(--text); font-variant-numeric: tabular-nums; }
+#scrStats { background: rgba(6, 10, 16, 0.88); }
+.stats-body { display: grid; gap: 14px; max-height: 60vh; overflow-y: auto; min-width: 0; }
+.stats-body > * { min-width: 0; }
+.st-head { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+.st-head img { width: 36px; height: 36px; }
+.st-head b { color: var(--c, var(--text)); }
+.st-sub { font-size: 12px; color: var(--muted); }
+.st-scroll { overflow-x: auto; }
+.st-table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; color: #c9d5e6; }
+.st-table th { text-align: left; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.st-table td { padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); white-space: nowrap; }
+.st-table td.st-sp { white-space: normal; min-width: 180px; }
+.st-lv { display: flex; align-items: center; gap: 6px; color: var(--text); font-weight: 700; }
+.st-lv img { width: 40px; height: 40px; }
+.st-name { display: flex; align-items: center; gap: 6px; color: var(--text); font-weight: 700; }
+.st-name img { width: 24px; height: 24px; }
+.st-foot { text-align: left; margin-top: 8px; }
 #fatalMsg { white-space: pre-wrap; font-size: 12px; color: #ffb3ba; }
 
 /* ---------- responsive ---------- */
@@ -212,7 +238,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
   #waveBox { width: 230px; }
   .tcard { width: 64px; }
   .tcard .nm { display: none; }
-  .tcard kbd { display: none; }
+  .tcard kbd, #bNext .keys-hint { display: none; }
 }
 @media (max-width: 700px) {
   .topbar { padding-top: calc(6px + env(safe-area-inset-top)); flex-wrap: wrap; row-gap: 6px; }
@@ -302,7 +328,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
       <div id="waveBox" class="panel">
         <div class="wb-head"><span id="wbTitle">Wave 1</span><span id="wbSub"></span></div>
         <div id="wbList" class="wb-list"></div>
-        <button type="button" id="bNext" class="primary"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><i id="bNextBar"></i></button>
+        <button type="button" id="bNext" class="primary" title="Start / call next wave (N or Enter)"><span id="bNextLabel">Start wave</span><span id="bNextBonus"></span><span class="keys-hint"><kbd>N</kbd><kbd aria-label="Enter">↵</kbd></span><i id="bNextBar"></i></button>
       </div>
     </footer>
 
@@ -338,6 +364,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
       <label class="check"><input type="checkbox" id="optPerf"> Show performance overlay</label>
       <label class="check"><input type="checkbox" id="optAuto" checked> Auto-start next wave</label>
       <button type="button" id="bHelp2" class="ghost">How to play</button>
+      <button type="button" id="bStats2" class="ghost">Detailed stats</button>
       <button type="button" id="bQuit" class="ghost">Quit to menu</button>
     </div>
   </section>
@@ -375,6 +402,7 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
             <tr><td>Wheel · pinch</td><td>Zoom</td></tr>
             <tr><td>Drag · <kbd>WASD</kbd></td><td>Pan · <kbd>0</kbd> resets view</td></tr>
             <tr><td><kbd>Esc</kbd></td><td>Cancel / deselect / pause</td></tr>
+            <tr><td><kbd>I</kbd></td><td>Detailed tower &amp; enemy stats</td></tr>
             <tr><td><kbd>`</kbd></td><td>Performance overlay</td></tr>
           </table>
         </div>
@@ -385,7 +413,30 @@ h2 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.16em; text-transform: u
           <div id="helpEnemies" class="codex"></div>
         </div>
       </div>
-      <button type="button" id="bHelpClose" class="primary">Got it</button>
+      <div class="menu-row">
+        <button type="button" id="bStatsOpen" class="ghost">Detailed stats</button>
+        <button type="button" id="bHelpClose" class="primary">Got it</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="scrStats" class="screen hidden">
+    <div class="menu-card help">
+      <h1 class="small">Detailed stats</h1>
+      <div class="stats-bar">
+        <div class="seg" id="statsTab">
+          <button type="button" data-tab="towers" class="on">Towers</button><button type="button" data-tab="enemies">Enemies</button>
+        </div>
+        <div class="stepper" id="statsWaveBox">
+          <span>Wave</span>
+          <button type="button" class="ghost" data-dw="-1" aria-label="Previous wave">−</button>
+          <b id="statsWave">1</b>
+          <button type="button" class="ghost" data-dw="1" aria-label="Next wave">+</button>
+        </div>
+      </div>
+      <p id="statsNote" class="fine"></p>
+      <div id="statsBody" class="stats-body"></div>
+      <button type="button" id="bStatsClose" class="primary">Close</button>
     </div>
   </section>
 
@@ -1649,14 +1700,15 @@ var TD = globalThis.TD;
     if (!this.stress) this.updateWaves();
   };
 
-  /** Cheap order-dependent hash of the full gameplay state (determinism tests). */
+  /** Cheap order-dependent hash of the full gameplay state (determinism tests).
+   *  Enemies are identified by uid, not slot, so memory layout does not count. */
   S.hash = function () {
     var h = 2166136261 >>> 0;
     function mix(v) { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; }
     mix(this.tick); mix(this.gold * 100); mix(this.lives); mix(this.score); mix(this.eCount); mix(this.pCount);
     for (let i = 0; i < this.eCount; i++) {
       const s = this.eList[i];
-      mix(s); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
+      mix(this.eUid[s]); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
     }
     for (let i = 0; i < this.pCount; i++) { mix(this.pX[i] * 100); mix(this.pY[i] * 100); }
     return h >>> 0;
@@ -2168,7 +2220,8 @@ var TD = globalThis.TD;
     return f;
   };
 
-  /** Render one or more frames into a standalone data URL (UI icons). */
+  /** Render one or more frames into a standalone data URL (UI icons).
+   *  rot is one angle for every frame, or an array with one per frame. */
   Atlas.prototype.icon = function (names, px, rot) {
     var cv = document.createElement('canvas');
     cv.width = px; cv.height = px;
@@ -2176,11 +2229,11 @@ var TD = globalThis.TD;
     var maxW = 0;
     names.forEach((n) => { var f = this.frames[n]; maxW = Math.max(maxW, f.w, f.h); });
     var k = px / maxW;
-    names.forEach((n) => {
-      var f = this.frames[n];
+    names.forEach((n, i) => {
+      var f = this.frames[n], a = Array.isArray(rot) ? rot[i] : rot;
       c.save();
       c.translate(px / 2, px / 2);
-      if (rot) c.rotate(rot);
+      if (a) c.rotate(a);
       c.drawImage(this.canvas, f.x, f.y, f.pw, f.ph, -f.w * k / 2, -f.h * k / 2, f.w * k, f.h * k);
       c.restore();
     });
@@ -2356,20 +2409,24 @@ var TD = globalThis.TD;
     // towers: shared base plate tinted per type + turret per level
     TD.TOWERS.forEach((def) => {
       var col = def.color;
-      A.add(`tb_${def.id}`, 36, 36, (c) => {
-        rrect(c, -16, -16, 32, 32, 7);
-        var g = c.createLinearGradient(0, -16, 0, 16);
-        g.addColorStop(0, '#36435a'); g.addColorStop(1, '#1b2232');
-        c.fillStyle = g; c.fill(); outline(c, 1.4);
-        rrect(c, -13.5, -13.5, 27, 27, 5); c.lineWidth = 1; c.strokeStyle = 'rgba(255,255,255,0.08)'; c.stroke();
-        c.fillStyle = col;
-        [[-11, -11], [11, -11], [-11, 11], [11, 11]].forEach((p) => {
-          c.globalAlpha = 0.9; c.beginPath(); c.arc(p[0], p[1], 1.6, 0, 7); c.fill();
+      // one plate per level: bronze / silver / gold rim and rank bars along the
+      // bottom edge for levels 2-4 (the plate never rotates with the turret)
+      for (let lv = 0; lv < 4; lv++) {
+        A.add(`tb_${def.id}${lv}`, 36, 36, (c) => {
+          rrect(c, -16, -16, 32, 32, 7);
+          var g = c.createLinearGradient(0, -16, 0, 16);
+          g.addColorStop(0, '#36435a'); g.addColorStop(1, '#1b2232');
+          c.fillStyle = g; c.fill(); outline(c, 1.4);
+          var rank = RANK_COLORS[lv];
+          rrect(c, -13.5, -13.5, 27, 27, 5); c.lineWidth = rank ? 1.8 : 1;
+          c.strokeStyle = rank || 'rgba(255,255,255,0.08)'; c.stroke();
+          for (let k = 0; k < lv; k++) {
+            rrect(c, (k - (lv - 1) / 2) * 6 - 2.2, 11, 4.4, 3, 1); c.fillStyle = rank; c.fill(); outline(c, 0.7);
+          }
+          c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fillStyle = '#121822'; c.fill();
+          c.lineWidth = 1.2 + lv * 0.3; c.strokeStyle = shade(col, -0.35 + lv * 0.15); c.stroke();
         });
-        c.globalAlpha = 1;
-        c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fillStyle = '#121822'; c.fill();
-        c.lineWidth = 1.2; c.strokeStyle = shade(col, -0.35); c.stroke();
-      });
+      }
       for (let lv = 0; lv < 4; lv++) {
         A.add(`tt_${def.id}${lv}`, 44, 44, turretDrawer(def.id, col, lv));
       }
@@ -2406,6 +2463,8 @@ var TD = globalThis.TD;
     void g;
   }
 
+  var RANK_COLORS = [null, '#d08a4e', '#d4deec', '#ffd25a'];   // level 2-4: bronze, silver, gold
+
   function turretDrawer(id, col, lv) {
     return (c) => {
       var dark = shade(col, -0.55), mid = shade(col, -0.2);
@@ -2418,18 +2477,28 @@ var TD = globalThis.TD;
         }
         if (lv === 3) { poly(c, [-4, -9, 4, -6, 4, 6, -4, 9]); c.fillStyle = dark; c.fill(); outline(c, 0.8); }
         c.beginPath(); c.arc(0, 0, 7.5 + lv * 0.4, 0, 7); c.fillStyle = bodyFill(c, col, 8); c.fill(); outline(c, 1.1);
+        if (lv >= 1) { c.beginPath(); c.arc(0, 0, 5.2 + lv * 0.4, 0, 7); c.lineWidth = 1.2; c.strokeStyle = dark; c.stroke(); }
         c.beginPath(); c.arc(0, 0, 3, 0, 7); c.fillStyle = '#e8fbff'; c.fill();
       } else if (id === 'cannon') {
         const bw = 6 + lv * 0.8;
         rrect(c, 0, -bw / 2, 13 + lv, bw, 2); c.fillStyle = '#3a2c22'; c.fill(); outline(c, 1);
         c.fillStyle = col; c.fillRect(10 + lv, -bw / 2 - 0.6, 2.2, bw + 1.2);
-        if (lv >= 2) { c.fillStyle = mid; c.fillRect(5, -bw / 2 - 0.4, 1.6, bw + 0.8); }
+        if (lv >= 1) { c.fillStyle = mid; c.fillRect(5, -bw / 2 - 0.4, 1.6, bw + 0.8); }
+        if (lv >= 2) { c.fillStyle = mid; c.fillRect(7.6, -bw / 2 - 0.4, 1.6, bw + 0.8); }
         ngon(c, 8, 9 + lv * 0.5, Math.PI / 8); c.fillStyle = bodyFill(c, '#8a6038', 9); c.fill(); outline(c, 1.1);
         ngon(c, 8, 5, Math.PI / 8); c.fillStyle = dark; c.fill();
         c.beginPath(); c.arc(0, 0, 2.2, 0, 7); c.fillStyle = col; c.fill();
         if (lv === 3) { for (let k = 0; k < 4; k++) { c.save(); c.rotate(k * Math.PI / 2 + Math.PI / 4); c.fillStyle = col; c.fillRect(7.5, -1, 3, 2); c.restore(); } }
       } else if (id === 'frost') {
         const r = 8 + lv * 1.2;
+        if (lv >= 2) { c.beginPath(); c.arc(0, 0, r + 1, 0, 7); c.lineWidth = 1; c.strokeStyle = 'rgba(216,251,255,0.55)'; c.stroke(); }
+        if (lv >= 1) {
+          for (let k = 0; k < 6; k++) {
+            c.save(); c.rotate(k * Math.PI / 3 + Math.PI / 6);
+            poly(c, [r * 0.5, -1.5, r * 0.95, 0, r * 0.5, 1.5]); c.fillStyle = mid; c.fill(); outline(c, 0.6);
+            c.restore();
+          }
+        }
         for (let k = 0; k < 6; k++) {
           c.save(); c.rotate(k * Math.PI / 3);
           poly(c, [r * 0.55, -2.2, r + 3, 0, r * 0.55, 2.2]); c.fillStyle = k % 2 ? '#d8fbff' : col; c.fill(); outline(c, 0.7);
@@ -2453,7 +2522,7 @@ var TD = globalThis.TD;
         rrect(c, 0, -3.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         rrect(c, 0, 1.4, L, 2, 0.8); c.fillStyle = '#2b3a33'; c.fill(); outline(c, 0.6);
         c.fillStyle = col; c.globalAlpha = 0.85; c.fillRect(2, -0.7, L - 3, 1.4); c.globalAlpha = 1;
-        if (lv >= 2) { c.fillStyle = mid; c.fillRect(L * 0.45, -4.2, 2, 8.4); }
+        for (let k = 0; k < lv; k++) { c.fillStyle = mid; c.fillRect(L * (0.35 + k * 0.2), -4.2, 2, 8.4); }
         poly(c, [-7, -7, 5, -5, 7, 0, 5, 5, -7, 7, -9, 0]); c.fillStyle = bodyFill(c, '#3f5a4a', 8); c.fill(); outline(c, 1);
         c.beginPath(); c.arc(-1, 0, 2.6, 0, 7); c.fillStyle = col; c.fill();
         if (lv === 3) { c.fillStyle = col; c.fillRect(-8.5, -1, 2, 2); }
@@ -2973,6 +3042,7 @@ var TD = globalThis.TD;
     this.tLife = new Float32Array(TCAP); this.tCol = new Uint32Array(TCAP); this.tHead = 0;
 
     this.budget = 0;
+    this.quality = 1;      // 0.2..1, lowered by the game when render CPU is over budget
     this.shake = 0;
     this.baseFlash = 0;
     this.time = 0;
@@ -3132,7 +3202,7 @@ var TD = globalThis.TD;
   // ---------------------------------------------------------------- update
   P.update = function (dt, realDt) {
     this.time += dt;
-    this.budget = 900;
+    this.budget = Math.round(900 * this.quality);
     this.shake *= 0.0015 ** realDt;
     if (this.shake < 0.05) this.shake = 0;
     this.baseFlash = Math.max(0, this.baseFlash - realDt * 2.5);
@@ -3182,7 +3252,7 @@ var TD = globalThis.TD;
     var F = this.F;
     this.eF = TD.ENEMIES.map((e) => F[`e_${e.id}`]);
     this.eBig = new Uint8Array(TD.ENEMIES.map((e) => (e.radius > 12 ? 1 : 0)));
-    this.tB = TD.TOWERS.map((t) => F[`tb_${t.id}`]);
+    this.tB = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tb_${t.id}${l}`]));
     this.tT = TD.TOWERS.map((t) => [0, 1, 2, 3].map((l) => F[`tt_${t.id}${l}`]));
     this.pF = TD.FX_FRAMES.map((n) => F[n]);
     this.chF = {};
@@ -3277,6 +3347,11 @@ var TD = globalThis.TD;
         const w = bW[i] * (0.4 + lf * 0.6);
         r.line(beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 2.2, bcol);
         r.line(beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 0.7, core);
+      } else if (fx.quality < 0.6) {   // reduced effects: glow only
+        for (let k = 0; k < 5; k++) {
+          const q = o + k * 2;
+          r.line(beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], bW[i] * 1.4, core);
+        }
       } else {
         for (let k = 0; k < 5; k++) {
           const q = o + k * 2;
@@ -3404,7 +3479,7 @@ var TD = globalThis.TD;
       if (tw.x < x0 - 30 || tw.x > x1 + 30 || tw.y < y0 - 30 || tw.y > y1 + 30) continue;
       const tc = this.towerCol[tw.type];
       r.push(F.shadow, tw.x + 3, tw.y + 5, 44, 40, 0, C.shadow);
-      r.push(this.tB[tw.type], tw.x, tw.y, 36, 36, 0, WHITE);
+      r.push(this.tB[tw.type][tw.level], tw.x, tw.y, 36, 36, 0, WHITE);
       const kind = tw.def.kind, tt = this.tT[tw.type][tw.level];
       let ang = tw.angle, rec = tw.recoil > 0 ? tw.recoil : 0;
       if (kind === 'pulse') {
@@ -3461,7 +3536,7 @@ var TD = globalThis.TD;
       r.push(F.tilefill, gx, gy, 40, 40, 0, ok ? C.okTile : C.badTile);
       r.push(F.disc, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeFill : C.badFill);
       r.push(F.ring, gx, gy, rr * 2, rr * 2, 0, ok ? C.rangeLine : C.badLine);
-      r.push(this.tB[ui.placing], gx, gy, 36, 36, 0, C.ghost);
+      r.push(this.tB[ui.placing][0], gx, gy, 36, 36, 0, C.ghost);
       r.push(this.tT[ui.placing][0], gx, gy, 44, 44, -Math.PI / 2, C.ghost);
     } else if (ui.hoverCol >= 0 && ui.hoverTower) {
       r.push(F.tile, (ui.hoverCol + 0.5) * TD.TILE, (ui.hoverRow + 0.5) * TD.TILE, 40, 40, 0, C.hover);
@@ -3769,6 +3844,8 @@ var TD = globalThis.TD;
     this.mapIndex = 0;
     this.diff = 'normal';
     this.perfOn = false;
+    this.statsTab = 'towers';
+    this.statsWave = 1;
   }
   TD.UI = UI;
   var U = UI.prototype;
@@ -3776,8 +3853,8 @@ var TD = globalThis.TD;
   U.init = function (atlas) {
     var g = this.game;
     TD.TOWERS.forEach((t, i) => {
-      this.icons.tower[i] = atlas.icon([`tb_${t.id}`, `tt_${t.id}0`], 96, -Math.PI / 2);
-      this.icons.tower[`${i}_3`] = atlas.icon([`tb_${t.id}`, `tt_${t.id}3`], 96, -Math.PI / 2);
+      this.icons.tower[i] = atlas.icon([`tb_${t.id}0`, `tt_${t.id}0`], 96, [0, -Math.PI / 2]);
+      for (let lv = 1; lv < t.levels.length; lv++) this.icons.tower[`${i}_${lv}`] = atlas.icon([`tb_${t.id}${lv}`, `tt_${t.id}${lv}`], 96, [0, -Math.PI / 2]);
     });
     TD.ENEMIES.forEach((e, i) => { this.icons.enemy[i] = atlas.icon([`e_${e.id}`], 64, -Math.PI / 2); });
 
@@ -3844,6 +3921,18 @@ var TD = globalThis.TD;
     $('bHelp').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelp2').addEventListener('click', () => { this.show('scrHelp'); });
     $('bHelpClose').addEventListener('click', () => { this.hide('scrHelp'); });
+    $('bStatsOpen').addEventListener('click', () => { this.showStats(); });
+    $('bStats2').addEventListener('click', () => { this.showStats(); });
+    $('bStatsClose').addEventListener('click', () => { this.hide('scrStats'); });
+    $('statsTab').addEventListener('click', (e) => {
+      var b = e.target.closest('button'); if (!b) return;
+      this.statsTab = b.dataset.tab; this.renderStats(); g.sfx('click');
+    });
+    $('statsWaveBox').addEventListener('click', (e) => {
+      var b = e.target.closest('button'); if (!b) return;
+      this.statsWave = Math.max(1, Math.min(TD.TOTAL_WAVES, this.statsWave + +b.dataset.dw));
+      this.renderStats();
+    });
     $('bResume').addEventListener('click', () => { g.setPaused(false); });
     $('bRestart').addEventListener('click', () => { g.restart(); });
     $('bQuit').addEventListener('click', () => { g.quit(); });
@@ -3872,7 +3961,7 @@ var TD = globalThis.TD;
   // ------------------------------------------------------------ screens
   U.show = (id) => { $(id).classList.remove('hidden'); };
   U.hide = (id) => { $(id).classList.add('hidden'); };
-  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench', 'scrStress'].forEach(this.hide); };
+  U.hideAll = function () { ['scrMenu', 'scrPause', 'scrEnd', 'scrHelp', 'scrBench', 'scrStress', 'scrStats'].forEach(this.hide); };
 
   U.refreshMenu = function () {
     this.mapCards.forEach((c, i) => {
@@ -3975,6 +4064,84 @@ var TD = globalThis.TD;
     this.show('scrBench');
   };
 
+  // ------------------------------------------------------------ detailed stats
+  /** Open the detailed stats screen. In a match it is scaled to the current
+   *  wave and difficulty; from the menu it uses the selected difficulty. */
+  U.showStats = function () {
+    var sim = this.game.isPlay() ? this.game.sim : null;
+    this.statsWave = sim ? Math.max(1, Math.min(TD.TOTAL_WAVES, sim.wave)) : 1;
+    this.renderStats();
+    this.show('scrStats');
+  };
+  U.statsOpen = () => !$('scrStats').classList.contains('hidden');
+
+  U.statsDiff = function () {
+    var sim = this.game.isPlay() ? this.game.sim : null;
+    return sim ? sim.diff : TD.DIFFICULTY[this.diff];
+  };
+
+  U.renderStats = function () {
+    var tab = this.statsTab, w = this.statsWave, diff = this.statsDiff();
+    Array.prototype.forEach.call($('statsTab').children, (b) => { b.classList.toggle('on', b.dataset.tab === tab); });
+    $('statsWave').textContent = w;
+    $('statsNote').textContent = tab === 'towers'
+      ? `"vs armour" is DPS against a wave ${w} Juggernaut (armour ${fmt1(enemyArmor(TD.ENEMIES[TD.ENEMY_INDEX.tank], w))}). Hits always deal at least 20%.`
+      : `Scaled for wave ${w} on ${diff.name} (HP ×${fmt1(TD.hpMult(w) * diff.hp)}, reward ×${fmt1(TD.rewardMult(w) * diff.reward)}).`;
+    $('statsBody').innerHTML = tab === 'towers' ? this.towerStatsHtml(w) : this.enemyStatsHtml(w, diff);
+  };
+
+  U.towerStatsHtml = function (w) {
+    var armor = enemyArmor(TD.ENEMIES[TD.ENEMY_INDEX.tank], w);
+    return TD.TOWERS.map((t, i) => {
+      var pierce = t.pierce || 0, total = 0;
+      var notes = [`${t.cost} cr`, KIND_LABEL[t.kind]];
+      if (t.projSpeed) notes.push(`projectile ${t.projSpeed} px/s`);
+      if (pierce) notes.push(`ignores ${Math.round(pierce * 100)}% armour`);
+      if (t.kind === 'chain') notes.push(`jumps ${t.jump} px, −12% damage per jump`);
+      if (t.kind === 'beam') notes.push('hits every enemy in line');
+      if (t.kind === 'pulse') notes.push('hits every enemy in range');
+      var rows = t.levels.map((L, lv) => {
+        total += lv === 0 ? t.cost : L.up;
+        var hit = Math.max(L.dmg - armor * (1 - pierce), L.dmg * 0.2);
+        var dps = L.dmg * L.rate;
+        var special = L.splash ? `splash ${L.splash}`
+          : L.slow ? `slow ${Math.round(L.slow * 100)}% · ${L.dur}s`
+          : L.chains ? `${L.chains} targets` : '—';
+        var icon = this.icons.tower[lv === 0 ? i : `${i}_${lv}`];
+        return `<tr><td class="st-lv"><img alt="" src="${icon}">Lv ${lv + 1}</td><td>${L.dmg}</td><td>${L.rate}/s</td><td>${fmt1(dps)}</td><td>${fmt1(hit * L.rate)}</td>` +
+          `<td>${L.range}</td><td>${special}</td><td>${lv === 0 ? '—' : L.up}</td><td>${total}</td><td>${fmt1(dps / total * 100)}</td></tr>`;
+      }).join('');
+      return `<div class="st-block" style="--c:${t.color}"><div class="st-head"><img alt="" src="${this.icons.tower[`${i}_3`]}">` +
+        `<div><b>${t.name}</b><div class="st-sub">${notes.join(' · ')}</div></div></div>` +
+        '<div class="st-scroll"><table class="st-table"><thead><tr><th>Level</th><th>Damage</th><th>Rate</th><th>DPS</th><th>vs armour</th>' +
+        '<th>Range</th><th>Special</th><th>Upgrade</th><th>Total cost</th><th>DPS / 100 cr</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+    }).join('');
+  };
+
+  U.enemyStatsHtml = function (w, diff) {
+    var hpM = TD.hpMult(w) * diff.hp, rwM = TD.rewardMult(w) * diff.reward;
+    var rows = TD.ENEMIES.map((e, i) => {
+      var hp = e.id === 'spawnling' ? '24% of Splitter' : fmt(Math.round(e.hp * hpM));
+      var special = ENEMY_SPECIAL[e.id] || '—';
+      if (e.slowResist) special += ` · slows ${Math.round(e.slowResist * 100)}% as effective`;
+      return `<tr><td class="st-name"><img alt="" src="${this.icons.enemy[i]}">${e.name}</td><td>${hp}</td><td>${fmt1(enemyArmor(e, w))}</td>` +
+        `<td>${e.speed}</td><td>${Math.max(1, Math.round(e.reward * rwM))}</td><td>${e.leak}</td><td class="st-sp">${special}</td></tr>`;
+    }).join('');
+    return '<div class="st-scroll"><table class="st-table"><thead><tr><th>Enemy</th><th>HP</th><th>Armour</th><th>Speed</th><th>Reward</th>' +
+      '<th>Lives lost</th><th>Special</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="fine st-foot">Armour is subtracted from every hit (minimum 20% gets through). Speed varies ±6% per enemy. Boss waves can scale Behemoth HP further.</p>';
+  };
+
+  var KIND_LABEL = { bullet: 'single target', shell: 'splash', pulse: 'area pulse', chain: 'chain', beam: 'piercing beam' };
+  var ENEMY_SPECIAL = {
+    healer: 'heals allies within 78 px for 7% max HP every 2.2 s',
+    splitter: 'splits into 3 Spawnlings on death',
+    spawnling: 'released by Splitters',
+    boss: 'summons 3 Swarmlings every 4.5 s (4 from wave 30)'
+  };
+  function enemyArmor(e, w) { return e.armor + (e.armorGrowth || 0) * (w - 1); }
+  function fmt1(v) { return v >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10); }
+
   // ------------------------------------------------------------ toast/banner
   U.toast = function (msg, err) {
     var t = $('toast');
@@ -4056,7 +4223,7 @@ var TD = globalThis.TD;
     var up = N ? `<button class="primary up"${sim.gold >= cost ? '' : ' disabled'}>Upgrade <b>${cost}</b></button>`
       : '<button class="primary up max" disabled>Max level</button>';
     p.innerHTML =
-      '<div class="tp-head"><img alt="" src="' + this.icons.tower[t.type + (t.level === 3 ? '_3' : '')] + '"><div><div class="tp-name">' + t.def.name +
+      '<div class="tp-head"><img alt="" src="' + this.icons.tower[t.level ? `${t.type}_${t.level}` : t.type] + '"><div><div class="tp-name">' + t.def.name +
       ' <span class="lvl">Lv ' + (t.level + 1) + '</span></div><div class="tp-sub">' + t.kills + ' kills · ' + fmt(t.dmgDone) + ' damage</div></div>' +
       '<button class="x" aria-label="Close">×</button></div>' +
       '<div class="tp-stats">' + s + '</div>' + target +
@@ -4600,12 +4767,14 @@ var TD = globalThis.TD;
     if (k === '`' || k === '~') { this.ui.setPerf(!this.ui.perfOn); return true; }
     if (!this.isPlay()) return false;
     if (k === 'Escape') {
+      if (this.ui.statsOpen()) { this.ui.hide('scrStats'); return true; }
       if (!document.getElementById('scrHelp').classList.contains('hidden')) { this.ui.hide('scrHelp'); return true; }
       if (!this.cancel()) this.togglePause();
       return true;
     }
     if (k === ' ' || k === 'p' || k === 'P') { this.togglePause(); return true; }
     if (k === '?') { this.ui.show('scrHelp'); return true; }
+    if (k === 'i' || k === 'I') { if (this.ui.statsOpen()) this.ui.hide('scrStats'); else this.ui.showStats(); return true; }
     if (k === 'm' || k === 'M') { this.toggleMute(); return true; }
     if (this.paused) return false;
     if (k >= '1' && k <= '5') { const i = +k - 1; this.selectTowerType(this.placing === i ? -1 : i); return true; }
@@ -4691,7 +4860,7 @@ var TD = globalThis.TD;
       ticksPerFrame: b.ticks / b.frames.length, worker: !!this.sim.isView,
       // share of the requested game speed actually simulated (1 = keeping up)
       speed: this.speed, simRate: b.want ? b.ticks / b.want : 1, maxFrame: f[f.length - 1],
-      renderScale: this.renderScale, lockstep: this.lockstep,
+      renderScale: this.renderScale, lockstep: this.lockstep, fxQuality: this.fx.quality,
       backend: `${this.renderer.backend} · ${this.renderer.drawCalls} draw calls · sim ${this.sim.isView ? 'in worker' : 'on main thread'}`,
       heap: b.heap0 ? `${b.heap0.toFixed(1)} → ${heapMB().toFixed(1)} MB` : 'n/a (browser does not expose)',
       stopped: stopped, planned: b.dur
@@ -4773,6 +4942,11 @@ var TD = globalThis.TD;
     // ---- UI + stats
     if (this.mode !== 'backdrop' && this.mode !== 'menu') this.ui.update(sim, this);
     this.renderEma += (performance.now() - tSim1 - this.renderEma) * 0.1;
+    // effects quality: when main-thread render CPU runs over ~10 ms, emit
+    // fewer particles and draw simpler arcs (cosmetic only); recover slowly
+    var q = this.fx.quality;
+    if (this.renderEma > 10) q *= 0.97; else if (this.renderEma < 7) q *= 1.01;
+    this.fx.quality = q < 0.2 ? 0.2 : q > 1 ? 1 : q;
     var h = this.fHead;
     var cpuMs = tEnd - t0 + (sim.isView ? simMs : 0);
     this.fDelta[h] = dtMs; this.fCpu[h] = cpuMs; this.fSim[h] = simMs; this.fRender[h] = tEnd - tSim1; this.fTicks[h] = ticks;
@@ -4849,7 +5023,7 @@ var TD = globalThis.TD;
       `enemies    ${sim.eCount}  (visible ${this.scene.stats.visibleEnemies})`,
       `towers     ${sim.towers.length}   proj ${sim.pCount}`,
       `particles  ${this.fx.count()}   sprites ${this.scene.stats.instances}`,
-      `renderer   ${this.renderer.backend} · ${this.renderer.drawCalls} draws · ${Math.round(this.renderScale * 100)}% res`,
+      `renderer   ${this.renderer.backend} · ${this.renderer.drawCalls} draws · ${Math.round(this.renderScale * 100)}% res · fx ${Math.round(this.fx.quality * 100)}%`,
       `speed      ${this.speed}×${performance.memory ? `   heap ${heapMB().toFixed(1)} MB` : ''}`
     ];
     if (this.bench && !this.bench.done) {
@@ -6091,14 +6265,15 @@ var TD = globalThis.TD;
     if (!this.stress) this.updateWaves();
   };
 
-  /** Cheap order-dependent hash of the full gameplay state (determinism tests). */
+  /** Cheap order-dependent hash of the full gameplay state (determinism tests).
+   *  Enemies are identified by uid, not slot, so memory layout does not count. */
   S.hash = function () {
     var h = 2166136261 >>> 0;
     function mix(v) { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; }
     mix(this.tick); mix(this.gold * 100); mix(this.lives); mix(this.score); mix(this.eCount); mix(this.pCount);
     for (let i = 0; i < this.eCount; i++) {
       const s = this.eList[i];
-      mix(s); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
+      mix(this.eUid[s]); mix(this.eDist[s] * 1000); mix(this.eHp[s] * 1000);
     }
     for (let i = 0; i < this.pCount; i++) { mix(this.pX[i] * 100); mix(this.pY[i] * 100); }
     return h >>> 0;

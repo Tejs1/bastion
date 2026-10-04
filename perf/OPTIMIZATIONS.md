@@ -12,6 +12,8 @@ A cell **passes** when it meets all three conditions:
 Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes for the stress run and for two full
 50-wave bot games, and a pure performance change has to leave all three unchanged:
 `stress 789190078`, `victory/w50/3412512395`, `victory/w50/2908296023`.
+From step 7 on, the hash identifies enemies by uid instead of slot, and `simbench` also records a hash every 12 000 ticks of both games.
+The new stress golden is `3058752934`.
 
 | # | Change | Sim ms/tick (geomean, all cells) | Frame CPU (geomean) | Passing cells (of 20) |
 |---|---|---|---|---|
@@ -21,6 +23,7 @@ Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes 
 | 3 | *(branch `perf/frame-budget`)* Frame-time budget for sim catch-up | +2% (noise) | **−55.5%** vs #2 | 10 |
 | 4 | *(branch `perf/sim-worker`)* Simulation in a Web Worker, with snapshots to the main thread | +14% (includes snapshot encode) | **−63.4%** vs the same build without a worker | **11** |
 | 5 | Split `Scene.build` into small per-section methods | — | `scene.build` **−20%** (scene bench, 20× CPU) | — |
+| 6 | *(branch `perf/fx-lod`)* Adaptive effects quality on the main thread | — | **−25%** at 20× CPU and 1× speed (A/B) | **12** |
 
 ## 0 · Baseline: where it breaks
 
@@ -181,3 +184,81 @@ Constant colours are hoisted out of the loops, and the per-type shadow flags are
 
 That is **−20%**. A micro-optimised `R.push` gave nothing measurable, so I dropped it.
 At about 30 ns per sprite unthrottled, the remaining main-thread cost scales with the sprite count.
+
+## 6 · Adaptive effects quality (`perf/fx-lod`)
+
+After step 5, the only cell bound by main-thread CPU was 20× CPU at 1× speed.
+There, about 16 k sprites took 13–15 ms of render CPU per frame, and the frame rate fell below 45 FPS on about 5% of frames.
+
+About 6 k of those sprites are purely cosmetic:
+- about 4 k particles
+- about 2 k line segments for the Tesla arcs
+
+`Fx.quality` (0.2–1) scales the per-frame particle emission budget, which is normally 900. Below 0.6, arcs draw one glow line per segment instead of two.
+`main.js` lowers the quality by 3% per frame while the smoothed render CPU is above 10 ms, and raises it by 1% per frame while it is below 7 ms.
+This is the CPU counterpart of the existing GPU dynamic-resolution scaling. The simulation is unaffected, and on normal hardware the quality stays at 100%.
+The current level shows in the perf overlay (`fx N%`) and in the benchmark result (`fxQuality`).
+
+The machine was busy during this step (load average about 6, from another Chrome and storage indexing).
+So I measured it as an **interleaved A/B**: the previous commit and this change, alternating, at 20× CPU:
+
+| Cell | Before (2 runs) | After (2 runs) |
+|---|---|---|
+| 20× CPU, 1×: FPS | 56.5, 51.5 | **59.3, 59.5** |
+| 20× CPU, 1×: frame CPU | 13.6, 14.6 ms | **10.9, 9.8 ms** |
+| 20× CPU, 1×: result | ❌ ❌ | **✅ ✅** |
+| 20× CPU, 12×: FPS / speed | 59.1 / 1.48×, 60.0 / 1.55× | 59.3 / 1.48×, 59.8 / 1.39× |
+
+20× CPU at 1× speed now passes, which brings the total to 12 of 20 cells.
+
+## 7 · Tried: slot compaction for cache locality (dropped)
+
+After step 6, the cells that still fail are limited by worker throughput: the requested ticks per second need more than one emulated core.
+4× CPU at 8× speed needs about 10% cheaper ticks. In an isolated test, `updateEnemies` ran about 33% faster in slot order than in the scattered dense-list order.
+
+I built an exactly equivalent version, kept in `perf/experiments/slot-compaction.patch`.
+Every 32 ticks it relabels all 8 192 slots with a bijection: live enemies go to 0…n−1, and free slots follow in free-stack order.
+The same mapping is applied to every structure that stores a slot: the per-enemy arrays, the list, the free stack, the previous tick's grid, and tower and projectile targets.
+
+A first version only compacted the live enemies, and it diverged at tick 64.
+The cause: `healPulse` queries the previous tick's grid, and a slot that is freed and then reused within the same tick shows up there as a "ghost".
+That quirk is only reproduced when the relabeling covers every slot.
+
+The full bijection gave bit-identical hashes for the stress run and all 41 mid-game checkpoints. In-process A/B, mean ms/tick over 2 400 ticks:
+
+| Compaction interval | Off | On |
+|---|---|---|
+| Every 32 ticks | 0.446 | 0.464 |
+| Every 256 ticks | 0.439 | 0.443 |
+
+So it gave no gain. The live enemy state is about 440 KB, which fits in the M2's L2 cache, so locality is not the bottleneck here, and the relabel pass costs more than it saves.
+It might help on phones with small caches, but I cannot measure that here, so it is not shipped.
+
+What I kept is test rigour:
+- The state hash now identifies enemies by **uid instead of slot**, so it describes gameplay rather than memory layout.
+- `simbench` now records 41 mid-game checkpoint hashes. The final victory hash alone has no enemies left to hash.
+
+## Final run (`06-final-fx-lod`)
+
+This is the full matrix on `perf/fx-lod`, over HTTP with the sim in the worker. The machine load average was about 5.4 during the run.
+Full table: `runs/06-final-fx-lod.md`.
+
+Against `00-baseline`:
+
+| Metric | Change |
+|---|---|
+| Passing cells | **10 → 12 of 20** |
+| Main-thread frame CPU (geomean) | **−90.8%** |
+| Avg FPS, every cell | **59.4–60** (baseline 1.8–60) |
+| Sim ms/tick (geomean) | −18.1% (the worker's ms/tick includes snapshot encoding) |
+
+Breaking points, as the highest passing game speed:
+
+| CPU throttle | Baseline | Final |
+|---|---|---|
+| 1× | 12× | 12× |
+| 4× | 4× | 4× |
+| 6× | 2× | **4×** |
+| 20× | none | **1×** |
+
+The remaining failures only miss the game-speed condition: they need more than one core of simulation.

@@ -49,6 +49,7 @@ var TD = globalThis.TD;
     this.tLife = new Float32Array(TCAP); this.tCol = new Uint32Array(TCAP); this.tHead = 0;
 
     this.budget = 0;
+    this.quality = 1;      // 0.2..1, lowered by the game when render CPU is over budget
     this.shake = 0;
     this.baseFlash = 0;
     this.time = 0;
@@ -208,7 +209,7 @@ var TD = globalThis.TD;
   // ---------------------------------------------------------------- update
   P.update = function (dt, realDt) {
     this.time += dt;
-    this.budget = 900;
+    this.budget = Math.round(900 * this.quality);
     this.shake *= 0.0015 ** realDt;
     if (this.shake < 0.05) this.shake = 0;
     this.baseFlash = Math.max(0, this.baseFlash - realDt * 2.5);

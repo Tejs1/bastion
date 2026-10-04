@@ -113,6 +113,11 @@ var TD = globalThis.TD;
         const w = bW[i] * (0.4 + lf * 0.6);
         r.line(beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 2.2, bcol);
         r.line(beam, bp[o], bp[o + 1], bp[o + 2], bp[o + 3], w * 0.7, core);
+      } else if (fx.quality < 0.6) {   // reduced effects: glow only
+        for (let k = 0; k < 5; k++) {
+          const q = o + k * 2;
+          r.line(beam, bp[q], bp[q + 1], bp[q + 2], bp[q + 3], bW[i] * 1.4, core);
+        }
       } else {
         for (let k = 0; k < 5; k++) {
           const q = o + k * 2;
