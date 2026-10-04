@@ -594,6 +594,8 @@ var TD = globalThis.TD;
     var view = this.view;
     view.x0 = rc.x - hw; view.x1 = rc.x + hw; view.y0 = rc.y - hh; view.y1 = rc.y + hh;
     this.renderT += running ? dt : 0;
+    // credits and the board change under a still cursor, so re-check the ghost
+    if (this.placing >= 0 && this.hoverCol >= 0) this.setHoverTile(this.hoverCol, this.hoverRow);
     this.scene.build(sim, this.fx, rc, view, alpha, this, this.renderT);
     var map = sim.map, br = this.bgRect;
     br.w = map.width; br.h = map.height;
