@@ -20,6 +20,7 @@ Gameplay must stay bit-identical. `node tools/simbench.mjs` prints state hashes 
 | 2 | Tesla chain: nearest-first cell walk with distance pruning | **−10.3%** vs #1 | **−11.2%** vs #1 | 10 |
 | 3 | *(branch `perf/frame-budget`)* Frame-time budget for sim catch-up | +2% (noise) | **−55.5%** vs #2 | 10 |
 | 4 | *(branch `perf/sim-worker`)* Simulation in a Web Worker, with snapshots to the main thread | +14% (includes snapshot encode) | **−63.4%** vs the same build without a worker | **11** |
+| 5 | Split `Scene.build` into small per-section methods | — | `scene.build` **−20%** (scene bench, 20× CPU) | — |
 
 ## 0 · Baseline: where it breaks
 
@@ -152,3 +153,31 @@ Both runs below use the same HTTP origin (`--serve`): `04-noworker-http` against
 - What still fails:
   - 4× and 6× CPU at 8–12×: the worker core is saturated, and the game reaches about 7× and about 4.7×.
   - 20× CPU at 1×: main-thread **render** CPU (scene build plus particles, about 15 ms) is now the bottleneck.
+
+## 5 · Split the scene builder into per-section methods
+
+With the sim in the worker, a DevTools profile of the main thread at 20× CPU and 1× speed shows:
+
+| Function | Share |
+|---|---|
+| `Scene.build` (self) | 47% |
+| `bufferSubData` | 9% |
+| `R.push` | 7% |
+| `fx.update` | 4% |
+
+Turning sections off with the debug switches showed:
+- Enemies cost about 7.7 ms for 4 500 sprites, about 1.7 µs each at 20×. That is far more than their arithmetic explains.
+- `build()` was one roughly 250-line function with about a dozen hot loops, and V8 optimises a function that size poorly.
+
+The change moves enemies (worker path), health bars, projectiles, beams and arcs, and particles each into a small method.
+Constant colours are hoisted out of the loops, and the per-type shadow flags are precomputed.
+
+`node tools/scenebench.mjs` freezes one stress state (about 16.5 k sprites) and times `scene.build` 300 times under 20× CPU throttling:
+
+| Version | `scene.build` p50, two runs |
+|---|---|
+| Before | 12.5 / 13.0 ms |
+| After | 10.3 / 10.1 ms |
+
+That is **−20%**. A micro-optimised `R.push` gave nothing measurable, so I dropped it.
+At about 30 ns per sprite unthrottled, the remaining main-thread cost scales with the sprite count.

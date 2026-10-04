@@ -19,7 +19,8 @@ const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } }
 const page = await ctx.newPage();
 const cdp = await ctx.newCDPSession(page);
 await cdp.send('Emulation.setCPUThrottlingRate', { rate: thr });
-await page.goto(`file://${path.join(root, 'index.html')}?stress&speed=${speed}&benchdur=600`);
+const base = arg('url', `file://${path.join(root, 'index.html')}`);   // e.g. --url=http://127.0.0.1:8765/index.html (worker mode)
+await page.goto(`${base}?stress&speed=${speed}&benchdur=600&workerslow=${thr}`);
 await page.waitForTimeout(4000);
 await cdp.send('Profiler.enable');
 await cdp.send('Profiler.setSamplingInterval', { interval: 200 });
